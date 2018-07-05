@@ -11,6 +11,7 @@ python "OCAT - Overlay Display.py" "%~1" "%~n1" "%~dp1
 ::	these arguments are then passed through as sys.argv which can be called in Python
 
 shift
+::	shift moves to the next set of Batch Parameters, allowing this to work when multiple files are dragged and dropped onto it
 
 if "%~1"=="" goto end
 goto start
