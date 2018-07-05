@@ -1,9 +1,15 @@
 library(readr)
+#	loads the library for reading CSVs into R
 library(ggplot2)
+#	loads the GGPlot2 library for generating graphs
 setwd("!PATH!")
+#	sets the working directory
 results <- read_csv("!FILEX!")
+#	reads the SV to the results dataframe
 FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
+#	is a count of the number of frames each second
 DIFF = diff(results$MsBetweenPresents)
+#	the difference between consecutive MsBetweenPresents values
 
 game = ""
 game = "!FILE!"
@@ -13,18 +19,23 @@ recording = character(0)
 
 setname = paste(" - \n", game, recording, sep = "")
 setname = character(0)
+#	above are for easy labelling of graphs with empty versions there, for when I want them disabled
 
 DPI = 120
 ggscale = 1 
 theme_set(theme_grey(base_size = 16))
+#	controls for size of output graph
 
 ytimes = c(120, 60, 30, 20, 15, 12, 10)
 ytimes = c(ytimes,-ytimes)
+#	lists for frame rates of interest, both positive and negative for some of the graph axes
 
 options(error=expression(NULL))
+#	supresses errors if there are issue when running the script
 
 if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
+#	creates a device for saving output to a text file
 writeLines("!FILE!")
 #Frame Time/Rate
 writeLines("\nMean")
@@ -67,6 +78,8 @@ writeLines("\nMsUntilDisplayed - MsUntilRenderComplete")
 print(round(quantile(posonly$MsUntilDisplayed - posonly$MsUntilRenderComplete, c(.001, .01, .50, .99, 0.999)), 2))
 
 if(FALSE) {
+#	looks at the MsBetweenDisplayChange data with dropped frames skipped
+#	if(FALSE) means it will not be done
 	cleanDisplay = results$MsBetweenDisplayChange[!results$MsBetweenDisplayChange==0] 
 
 	writeLines("\nDisplay Change Percentiles")
@@ -88,9 +101,12 @@ if(FALSE) {
 }
 
 sink()
+#	closes the text file, applying all of this information to it
 }
 
-pdf(NULL) #prevents rplots.pdf from being generated
+pdf(NULL)
+#	prevents rplots.pdf from being generated
+
 #Frame Time
 if(TRUE) {
 	ggplot(results, aes(MsBetweenPresents)) + 
@@ -136,7 +152,7 @@ if(TRUE) {
 	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,100), expand=c(0.02, 0)) + 
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
 	geom_hline(yintercept = c(quantile(results$MsBetweenPresents, c(.001, .01, .99, 0.999))), color="red")
-#for a boxplot add this
+#for a boxplot added this
 #	+ geom_boxplot(aes(x=330, y=results$MsBetweenPresents), width=25)
 #	for quantile regression use this instead
 #	stat_quantile(quantiles = c(0.001, 0.01, 0.99, 0.999), color = "red")
@@ -272,4 +288,6 @@ if(FALSE) {
 #	switch(testswitch,neglag,poslag,zerolag)
 #	ggsave(filename=paste(game, " - Latency", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 #	ggsave(filename=paste(game, " - Latency", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	
+#	sometimes these latency values can be weird, going negative even, hence the need for a switch to correctly build the graph
 }
