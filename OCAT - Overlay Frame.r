@@ -49,4 +49,10 @@ geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + geom_point(color="whit
 	
 ggsave(filename=sprintf("%05d.png",place), device="png", width=20.48, height=3.84, dpi=100)
 #	I record at 2048x1152 so these images will be 2048x384 (one-third height)
+
+dev.off(dev.prev())
+#	this closes the previous device, which is how the images are made and not closing them properly breaks R with too many devices
 }
+
+dev.off(dev.prev())
+#	also outside to make sure the devices are cleared
