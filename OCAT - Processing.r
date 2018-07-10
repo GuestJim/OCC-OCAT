@@ -136,7 +136,7 @@ if (pdf) {
 	ggsave(filename=paste(game, recording, " - Display Times", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
 	ggsave(filename=paste(game, recording, " - Display Times", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
-}
+	}
 }
 
 #Course - Frame Time
@@ -157,7 +157,7 @@ if (pdf) {
 	ggsave(filename=paste(game, recording, " - Course", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
 	ggsave(filename=paste(game, recording, " - Course", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
-}
+	}
 }
 
 #1s Frame Counts Graph
@@ -312,7 +312,7 @@ if (pdf) {
 	ggsave(filename=paste(game, recording, " - Latency", recording, ".png", sep = ""), plot=neglag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
 	ggsave(filename=paste(game, recording, " - Latency", recording, ".png", sep = ""), plot=poslag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
 	ggsave(filename=paste(game, recording, " - Latency", recording, ".png", sep = ""), plot=zerolag, device="png", width=16, height=9, dpi=DPI, scale=ggscale)) 
-	}
+	}	
 #	switch(testswitch,neglag,poslag,zerolag)
 #	ggsave(filename=paste(game, recording, " - Latency", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 #	ggsave(filename=paste(game, recording, " - Latency", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
