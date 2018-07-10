@@ -2,13 +2,13 @@
 ::	keeps the console window clean by suppressing the input commands
 
 pushd %~dp0
-::	pushes the working 
+::	pushes the working directory
 
 :start
 ::	a label named start
 
 python "OCAT - Overlay Frame.py" "%~1" "%~n1" "%~dp1
-python "OCAT - Overlay Display.py" "%~1" "%~n1" "%~dp1
+python "OCAT - Overlay Display.py" "%~1" "%~n1""%~dp1
 ::	curiously I cannot close for the path
 ::	this will open the script and pass it those three arguments
 ::		full file path and name, file name, file path
