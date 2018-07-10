@@ -2,6 +2,8 @@ library(readr)
 #	loads the library for reading CSVs into R
 library(ggplot2)
 #	loads the GGPlot2 library for generating graphs
+library(gridExtra)
+#	loads the gridExtra library for saving the Clocks table to an image/graphic
 setwd("!PATH!")
 #	sets the working directory
 
