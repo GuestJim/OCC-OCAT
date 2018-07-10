@@ -2,7 +2,7 @@
 ::	keeps the console window clean by suppressing the input commands
 
 pushd %~dp0
-::	pushes the working directory
+::	pushes the working 
 
 :start
 ::	a label named start
