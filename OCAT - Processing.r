@@ -204,7 +204,7 @@ if (pdf) {
 	ggsave(filename=paste(game, " - QQ", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
 	ggsave(filename=paste(game, " - QQ", recording, ".png", sep = ""), width=16, height=9, dpi=DPI, scale=ggscale)
-}
+	}
 }
 
 #Course - Display Time

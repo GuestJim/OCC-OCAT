@@ -8,8 +8,8 @@ droppedPath = sys.argv[3]
 
 scriptPath = os.path.abspath('')
 #	gets the path of the Python script, which is the same path for the R source scripts
-scriptType = "OCAT"
-scriptName = "Overlay Display"
+scriptType = "OCAT-ADRN"
+scriptName = "Multi-Run"
 #	separate Type and Name variables for use with the outputName variable below
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 #	full path and name of the source R script
@@ -32,3 +32,4 @@ with fileinput.FileInput(outputName, inplace=True) as file:
 	for line in file:
 		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
 #	reads the lines of the outpur R script and replaces specific strings with the correct references
+#		even though not all of these substitutions are necessary I want to maintain parity with the other scripts

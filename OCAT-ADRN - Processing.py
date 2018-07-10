@@ -2,14 +2,15 @@ import sys, os, fileinput
 #	loads different modules for Python
 
 droppedFile = sys.argv[1]
-droppedName = sys.argv[2]
-droppedPath = sys.argv[3]
+droppedADRN = sys.argv[2]
+droppedOCAT = sys.argv[3]
+droppedPath = sys.argv[4]
 #	assigns the values of the Batch Parameters passed to the Python script to these variables
 
 scriptPath = os.path.abspath('')
 #	gets the path of the Python script, which is the same path for the R source scripts
-scriptType = "OCAT"
-scriptName = "Overlay Display"
+scriptType = "OCAT-ADRN"
+scriptName = "Processing"
 #	separate Type and Name variables for use with the outputName variable below
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 #	full path and name of the source R script
@@ -30,5 +31,5 @@ copyfile(scriptFull, outputFull)
 
 with fileinput.FileInput(outputName, inplace=True) as file:
 	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
+		print(line.replace("!PATH!", RPath).replace("!FILEADRN!", droppedADRN).replace("!FILEOCAT!", droppedOCAT).replace("!FILEADRNX!", droppedADRN + ".csv").replace("!FILEOCATX!", droppedOCAT + ".csv"), end='')
 #	reads the lines of the outpur R script and replaces specific strings with the correct references
