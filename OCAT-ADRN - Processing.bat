@@ -7,12 +7,13 @@ pushd %~dp0
 :start
 ::	a label named start
 
-python "OCAT - Overlay Frame.py" "%~1" "%~n1" "%~dp1
+python "OCAT-ADRN - Processing.py" "%~1" "%~n1" "%~n2" "%~dp1
 ::	curiously I cannot close quotes for the path
-::	this will open the script and pass it those three arguments
-::		full file path and name, file name, file path
+::	this will open the script and pass it those four arguments
+::		full file path and name, Adrenalin file name, OCAT file name, file path
 ::	these arguments are then passed through as sys.argv which can be called in Python
 
+shift
 shift
 ::	shift moves to the next set of Batch Parameters, allowing this to work when multiple files are dragged and dropped onto it
 

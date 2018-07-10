@@ -7,7 +7,7 @@ pushd %~dp0
 :start
 ::	a label named start
 
-python "OCAT - Overlay Frame.py" "%~1" "%~n1" "%~dp1
+python "OCAT-ADRN - Multi-Run.py" "%~1" "%~n1" "%~dp1
 ::	curiously I cannot close quotes for the path
 ::	this will open the script and pass it those three arguments
 ::		full file path and name, file name, file path
@@ -25,3 +25,10 @@ goto start
 
 ::pause
 ::	pause is useful for troubleshooting so I tend to leave it commented out for future use
+
+if "%~1"=="" goto end
+goto start
+
+:end
+
+::pause

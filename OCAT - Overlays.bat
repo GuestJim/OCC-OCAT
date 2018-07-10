@@ -8,8 +8,8 @@ pushd %~dp0
 ::	a label named start
 
 python "OCAT - Overlay Frame.py" "%~1" "%~n1" "%~dp1
-python "OCAT - Overlay Display.py" "%~1" "%~n1""%~dp1
-::	curiously I cannot close for the path
+python "OCAT - Overlay Display.py" "%~1" "%~n1" "%~dp1
+::	curiously I cannot close quotes for the path
 ::	this will open the script and pass it those three arguments
 ::		full file path and name, file name, file path
 ::	these arguments are then passed through as sys.argv which can be called in Python
