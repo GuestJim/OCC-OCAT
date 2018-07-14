@@ -13,7 +13,9 @@ scriptName = "Multi-Run"
 #	separate Type and Name variables for use with the outputName variable below
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 #	full path and name of the source R script
-outputName = scriptName + " - " + droppedName + ".r"
+folderName = droppedPath.split('\\')[-2]
+#	grabs the name of the folder
+outputName = scriptName + " - " + folderName + ".r"
 #	name of output R script
 outputFull = droppedPath + outputName
 #	full path and name of output R script
