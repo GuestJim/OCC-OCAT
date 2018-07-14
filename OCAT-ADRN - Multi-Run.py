@@ -7,7 +7,8 @@ scriptPath = os.path.abspath('')
 scriptType = "OCAT-ADRN"
 scriptName = "Multi-Run"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " - " + droppedName + ".r"
+folderName = droppedPath.split('\\')[-2]
+outputName = scriptName + " - " + folderName + ".r"
 outputFull = droppedPath + outputName
 
 RPath = droppedPath.replace("\\", "/")
