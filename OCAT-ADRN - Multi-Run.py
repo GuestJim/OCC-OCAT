@@ -20,4 +20,4 @@ copyfile(scriptFull, outputFull)
 
 with fileinput.FileInput(outputName, inplace=True) as file:
 	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
+		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv").replace("!NAME!", folderName), end='')

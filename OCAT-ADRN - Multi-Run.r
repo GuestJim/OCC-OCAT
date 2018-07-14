@@ -4,9 +4,8 @@ library(gridExtra)
 setwd("!PATH!")
 
 pngname = "Combined Results"
-pngname = ""
-settext = "Killing Floor 2 (Stock)"
 settext = ""
+settext = "!NAME!"
 setname = paste(" - \n", settext, sep='')
 
 pdf = TRUE
@@ -175,8 +174,6 @@ GPU = data.frame(P0, P1, P2, P3, P4, P5, P6, P7, P11, row.names = runs)
 colnames(GPU) = c(0, plabels)
 GPU = t(GPU * 100)
 
-Pwidths = c(diff(pstates), 1)
-
 options(width = 10000)
 #	to prevent line wrapping
 
@@ -201,7 +198,6 @@ grid.arrange(
 )
 dev.off()
 
-#grid.table(round(GPU, 2))
 options(error=expression(NULL))
 
 pdf(NULL) #prevents rplots.pdf from being generated
@@ -209,7 +205,8 @@ pdf(NULL) #prevents rplots.pdf from being generated
 #Power Average
 if (TRUE){
 scaleFP = 1
-ggplot(na.rm = TRUE) + ggtitle(paste("Comparison of ASIC Average Power", setname, sep = ""), subtitle="Watts")+
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Comparison of ASIC Average Power", setname, sep = ""), subtitle="Watts")+
 scale_fill_gradient2("Power (W)", low="blue", mid = "green", midpoint = 225,  high="red", limits = c(50, 400), breaks = c(75,150,225,300,375)) + 
 geom_boxplot(data = OCAT, outlier.shape = NA, aes(x = RUN, y = 1000 / MsBetweenPresents * scaleFP)) + 
 geom_col(data = results, aes(x = RUN, y = PWRAVG, fill=PWRAVG)) + 
@@ -231,7 +228,8 @@ if (pdf) {
 
 #QQ Plots of ASIC Power
 if (TRUE){
-ggplot(na.rm = TRUE, data = ADRN) + ggtitle(paste("QQ Plot of ASIC Power", setname, sep = "")) + 
+ggplot(na.rm = TRUE, data = ADRN) + 
+ggtitle(paste("QQ Plot of ASIC Power", setname, sep = "")) + 
 stat_qq(aes(sample = GPUPWR, group = RUN, color = RUN)) + 
 scale_y_continuous(name="ASIC Power (W)", breaks = c(0, 75, 150, 225, 300), limits = c(0, 225)) + 
 scale_x_continuous(name="Percentile", breaks=qnorm(c(.01, .25, .5, .75, .99)), labels=c("1", "25", "50", "75", "99"), minor_breaks=NULL, expand=c(0.02, 0))
@@ -245,7 +243,8 @@ if (pdf) {
 
 #Power through Course
 if (TRUE){
-ggplot(na.rm = TRUE) + ggtitle(paste("ASIC Power Usage Through Course", setname, sep = ""), subtitle="Watts") +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("ASIC Power Usage Through Course", setname, sep = ""), subtitle="Watts") +
 scale_fill_gradient2(name = "Power (W)", low="blue", mid = "green", midpoint = 225,  high="red", limits = c(50, 400), breaks = c(75,150,225,300,375)) + 
 geom_col(data = ADRN, aes(x = TIME, y = GPUPWR, group=RUN, fill = GPUPWR)) + 
 facet_grid(RUN ~., as.table = FALSE, drop = FALSE) + 
@@ -264,7 +263,8 @@ if (pdf) {
 if (TRUE){
 scaleFC = 5
 
-ggplot(na.rm = TRUE) + ggtitle(paste("Comparison of Clock Speed", setname, sep = ""), subtitle="Average MHz") +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Comparison of Clock Speed", setname, sep = ""), subtitle="Average MHz") +
 scale_fill_gradient2(name = "MHz", low = "blue", mid = "green", midpoint = 1200,  high="red", limits = c(800, 1600), breaks = yclk) + 
 geom_hline(yintercept = pstates, color = "blue") + 
 geom_label(aes(label = plabels, x = "P-States", y = pstates), hjust = 0.5, size = 2.75) + 
@@ -409,7 +409,8 @@ if (pdf) {
 
 #Fan through Course
 if (TRUE){
-ggplot(na.rm = TRUE) + ggtitle(paste("Fan Speed Through Course", setname, sep = ""), subtitle="RPM") +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Fan Speed Through Course", setname, sep = ""), subtitle="RPM") +
 scale_fill_gradient2(name = "RPM", low="blue", mid = "green", midpoint = 1400,  high="red", limits = c(300, 3000), breaks = c(400, 900, 1400, 1900, 2400, 2900)) + 
 geom_col(data = ADRN, aes(x = TIME, y = GPUFAN, group=RUN, fill = GPUFAN)) + 
 facet_grid(RUN ~., as.table = FALSE, drop = FALSE) + 
@@ -426,7 +427,8 @@ if (pdf) {
 
 #Frame Rate Distributions
 if (TRUE){
-ggplot(OCAT, na.rm = TRUE) + ggtitle(paste("Frequency Plot of Frame Rates", setname, sep = ""), subtitle="1000 * MsBetweenPresents^-1") +
+ggplot(OCAT, na.rm = TRUE) + 
+ggtitle(paste("Frequency Plot of Frame Rates", setname, sep = ""), subtitle="1000 * MsBetweenPresents^-1") +
 geom_freqpoly(aes(1000 / MsBetweenPresents), binwidth=1) + 
 scale_x_continuous(name="Frame Rate (FPS)", breaks = xfps, expand=c(0.02, 0), limits = c(30, 300)) + expand_limits(x=c(30, 60)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
@@ -439,7 +441,8 @@ if (pdf) {
 
 #Frame Rate Distributions - Grouped
 if (TRUE){
-ggplot(OCAT, na.rm = TRUE) + ggtitle(paste("Frequency Plot of Frame Rates", setname, sep = ""), subtitle="1000 * MsBetweenPresents^-1") +
+ggplot(OCAT, na.rm = TRUE) + 
+ggtitle(paste("Frequency Plot of Frame Rates", setname, sep = ""), subtitle="1000 * MsBetweenPresents^-1") +
 geom_freqpoly(aes(1000 / MsBetweenPresents, group = RUN, color = RUN), binwidth=1, size=1) + 
 scale_x_continuous(name="Frame Rate (FPS)", breaks = xfps, expand=c(0.02, 0), limits = c(30, 300)) + expand_limits(x=c(30, 60)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
@@ -454,7 +457,8 @@ if (pdf) {
 if (TRUE){
 scaleFD = 5
 
-ggplot(na.rm = TRUE) + ggtitle(paste("Clock Speed and Net Frame Rate Distribution", setname, sep = "")) +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Clock Speed and Net Frame Rate Distribution", setname, sep = "")) +
 scale_fill_gradient2(name = "MHz", low = "blue", mid = "green", midpoint = 1200,  high="red", limits = c(800, 1600), breaks = yclk) + 
 geom_hline(yintercept = pstates, color = "blue") + 
 geom_col(data = FRTCOnly, aes(x = RUN, y = GPUCLK, fill=GPUCLK)) + 
@@ -475,7 +479,8 @@ if (pdf) {
 
 #Frame Time Courses Faceted
 if (TRUE){
-ggplot(na.rm = TRUE) + ggtitle(paste("Frame Times Through Course", setname, sep = ""), subtitle="MsBetweenPresents") +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Frame Times Through Course", setname, sep = ""), subtitle="MsBetweenPresents") +
 geom_point(data = OCAT, aes(x = TimeInSeconds, y = MsBetweenPresents), color="black", alpha = 0.10) + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,1000/40), expand=c(0.02, 0), minor_breaks = NULL) + 
 scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(OCAT$TimeInSeconds, na.rm = TRUE), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
@@ -492,7 +497,8 @@ if (pdf) {
 
 #Display Rate Distributions
 if (TRUE){
-ggplot(OCAT, na.rm = TRUE) + ggtitle(paste("Frequency Plot of Display Rates", setname, sep = ""), subtitle="MsBetweenDisplayChange") +
+ggplot(OCAT, na.rm = TRUE) + 
+ggtitle(paste("Frequency Plot of Display Rates", setname, sep = ""), subtitle="MsBetweenDisplayChange") +
 geom_freqpoly(aes(MsBetweenDisplayChange * 60 / 1000), binwidth=0.003, size=1) + 
 scale_x_continuous(name="Refresh Cycles Later (1 / 60 Hz)", breaks=seq(from=0, to=5, by=1), minor_breaks=NULL, limits=c(0, 1.1), expand=c(0.02, 0)) + expand_limits(x=c(0, 2)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
@@ -505,7 +511,8 @@ if (pdf) {
 
 #Display Rate Distributions - Grouped
 if (TRUE){
-ggplot(OCAT, na.rm = TRUE) + ggtitle(paste("Frequency Plot of Display Rates", setname, sep = ""), subtitle="MsBetweenDisplayChange") +
+ggplot(OCAT, na.rm = TRUE) + 
+ggtitle(paste("Frequency Plot of Display Rates", setname, sep = ""), subtitle="MsBetweenDisplayChange") +
 geom_freqpoly(aes(MsBetweenDisplayChange * 60 / 1000, group = RUN, color = RUN), binwidth=0.003, size=1) + 
 scale_x_continuous(name="Refresh Cycles Later (1 / 60 Hz)", breaks=seq(from=0, to=5, by=1), minor_breaks=NULL, limits=c(0, 1.1), expand=c(0.02, 0)) + expand_limits(x=c(0, 2)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
@@ -518,7 +525,8 @@ if (pdf) {
 
 #Display Time Courses Faceted
 if (TRUE){
-ggplot(na.rm = TRUE) + ggtitle(paste("Display Times Through Course", setname, sep = ""), subtitle="MsBetweenDisplayChange") +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Display Times Through Course", setname, sep = ""), subtitle="MsBetweenDisplayChange") +
 geom_point(data = OCAT, aes(x = TimeInSeconds, y = MsBetweenDisplayChange), color="black", alpha = 0.10) + 
 scale_y_continuous(name="Cycles Later (1 / 60 Hz)", breaks=c(0, 1000/60, 1000/30), labels=c(0, 1, 2), limits=c(NA,1000/31), expand=c(0.02, 0), minor_breaks = NULL) + 
 scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(OCAT$TimeInSeconds, na.rm = TRUE), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
@@ -537,7 +545,8 @@ if (pdf) {
 if (TRUE){
 scaleFD = 20
 
-ggplot(na.rm = TRUE) + ggtitle(paste("Clock Speed and Net Display Rate Distribution", setname, sep = "")) +
+ggplot(na.rm = TRUE) + 
+ggtitle(paste("Clock Speed and Net Display Rate Distribution", setname, sep = "")) +
 scale_fill_gradient2(name = "MHz", low = "blue", mid = "green", midpoint = 1200,  high="red", limits = c(800, 1600), breaks = yclk) + 
 geom_hline(yintercept = pstates, color = "blue") + 
 geom_col(data = FRTCOnly, aes(x = RUN, y = GPUCLK, fill=GPUCLK)) + 
