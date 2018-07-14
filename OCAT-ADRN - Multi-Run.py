@@ -32,6 +32,6 @@ copyfile(scriptFull, outputFull)
 
 with fileinput.FileInput(outputName, inplace=True) as file:
 	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
+		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv").replace("!NAME!", folderName), end='')
 #	reads the lines of the outpur R script and replaces specific strings with the correct references
 #		even though not all of these substitutions are necessary I want to maintain parity with the other scripts
