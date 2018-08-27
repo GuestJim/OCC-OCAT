@@ -15,10 +15,12 @@ game = ""
 game = "!FILE!"
 #	sets a variable for easier identification of what is being worked on
 
-recording = " - (Recording 1)"
+recording = "Recording 1"
 recording = character(0)
+recordnam = paste(" - (", recording, ")",sep="")
 #	to specify the specific recording, as there are often multiple
 #		character(0) keeps it empty as currently it will use the CSV file name in the game variable, making this unnecessary in general
+#	by separating the Recording # from the string used for naming, it makes the filenames and such cleaner
 
 setname = paste(" - \n", game, recording, sep = "")
 setname = character(0)
@@ -121,9 +123,9 @@ if(TRUE) {
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
- 	ggsave(filename=paste(game, " - Frame Times", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+ 	ggsave(filename=paste(game, " - ", recording, " - Frame Times.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - Frame Times", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Frame Times.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -135,8 +137,11 @@ if(TRUE) {
 	scale_x_continuous(name="Frame Rate (FPS)", breaks=c(120, 60, 30, 20, 15, 10,0), expand=c(0.02, 0)) + expand_limits(x=c(30, 60)) + 
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
-	ggsave(filename=paste(game, " - Frame Rates", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
-#	ggsave(filename=paste(game, " - Frame Rates", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+if (pdf) {
+	ggsave(filename=paste(game, " - ", recording, " - Frame Rates.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	} else {
+	ggsave(filename=paste(game, " - ", recording, " - Frame Rates.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	}
 }
 
 #Display Time
@@ -144,13 +149,14 @@ if(TRUE) {
 	ggplot(as.data.frame(results$MsBetweenDisplayChange), aes(results$MsBetweenDisplayChange*60/1000)) + 
 	ggtitle(paste("Frequency Plot of Display Times", setname, sep = ""), subtitle="MsBetweenDisplayChange") + 
 	geom_freqpoly(binwidth=0.003, size=0) + 
-	scale_x_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange*60/1000)), by=1), minor_breaks=NULL, limits=c(0, min(max(results$MsBetweenDisplayChange*60/1000),15)), expand=c(0.02, 0)) + expand_limits(x=c(0, 2)) + 
+	scale_x_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange*60/1000)), by=1), minor_breaks=NULL, limits=c(0, min(max(results$MsBetweenDisplayChange*60/1000),15)), expand=c(0.02, 0)) + 
+	expand_limits(x=c(0, 2)) + 
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - Display Times", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Display Times.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - Display Times", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Display Times.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -169,9 +175,9 @@ if(TRUE) {
 #	stat_quantile(quantiles = c(0.001, 0.01, 0.99, 0.999), color = "red")
 
 if (pdf) {
-	ggsave(filename=paste(game, " - Course", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Course.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - Course", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Course.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -186,9 +192,9 @@ if(FALSE) {
 	scale_y_continuous(name="Frames per Second", limits=c(0, max(60,FPS)), breaks=seq(from=0, to=max(60,FPS), by=30), expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - FPS", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - FPS.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - FPS", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - FPS.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -201,9 +207,9 @@ if(TRUE) {
 	annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + geom_point(stat="qq")
 
 if (pdf) {
-	ggsave(filename=paste(game, " - QQ", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - QQ.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - QQ", recording, ".png", sep = ""), width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - QQ.png", sep = ""), width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -217,9 +223,9 @@ if(TRUE) {
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 3))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - Course Display", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Course Display.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
- 	ggsave(filename=paste(game, " - Course Display", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+ 	ggsave(filename=paste(game, " - ", recording, " - Course Display.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -232,9 +238,9 @@ if(FALSE) {
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - Course Diff", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Course Diff.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
- 	ggsave(filename=paste(game, " - Course Diff", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+ 	ggsave(filename=paste(game, " - ", recording, " - Course Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -243,12 +249,13 @@ if(TRUE) {
 	ggplot(as.data.frame(DIFF), aes(sample=DIFF)) + 
 	ggtitle(paste("Difference QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresent consecutive differences") + 
 	scale_y_continuous(name="Frame Time (ms)", breaks=round(1000/ytimes, 2), limits=c(-1000/30, 1000/30), expand=c(0, 0)) + expand_limits(y=c(-1000/50, 1000/50)) + 
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .25, .5, .75, .99, .999)),labels=c("0.1", "1","25", "50\n(Median)", "75","99","99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + geom_point(stat="qq")
+	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .25, .5, .75, .99, .999)),labels=c("0.1", "1","25", "50\n(Median)", "75","99","99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
+	geom_point(stat="qq")
 
 if (pdf) {
-	ggsave(filename=paste(game, " - QQ Diff", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - QQ Diff.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - QQ Diff", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - QQ Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -277,9 +284,9 @@ if(FALSE) {
 	expand_limits(y=c(0, 1000/30))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - Multi", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Multi.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - Multi", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Multi.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -294,9 +301,9 @@ if(FALSE) {
 	geom_boxplot(aes(group=cut_width(results$TimeInSeconds, 1)), color="black", outlier.alpha=0)
 
 if (pdf) {
-	ggsave(filename=paste(game, " - Box Secs", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Box Secs.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - Box Secs", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(game, " - ", recording, " - Box Secs.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	}
 }
 
@@ -318,16 +325,16 @@ if(FALSE) {
 	testswitch=sum(test==0)+1
 if (pdf) {
 	switch(testswitch, 
-	ggsave(filename=paste(game, " - Latency", recording, ".pdf", sep = ""), plot=neglag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - Latency", recording, ".pdf", sep = ""), plot=poslag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - Latency", recording, ".pdf", sep = ""), plot=zerolag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale)) 
+	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), plot=neglag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), plot=poslag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), plot=zerolag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale)) 
 	} else {
 	switch(testswitch, 
-	ggsave(filename=paste(game, " - Latency", recording, ".png", sep = ""), plot=neglag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - Latency", recording, ".png", sep = ""), plot=poslag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - Latency", recording, ".png", sep = ""), plot=zerolag, device="png", width=16, height=9, dpi=DPI, scale=ggscale)) 
-	}
+	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), plot=neglag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), plot=poslag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), plot=zerolag, device="png", width=16, height=9, dpi=DPI, scale=ggscale)) 
+	}	
 #	switch(testswitch,neglag,poslag,zerolag)
-#	ggsave(filename=paste(game, " - Latency", recording, ".png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
-#	ggsave(filename=paste(game, " - Latency", recording, ".pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+#	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+#	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 }
