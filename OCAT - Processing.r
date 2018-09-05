@@ -11,20 +11,29 @@ FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
 #	the difference between consecutive MsBetweenPresents values
 
-game = ""
+game = character(0)
 game = "!FILE!"
 #	sets a variable for easier identification of what is being worked on
 
-recording = "Recording 1"
-recording = character(0)
-recordnam = paste(" - (", recording, ")",sep="")
-#	to specify the specific recording, as there are often multiple
-#		character(0) keeps it empty as currently it will use the CSV file name in the game variable, making this unnecessary in general
-#	by separating the Recording # from the string used for naming, it makes the filenames and such cleaner
+titled = FALSE
+#	indicates if a title has been given to the data, besides the filename
+graphs = FALSE
+#	should the graphs be made or not because sometimes you only want the characteristics
 
-setname = paste(" - \n", game, recording, sep = "")
-setname = character(0)
-#	for identifying the game and recording set in the graphs, but should be manually set, so leaving blank is preferred here
+if(titled) {
+#	control for if a title for the dataset has been provided or not
+	recording = "Recording 1"
+	recordnam = paste(" - (", recording, ")",sep="")
+	#	to specify the specific recording, as there are often multiple
+	#		character(0) keeps it empty as currently it will use the CSV file name in the game variable, making this unnecessary in general
+	#	by separating the Recording # from the string used for naming, it makes the filenames and such cleaner
+	setname = paste(" - \n", game, recordnam, sep = "")
+	#	for identifying the game and recording set in the graphs, but should be manually set, so leaving blank is preferred here
+} else {
+	recording = character(0)
+	setname = character(0)
+	#	gives default empty values for these variables so they can still be used without error
+}
 
 pdf = TRUE
 #	TRUE to save graphs as PDFs and FALSE for PNGs
@@ -44,6 +53,10 @@ if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
 #	creates a device for saving output to a text file
 writeLines("!FILE!")
+if (titled) {
+	writeLines(paste(game, recordnam, sep = ""))
+}
+#	if there is a title for the data, this will add it to the file
 #Frame Time/Rate
 writeLines("\nMean")
 print(mean(results$MsBetweenPresents))
@@ -110,6 +123,12 @@ if(FALSE) {
 sink()
 #	closes the text file, applying all of this information to it
 }
+
+if (!graphs){
+	q()
+}
+#	quits out of R if you do not want the graphs
+#		it is !graphs so that TRUE gets you the graphs
 
 pdf(NULL)
 #	prevents rplots.pdf from being generated
