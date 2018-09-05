@@ -5,15 +5,20 @@ results <- read_csv("!FILEX!")
 FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
 
-game = ""
+game = character(0)
 game = "!FILE!"
 
-recording = "Recording 1"
-recording = character(0)
-recordnam = paste(" - (", recording, ")",sep="")
+titled = FALSE
+graphs = FALSE
 
-setname = paste(" - \n", game, recordnam, sep = "")
-setname = character(0)
+if(titled) {
+	recording = "Recording 1"
+	recordnam = paste(" - (", recording, ")",sep="")
+	setname = paste(" - \n", game, recordnam, sep = "")
+} else {
+	recording = character(0)
+	setname = character(0)
+}
 
 pdf = FALSE
 DPI = 120
@@ -28,6 +33,9 @@ options(error=expression(NULL))
 if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
 writeLines("!FILE!")
+if (titled) {
+	writeLines(paste(game, recordnam, sep = ""))
+}
 #Frame Time/Rate
 writeLines("\nMean")
 print(mean(results$MsBetweenPresents))
@@ -90,6 +98,10 @@ if(FALSE) {
 }
 
 sink()
+}
+
+if (!graphs){
+	q()
 }
 
 pdf(NULL) #prevents rplots.pdf from being generated
