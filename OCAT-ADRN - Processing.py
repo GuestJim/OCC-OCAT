@@ -8,7 +8,7 @@ scriptPath = os.path.abspath('')
 scriptType = "OCAT-ADRN"
 scriptName = "Processing"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " - " + droppedOCAT + ".r"
+outputName = scriptName + " " + scriptType + " - " + droppedOCAT + ".r"
 outputFull = droppedPath + outputName
 
 RPath = droppedPath.replace("\\", "/")
