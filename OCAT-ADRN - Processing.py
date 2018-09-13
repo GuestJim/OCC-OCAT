@@ -14,7 +14,7 @@ scriptName = "Processing"
 #	separate Type and Name variables for use with the outputName variable below
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 #	full path and name of the source R script
-outputName = scriptName + " - " + droppedName + ".r"
+outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
 #	name of output R script
 outputFull = droppedPath + outputName
 #	full path and name of output R script
