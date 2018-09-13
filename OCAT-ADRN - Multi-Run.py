@@ -15,7 +15,7 @@ scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 #	full path and name of the source R script
 folderName = droppedPath.split('\\')[-2]
 #	grabs the name of the folder
-outputName = scriptName + " - " + folderName + ".r"
+outputName = scriptName + " " + scriptType + " - " + folderName + ".r"
 #	name of output R script
 outputFull = droppedPath + outputName
 #	full path and name of output R script
