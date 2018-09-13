@@ -7,7 +7,7 @@ scriptPath = os.path.abspath('')
 scriptType = "OCAT"
 scriptName = "Overlay Display"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " - " + droppedName + ".r"
+outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
 outputFull = droppedPath + outputName
 
 RPath = droppedPath.replace("\\", "/")
