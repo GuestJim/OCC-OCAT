@@ -1,5 +1,4 @@
 import sys, os, fileinput
-
 droppedFile = sys.argv[1]
 droppedName = sys.argv[2]
 droppedPath = sys.argv[3]
@@ -8,7 +7,7 @@ scriptPath = os.path.abspath('')
 scriptType = "OCAT"
 scriptName = "Overlay Frame"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " - " + droppedName + ".r"
+outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
 outputFull = droppedPath + outputName
 
 RPath = droppedPath.replace("\\", "/")
