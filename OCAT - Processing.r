@@ -280,12 +280,16 @@ if (pdf) {
 
 #Plotting Frame Time and Diff
 #	the idea is to show the relation between one frame to the next, for indicating stutter
-if(FALSE){
+if(TRUE){
 	ggplot(data=results, aes(x=results$MsBetweenPresents, y=rbind(c(diff(results$MsBetweenPresents), 0))[1,])) + 
 #		necessary to add a datum to the DIFF results for lengths to match.
 #		adding it afterward so the DIFF data will be the difference to the next frame, instead of the previous.
 	ggtitle(paste("Frame Times vs Frame Time Difference (next frame)", setname, sep = ""), subtitle="MsBetweenPresent consecutive differences") + 
+	annotate("rect", ymin=quantile(diff(results$MsBetweenPresents), c(.001, .010)), ymax=quantile(diff(results$MsBetweenPresents), c(.999, .990)), xmin=quantile(results$MsBetweenPresents, c(.001, .010)), xmax=quantile(results$MsBetweenPresents, c(.999, .990)), alpha=c(0.1, 0.075), fill=c("red", "blue")) + 
 	geom_point(alpha = 0.1) + 
+	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
+#	adds a density heat map with colors according to viridis_c scale
+	geom_point(x=median(results$MsBetweenPresents), y=median(diff(results$MsBetweenPresents)), color = "magenta", shape ="x") + 
 	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), 2), limits=c(0, max(c(results$MsBetweenPresents, 1000/30))), expand=c(0.02, 0)) + 
 	scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 	
