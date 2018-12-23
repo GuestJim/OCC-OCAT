@@ -256,7 +256,7 @@ if(FALSE){
 	ggplot(data=results, aes(x=results$MsBetweenPresents, y=rbind(c(diff(results$MsBetweenPresents), 0))[1,])) + 
 	ggtitle(paste("Frame Times vs Frame Time Difference (next frame)", setname, sep = ""), subtitle="MsBetweenPresent consecutive differences") + 
 	geom_point(alpha = 0.1) + 
-	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1000/120), 2), limits=c(0, min(max(results$MsBetweenPresents), 100)), expand=c(0.02, 0)) + 
+	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), 2), limits=c(0, max(c(results$MsBetweenPresents, 1000/30))), expand=c(0.02, 0)) + 
 	scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 	
 if (pdf) {
