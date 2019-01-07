@@ -1,6 +1,8 @@
 library(readr)
 library(ggplot2)
-setwd("!PATH!")
+
+#setwd("!PATH!")
+
 ADRN <- read_csv("!FILEADRNX!")
 OCAT <- read_csv("!FILEOCATX!")
 FPS <- hist(OCAT$TimeInSeconds, breaks=300,plot=FALSE)$counts
