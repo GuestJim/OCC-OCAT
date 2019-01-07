@@ -6,8 +6,10 @@ library(foreach)
 library(doParallel)
 #	both foreach and doParallel are for making this multithreaded
 
-setwd("!PATH!")
-#	sets working directory
+#setwd("!PATH!")
+#	sets the working directory
+#		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
+#		keeping it though for when working in the GUI though
 results <- read_csv("!FILEX!")
 #	reads the CSV to the results data frame
 dir.create("Frames - !FILE!", showWarnings=FALSE)
