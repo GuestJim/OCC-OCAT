@@ -2,8 +2,10 @@ library(readr)
 #	loads the library for reading CSVs into R
 library(ggplot2)
 #	loads the GGPlot2 library for generating graphs
-setwd("!PATH!")
+#setwd("!PATH!")
 #	sets the working directory
+#		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
+#		keeping it though for when working in the GUI though
 results <- read_csv("!FILEX!")
 #	reads the CSV to the results dataframe
 FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
