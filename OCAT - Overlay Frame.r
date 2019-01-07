@@ -3,7 +3,7 @@ library(ggplot2)
 library(foreach)
 library(doParallel)
 
-setwd("!PATH!")
+#setwd("!PATH!")
 results <- read_csv("!FILEX!")
 dir.create("Frames - !FILE!", showWarnings=FALSE)
 setwd("Frames - !FILE!")
