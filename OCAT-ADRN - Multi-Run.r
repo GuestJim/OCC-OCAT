@@ -1,7 +1,8 @@
 library(readr)
 library(ggplot2)
 library(gridExtra)
-setwd("!PATH!")
+
+#setwd("!PATH!")
 
 pngname = "Combined Results"
 settext = ""
