@@ -1,6 +1,7 @@
 library(readr)
 library(ggplot2)
-setwd("!PATH!")
+
+#setwd("!PATH!")
 results <- read_csv("!FILEX!")
 FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
