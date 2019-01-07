@@ -4,8 +4,10 @@ library(ggplot2)
 #	loads the GGPlot2 library for generating graphs
 library(gridExtra)
 #	loads the gridExtra library for saving the Clocks table to an image/graphic
-setwd("!PATH!")
+#setwd("!PATH!")
 #	sets the working directory
+#		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
+#		keeping it though for when working in the GUI though
 
 pngname = "Combined Results"
 settext = "Killing Floor 2 (Stock)"
