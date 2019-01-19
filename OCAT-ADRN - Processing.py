@@ -1,23 +1,35 @@
-import sys, os, fileinput
-droppedFile = sys.argv[1]
-droppedADRN = sys.argv[2]
-droppedOCAT = sys.argv[3]
-droppedPath = sys.argv[4]
+import sys, os
 
-scriptPath = os.path.abspath('')
+scriptPath = sys.argv[0].rsplit("\\",1)[0]
+droppedPath = sys.argv[1].rsplit("\\",1)[0] + "\\"
+
+droppedFiles = sys.argv[1:]
+
+droppedOCAT = []
+droppedADRN = []
+
+for file in droppedFiles:
+	if "OCAT" in file:
+		droppedOCAT.append(file.rsplit("\\",1)[1].split(".")[0])
+	if "ADRN" in file:
+		droppedADRN.append(file.rsplit("\\",1)[1].split(".")[0])
+
+droppedOCAT.sort()
+droppedADRN.sort()
+
 scriptType = "OCAT-ADRN"
 scriptName = "Processing"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " " + scriptType + " - " + droppedOCAT + ".r"
-outputFull = droppedPath + outputName
 
-RPath = droppedPath.replace("\\", "/")
+	RPath = droppedPath.replace("\\", "/")
 
-os.chdir(droppedPath)
+for place in range(0, len(droppedOCAT)):
+	outputName = scriptName + " " + scriptType + " - " + droppedOCAT[place] + ".r"
+	outputFull = droppedPath + outputName
 
-from shutil import copyfile
-copyfile(scriptFull, outputFull)
-
-with fileinput.FileInput(outputName, inplace=True) as file:
-	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILEADRN!", droppedADRN).replace("!FILEOCAT!", droppedOCAT).replace("!FILEADRNX!", droppedADRN + ".csv").replace("!FILEOCATX!", droppedOCAT + ".csv"), end='')
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+		for line in fref:
+			fout.write(line.replace("!PATH!", RPath).replace("!FILEADRN!", droppedADRN[place]).replace("!FILEOCAT!", droppedOCAT[place]).replace("!FILEADRNX!", droppedADRN[place] + ".csv").replace("!FILEOCATX!", droppedOCAT[place] + ".csv"))
+		fout.close()
+	
+#os.system("pause")
