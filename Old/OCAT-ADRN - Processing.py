@@ -1,13 +1,14 @@
 import sys, os, fileinput
 droppedFile = sys.argv[1]
-droppedName = sys.argv[2]
-droppedPath = sys.argv[3]
+droppedADRN = sys.argv[2]
+droppedOCAT = sys.argv[3]
+droppedPath = sys.argv[4]
 
 scriptPath = os.path.abspath('')
-scriptType = "OCAT"
-scriptName = "Overlay Frame"
+scriptType = "OCAT-ADRN"
+scriptName = "Processing"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
+outputName = scriptName + " " + scriptType + " - " + droppedOCAT + ".r"
 outputFull = droppedPath + outputName
 
 RPath = droppedPath.replace("\\", "/")
@@ -19,4 +20,4 @@ copyfile(scriptFull, outputFull)
 
 with fileinput.FileInput(outputName, inplace=True) as file:
 	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
+		print(line.replace("!PATH!", RPath).replace("!FILEADRN!", droppedADRN).replace("!FILEOCAT!", droppedOCAT).replace("!FILEADRNX!", droppedADRN + ".csv").replace("!FILEOCATX!", droppedOCAT + ".csv"), end='')
