@@ -17,10 +17,11 @@ for files in os.listdir(droppedPath):
 		outputFull = droppedPath + outputName
 
 		RPath = droppedPath.replace("\\", "/")
-
-		with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
-			for line in fref:
-				fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
-			fout.close()
+		
+		if not os.path.exists(outputFull):
+			with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+				for line in fref:
+					fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
+				fout.close()
 				
 #os.system("pause")
