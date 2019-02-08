@@ -30,15 +30,17 @@ for files in os.listdir(droppedPath):
 		RPath = droppedPath.replace("\\", "/")
 #			R needs to use / instead of \ for file paths, hence this conversion
 
-		with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
-#			opens and reads the reference R script to the fref variable
-#			opens the output R script, and calls it fout
-			for line in fref:
-#				reads through each line from the reference file
-				fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
-#					replaces the !PATH!, !FILE!, and !FILEX! text in the reference file 
-#					note it is writing to fout, not fref, so the reference file is never changed
-			fout.close()
-#			closes fout, which finishes the file so it can be used
+		if not os.path.exists(outputFull):
+#			to prevent overwriting already created files
+			with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+#				opens and reads the reference R script to the fref variable
+#				opens the output R script, and calls it fout
+				for line in fref:
+#					reads through each line from the reference file
+					fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
+#						replaces the !PATH!, !FILE!, and !FILEX! text in the reference file 
+#						note it is writing to fout, not fref, so the reference file is never changed
+				fout.close()
+#				closes fout, which finishes the file so it can be used
 
 #os.system("pause")

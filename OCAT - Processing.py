@@ -18,7 +18,7 @@ droppedPath = droppedFiles[0].rsplit("\\",1)[0] + "\\"
 
 for droppedFile in droppedFiles:
 #	works through the files dropped onto the Python script
-	droppedName = droppedFile.rsplit("\\",1)[1].split(".")[0]
+	droppedName = droppedFile.rsplit("\\",1)[1].split(".csv")[0]
 #		gets just the file name of the dropped file
 
 	outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
@@ -35,7 +35,7 @@ for droppedFile in droppedFiles:
 		for line in fref:
 #			reads through each line from the reference file
 			fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
-#				replaces the !PATH!, !FILE!, and !FILEX! text in the reference file 
+#				replaces the !PATH!, !FILE!, and !FILEX! text in the reference file
 #					note it is writing to fout, not fref, so the reference file is never changed
 		fout.close()
 #			closes fout, which finishes the file so it can be used
