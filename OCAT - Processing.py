@@ -16,9 +16,6 @@ for droppedFile in droppedFiles:
 
 	outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
 	outputFull = droppedPath + outputName
-	
-	print(droppedFile)
-	os.system("pause")
 
 	RPath = droppedPath.replace("\\", "/")
 
@@ -27,4 +24,4 @@ for droppedFile in droppedFiles:
 			fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
 		fout.close()
 
-os.system("pause")
+#os.system("pause")
