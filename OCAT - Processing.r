@@ -9,6 +9,8 @@ DIFF = diff(results$MsBetweenPresents)
 game = character(0)
 game = "!FILE!"
 
+gameF = gsub(":", "-", game)
+
 titled = FALSE
 graphs = FALSE
 
@@ -35,7 +37,7 @@ if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
 writeLines("!FILE!")
 if (titled) {
-	writeLines(paste(game, recordnam, sep = ""))
+	writeLines(paste(gameF, recordnam, sep = ""))
 }
 #Frame Time/Rate
 writeLines("\nMean")
@@ -106,6 +108,7 @@ if (!graphs){
 }
 
 pdf(NULL) #prevents rplots.pdf from being generated
+
 #Frame Time
 if(TRUE) {
 	ggplot(results, aes(MsBetweenPresents)) + 
@@ -116,9 +119,9 @@ if(TRUE) {
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
- 	ggsave(filename=paste(game, " - ", recording, " - Frame Times.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+ 	ggsave(filename=paste(gameF, " - ", recording, " - Frame Times.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - Frame Times.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Frame Times.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -131,9 +134,9 @@ if(TRUE) {
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Frame Rates.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Frame Rates.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - Frame Rates.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Frame Rates.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -147,9 +150,9 @@ if(TRUE) {
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Display Times.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Display Times.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - Display Times.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Display Times.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -168,9 +171,9 @@ if(TRUE) {
 #	stat_quantile(quantiles = c(0.001, 0.01, 0.99, 0.999), color = "red")
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Course.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Course.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - Course.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Course.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -185,9 +188,9 @@ if(FALSE) {
 	scale_y_continuous(name="Frames per Second", limits=c(0, max(60,FPS)), breaks=seq(from=0, to=max(60,FPS), by=30), expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - FPS.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - FPS.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - FPS.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - FPS.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -200,14 +203,14 @@ if(TRUE) {
 	annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + geom_point(stat="qq")
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - QQ.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - QQ.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - QQ.png", sep = ""), width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - QQ.png", sep = ""), width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
 #Course - Display Time
-if(TRUE) {
+if(FALSE) {
 	ggplot(results, aes(TimeInSeconds, results$MsBetweenDisplayChange*60/1000)) + 
 	ggtitle(paste("Display Times Through Course", setname, sep = ""), subtitle="MsBetweenDisplayChange") + 
 	geom_point() + 
@@ -216,9 +219,9 @@ if(TRUE) {
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 3))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Course Display.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Course Display.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
- 	ggsave(filename=paste(game, " - ", recording, " - Course Display.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+ 	ggsave(filename=paste(gameF, " - ", recording, " - Course Display.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -226,29 +229,33 @@ if (pdf) {
 if(FALSE) {
 	ggplot(as.data.frame(DIFF), aes(x=results$TimeInSeconds[-1], y=DIFF)) + 
 	ggtitle(paste("Difference Course Plot", setname, sep = ""), subtitle="MsBetweenPresent consecutive difference") + 
-	geom_point() + 
+	geom_point(alpha = 0.1) + 
+	geom_hline(yintercept = 0, color = "red") + 
 	scale_y_continuous(name="Frame Time (ms)", breaks=round(1000/ytimes, 2), limits=c(-1000/50, 1000/50), expand=c(0, 0)) + expand_limits(y=c(-1000/30, 1000/30)) + 
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Course Diff.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Course Diff.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
- 	ggsave(filename=paste(game, " - ", recording, " - Course Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+ 	ggsave(filename=paste(gameF, " - ", recording, " - Course Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
+quant = c(0.1, 1, 25, 50, 75, 99, 99.9) / 100
+
 #QQ Diff
-if(TRUE) {
+if(FALSE) {
 	ggplot(as.data.frame(DIFF), aes(sample=DIFF)) + 
 	ggtitle(paste("Difference QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresent consecutive differences") + 
 	scale_y_continuous(name="Frame Time (ms)", breaks=round(1000/ytimes, 2), limits=c(-1000/30, 1000/30), expand=c(0, 0)) + expand_limits(y=c(-1000/50, 1000/50)) + 
 	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .25, .5, .75, .99, .999)),labels=c("0.1", "1","25", "50\n(Median)", "75","99","99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
-	geom_point(stat="qq")
+	geom_point(stat="qq") + 
+	annotate("label", x = qnorm(quant), y = quantile(DIFF, quant, names = FALSE) + 2, label = round(quantile(DIFF, quant, names = FALSE), 2))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - QQ Diff.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - QQ Diff.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - QQ Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - QQ Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -260,7 +267,7 @@ if(TRUE){
 	geom_point(alpha = 0.1) + 
 	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 	geom_point(x=median(results$MsBetweenPresents), y=median(diff(results$MsBetweenPresents)), color = "magenta", shape ="x") + 
-	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), 2), limits=c(0, max(c(results$MsBetweenPresents, 1000/30))), expand=c(0.02, 0)) + 
+	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), 2), limits=c(0, 1000/10), expand=c(0.02, 0)) + 
 	scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 	
 if (pdf) {
@@ -269,6 +276,29 @@ if (pdf) {
 	ggsave(filename=paste(gameF, " - ", recording, " - Time vs Diff.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
+
+resultsClean = results[!(results$MsBetweenDisplayChange ==0), ]
+#	removes the dropped frames, which have a 0 for MsBetweenDisplayChange
+
+#Plotting Display Time and Diff
+if(FALSE){
+	ggplot(data=results, aes(x=results$MsBetweenDisplayChange, y=rbind(c(diff(results$MsBetweenDisplayChange), 0))[1,])) + 
+	ggtitle(paste("Display Times vs Display Time Difference (next frame)", setname, sep = ""), subtitle="MsBetweenDisplayChange consecutive differences") + 
+	annotate("rect", ymin=quantile(diff(results$MsBetweenDisplayChange), c(.001, .010)), ymax=quantile(diff(results$MsBetweenDisplayChange), c(.999, .990)), xmin=quantile(results$MsBetweenDisplayChange, c(.001, .010)), xmax=quantile(results$MsBetweenDisplayChange, c(.999, .990)), alpha=c(0.1, 0.075), fill=c("red", "blue")) + 
+	geom_point(alpha = 0.1) + 
+	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
+	geom_point(x=median(results$MsBetweenDisplayChange), y=median(diff(results$MsBetweenDisplayChange)), color = "magenta", shape ="x") + 
+	scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120)/(1000/60), 2), limits=c(0, 1000/10), expand=c(0.02, 0)) + 
+	scale_y_continuous(name="Consecutive Display Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
+	
+	
+if (pdf) {
+	ggsave(filename=paste(gameF, " - ", recording, " - Time vs Diff - Display.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	} else {
+	ggsave(filename=paste(gameF, " - ", recording, " - Time vs Diff - Display.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	}
+}
+
 
 #Multi-data Graph
 if(FALSE) {
@@ -295,9 +325,9 @@ if(FALSE) {
 	expand_limits(y=c(0, 1000/30))
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Multi.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Multi.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - Multi.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Multi.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	}
 }
 
@@ -312,9 +342,9 @@ if(FALSE) {
 	geom_boxplot(aes(group=cut_width(results$TimeInSeconds, 1)), color="black", outlier.alpha=0)
 
 if (pdf) {
-	ggsave(filename=paste(game, " - ", recording, " - Box Secs.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Box Secs.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
 	} else {
-	ggsave(filename=paste(game, " - ", recording, " - Box Secs.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+	ggsave(filename=paste(gameF, " - ", recording, " - Box Secs.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 	}
 }
 
@@ -336,16 +366,16 @@ if(FALSE) {
 	testswitch=sum(test==0)+1
 if (pdf) {
 	switch(testswitch, 
-	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), plot=neglag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), plot=poslag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), plot=zerolag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale)) 
+	ggsave(filename=paste(gameF, " - ", recording, " - Latency.pdf", sep = ""), plot=neglag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(gameF, " - ", recording, " - Latency.pdf", sep = ""), plot=poslag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(gameF, " - ", recording, " - Latency.pdf", sep = ""), plot=zerolag, device="pdf", width=16, height=9, dpi=DPI, scale=ggscale)) 
 	} else {
 	switch(testswitch, 
-	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), plot=neglag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), plot=poslag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
-	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), plot=zerolag, device="png", width=16, height=9, dpi=DPI, scale=ggscale)) 
+	ggsave(filename=paste(gameF, " - ", recording, " - Latency.png", sep = ""), plot=neglag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(gameF, " - ", recording, " - Latency.png", sep = ""), plot=poslag, device="png", width=16, height=9, dpi=DPI, scale=ggscale), 
+	ggsave(filename=paste(gameF, " - ", recording, " - Latency.png", sep = ""), plot=zerolag, device="png", width=16, height=9, dpi=DPI, scale=ggscale)) 
 	}	
 #	switch(testswitch,neglag,poslag,zerolag)
-#	ggsave(filename=paste(game, " - ", recording, " - Latency.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
-#	ggsave(filename=paste(game, " - ", recording, " - Latency.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
+#	ggsave(filename=paste(gameF, " - ", recording, " - Latency.png", sep = ""), device="png", width=16, height=9, dpi=DPI, scale=ggscale)
+#	ggsave(filename=paste(gameF, " - ", recording, " - Latency.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
 }
