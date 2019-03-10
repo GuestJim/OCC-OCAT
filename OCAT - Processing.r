@@ -2,6 +2,16 @@ library(readr)
 #	loads the library for reading CSVs into R
 library(ggplot2)
 #	loads the GGPlot2 library for generating graphs
+
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL)
+}
+#	interactive() will be TRUE when in the GUI and FALSE when not
+#		it is necessary to set the working directory when in the GUI, but the directory of the script is the working directory when run otherwise
+#	when not run in the GUI, rplots.pdf is made but PDF(null) prevents this
+
 #setwd("!PATH!")
 #	sets the working directory
 #		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
@@ -18,7 +28,7 @@ game = "!FILE!"
 #	sets a variable for easier identification of what is being worked on
 
 gameF = gsub(":", "-", game)
-gameF = unlist(strsplit(gameF, split=" [(]")}[1]
+gameF = unlist(strsplit(gameF, split=" [(]"))[1]
 #	version of the 'game' variable for use in filenames
 
 titled = FALSE
@@ -135,9 +145,6 @@ if (!graphs){
 }
 #	quits out of R if you do not want the graphs
 #		it is !graphs so that TRUE gets you the graphs
-
-pdf(NULL)
-#	prevents rplots.pdf from being generated
 
 #Frame Time
 if(TRUE) {
