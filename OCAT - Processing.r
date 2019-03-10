@@ -1,7 +1,12 @@
 library(readr)
 library(ggplot2)
 
-#setwd("!PATH!")
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL) #prevents rplots.pdf from being generated
+}
+
 results <- read_csv("!FILEX!")
 FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
@@ -10,6 +15,7 @@ game = character(0)
 game = "!FILE!"
 
 gameF = gsub(":", "-", game)
+gameF = unlist(strsplit(gameF, split=" [(]"))[1]
 
 titled = FALSE
 graphs = FALSE
@@ -37,7 +43,7 @@ if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
 writeLines("!FILE!")
 if (titled) {
-	writeLines(paste(gameF, recordnam, sep = ""))
+	writeLines(paste(game, recordnam, sep = ""))
 }
 #Frame Time/Rate
 writeLines("\nMean")
@@ -106,8 +112,6 @@ sink()
 if (!graphs){
 	q()
 }
-
-pdf(NULL) #prevents rplots.pdf from being generated
 
 #Frame Time
 if(TRUE) {
@@ -290,7 +294,6 @@ if(FALSE){
 	geom_point(x=median(results$MsBetweenDisplayChange), y=median(diff(results$MsBetweenDisplayChange)), color = "magenta", shape ="x") + 
 	scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120)/(1000/60), 2), limits=c(0, 1000/10), expand=c(0.02, 0)) + 
 	scale_y_continuous(name="Consecutive Display Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
-	
 	
 if (pdf) {
 	ggsave(filename=paste(gameF, " - ", recording, " - Time vs Diff - Display.pdf", sep = ""), device="pdf", width=16, height=9, scale=ggscale)
