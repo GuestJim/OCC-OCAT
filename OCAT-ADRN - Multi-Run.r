@@ -2,14 +2,29 @@ library(readr)
 library(ggplot2)
 library(gridExtra)
 
-#setwd("!PATH!")
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL) #prevents rplots.pdf from being generated
+}
 
-pngname = "Combined Results"
-settext = ""
-settext = "!NAME!"
-setname = paste(" - \n", settext, sep='')
+game = character(0)
+game = "Combined Results - !FILE!"
 
-pdf = TRUE
+gameF = gsub(":", "-", game)
+
+titled = FALSE
+graphs = FALSE
+
+if(titled) {
+	recording = "!NAME!"
+	recordnam = paste(" - (", recording, ")",sep="")
+	setname = paste(" - \n", game, recordnam, sep = "")
+} else {
+	recording = character(0)
+	setname = character(0)
+}
+
 DPI = 120
 ggscale = 1
 
@@ -35,6 +50,8 @@ mlabels = c("P0 - 167", "P1 - 500", "P2 - 800", "P3 - 945")
 
 ytimes = c(120, 60, 30, 20, 15, 12, 10)
 ytimes = c(ytimes,-ytimes)
+
+labelRound = function(x) sprintf("%.2f", x)
 
 results = data.frame(matrix(ncol = 6, nrow = 0))
 
@@ -221,9 +238,9 @@ geom_point(data = results, aes(x = RUN, y = FPSAVG * scaleFP), color = "black", 
 theme(legend.position = c(1, 0.9))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Power.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Power.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Power.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Power.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -236,9 +253,9 @@ scale_y_continuous(name="ASIC Power (W)", breaks = c(0, 75, 150, 225, 300), limi
 scale_x_continuous(name="Percentile", breaks=qnorm(c(.01, .25, .5, .75, .99)), labels=c("1", "25", "50", "75", "99"), minor_breaks=NULL, expand=c(0.02, 0))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - QQ Power.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - QQ Power.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - QQ Power.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - QQ Power.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -254,9 +271,9 @@ scale_y_continuous(name="ASIC Power (W)", breaks=c(75,150,225,300,375), limits =
 theme(panel.spacing=unit(.1, "lines"), panel.border = element_rect(color = "blue", fill = NA, size = 1), strip.background = element_rect(color = "black", size = 1))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Course Facet - Power.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Power.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Course Facet - Power.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Power.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -282,9 +299,9 @@ geom_point(data = results, aes(x = RUN, y = FPSAVG * scaleFC), color = "black", 
 theme(legend.position = c(1, 0.9))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Clock Speed.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Clock Speed.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Clock Speed.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Clock Speed.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -297,9 +314,9 @@ scale_y_continuous(name="GPU Clock Speed (MHz)", breaks = pstates, labels = plab
 scale_x_continuous(name="Percentile", breaks=qnorm(c(.01, .25, .5, .75, .99)), labels=c("1", "25", "50 (Median)", "75", "99"), minor_breaks=NULL, expand=c(0.02, 0))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - QQ Clock.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - QQ Clock.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - QQ Clock.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - QQ Clock.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -317,9 +334,9 @@ theme(panel.spacing=unit(.1, "lines"), panel.border = element_rect(color = "blue
 theme(legend.key.height = unit(2, "line"))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Course Facet - Clock.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Clock.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Course Facet - Clock.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Clock.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -336,9 +353,9 @@ theme(panel.spacing=unit(.1, "lines"), panel.border = element_rect(color = "blue
 theme(legend.key.height = unit(2, "line"))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Course Facet - HBM.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - HBM.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Course Facet - HBM.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - HBM.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -359,9 +376,9 @@ scale_x_continuous(name = "GPU Clock (MHz)", breaks = seq(from = 1000, to = 1600
 theme(legend.position = c(0.97, 0.9))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - CLK vs PWR Averages.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - CLK vs PWR Averages.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - CLK vs PWR Averages.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - CLK vs PWR Averages.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -377,9 +394,9 @@ geom_hex(binwidth = c(3.457778, 1) * 3) +
 geom_smooth(aes(group = NA), method = 'glm', formula = y ~ poly(x ^ 1, 5, raw = TRUE))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - CLK vs PWR.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - CLK vs PWR.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - CLK vs PWR.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - CLK vs PWR.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -402,9 +419,9 @@ geom_point(data = results, aes(x = RUN, y = FPSAVG * scaleFF), color = "black", 
 theme(legend.position = c(1, 0.9))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Fan.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Fan.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Fan.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Fan.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -420,9 +437,9 @@ scale_y_continuous(name="Rotations Per Minute (RPM)", breaks=c(400,1400,2400), l
 theme(panel.spacing=unit(.1, "lines"), panel.border = element_rect(color = "blue", fill = NA, size = 1), strip.background = element_rect(color = "black", size = 1))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Course Facet - Fan.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Fan.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Course Facet - Fan.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Fan.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -434,9 +451,9 @@ geom_freqpoly(aes(1000 / MsBetweenPresents), binwidth=1) +
 scale_x_continuous(name="Frame Rate (FPS)", breaks = xfps, expand=c(0.02, 0), limits = c(30, 300)) + expand_limits(x=c(30, 60)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - FPS Frequency.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - FPS Frequency.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -448,9 +465,9 @@ geom_freqpoly(aes(1000 / MsBetweenPresents, group = RUN, color = RUN), binwidth=
 scale_x_continuous(name="Frame Rate (FPS)", breaks = xfps, expand=c(0.02, 0), limits = c(30, 300)) + expand_limits(x=c(30, 60)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - FPS Grouped.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Grouped.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - FPS Grouped.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Grouped.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -472,9 +489,9 @@ scale_y_continuous(name="Average GPU Clock Speed (MHz)", breaks = yclk, labels =
 theme(legend.position = c(0.97, 0.9))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - FPS Frequency Clock.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency Clock.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - FPS Frequency Clock.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency Clock.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -490,9 +507,9 @@ facet_grid(RUN ~ ., as.table = FALSE, drop = FALSE) +
 theme(panel.spacing=unit(.1, "lines"), panel.border = element_rect(color = "blue", fill = NA, size = 1), strip.background = element_rect(color = "black", size = 1))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Course Facet - Frames.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Frames.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Course Facet - Frames.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Frames.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -504,9 +521,9 @@ geom_freqpoly(aes(MsBetweenDisplayChange * 60 / 1000), binwidth=0.003, size=1) +
 scale_x_continuous(name="Refresh Cycles Later (1 / 60 Hz)", breaks=seq(from=0, to=5, by=1), minor_breaks=NULL, limits=c(0, 1.1), expand=c(0.02, 0)) + expand_limits(x=c(0, 2)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - FPS Frequency - Display.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency - Display.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - FPS Frequency - Display.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency - Display.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -518,9 +535,9 @@ geom_freqpoly(aes(MsBetweenDisplayChange * 60 / 1000, group = RUN, color = RUN),
 scale_x_continuous(name="Refresh Cycles Later (1 / 60 Hz)", breaks=seq(from=0, to=5, by=1), minor_breaks=NULL, limits=c(0, 1.1), expand=c(0.02, 0)) + expand_limits(x=c(0, 2)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - FPS Grouped - Display.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Grouped - Display.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - FPS Grouped - Display.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Grouped - Display.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -536,9 +553,9 @@ facet_grid(RUN ~ ., as.table = FALSE, drop = FALSE) +
 theme(panel.spacing=unit(.1, "lines"), panel.border = element_rect(color = "blue", fill = NA, size = 1), strip.background = element_rect(color = "black", size = 1))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - Course Facet - Display.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Display.pdf", sep=""), device="pdf", width=8, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - Course Facet - Display.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - Course Facet - Display.png", sep=""), device="png", width=8, height=9, dpi=DPI, scale = ggscale)
 	}
 }
 
@@ -560,8 +577,8 @@ scale_y_continuous(name="Average GPU Clock Speed (MHz)", breaks = yclk, labels =
 theme(legend.position = c(0.97, 0.9))
 
 if (pdf) {
-		ggsave(filename=paste(pngname, " - FPS Frequency Clock - Display.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency Clock - Display.pdf", sep=""), device="pdf", width=16, height=9, dpi=DPI, scale = ggscale)
 	} else {
-		ggsave(filename=paste(pngname, " - FPS Frequency Clock - Display.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
+		ggsave(filename=paste(gameF, " - ", setname, " - FPS Frequency Clock - Display.png", sep=""), device="png", width=16, height=9, dpi=DPI, scale = ggscale)
 	}
 }

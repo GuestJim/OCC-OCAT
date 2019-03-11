@@ -1,7 +1,11 @@
 library(readr)
 library(ggplot2)
 
-#setwd("!PATH!")
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL) #prevents rplots.pdf from being generated
+}
 
 ADRN <- read_csv("!FILEADRNX!")
 OCAT <- read_csv("!FILEOCATX!")
@@ -35,6 +39,8 @@ ADRN = cbind(Time, ADRN)
 
 ytimes = c(120, 60, 30, 20, 15, 12, 10)
 ytimes = c(ytimes,-ytimes)
+
+labelRound = function(x) sprintf("%.2f", x)
 
 scaleP = ceiling(max(ADRN$PWR) / max(OCAT$MsBetweenPresents))
 scaleT = ceiling(max(ADRN$TEMP) / max(OCAT$MsBetweenPresents))
@@ -215,7 +221,7 @@ if(FALSE) {
 	ggplot(OCAT, aes(MsBetweenPresents)) + 
 	ggtitle(paste("Frequency Plot of Frame Times", setname, sep = ""), subtitle="MsBetweenPresents") + 
 	geom_freqpoly(binwidth=0.03, size=0) + 
-	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(OCAT$MsBetweenPresents, 1000/60)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(OCAT$MsBetweenPresents, 1000/60)), by=1000/120), 2), limits=c(NA, min(max(OCAT$MsBetweenPresents), 100)), expand=c(0.02, 0)) + 
+	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(OCAT$MsBetweenPresents, 1000/60)), by=1000/120), labels=labelRound, limits=c(NA, min(max(OCAT$MsBetweenPresents), 100)), expand=c(0.02, 0)) + 
 	expand_limits(x=c(1000/60, 1000/30)) + scale_y_continuous(name="Count", expand=c(0.02, 0))
 	
 if (pdf) {
@@ -298,7 +304,7 @@ if (pdf) {
 if(FALSE) {
 	ggplot(OCAT, aes(sample=MsBetweenPresents)) + 
 	ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresents") + 
-	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2), quantile(OCAT$MsBetweenPresents, .9999)), labels=c(0, round(1000/ytimes, 2), paste(round(quantile(OCAT$MsBetweenPresents, .9999), 2), "\n(99.99%)")), limits=c(0, max(quantile(OCAT$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0)) + 
+	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenPresents, .9999), labels = paste0(round(quantile(results$MsBetweenPresents, .9999), 2), "\n(99.99%)"))) + 
 	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
 	annotate("rect", ymin=-Inf, ymax=quantile(OCAT$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + geom_point(stat="qq")
 	
