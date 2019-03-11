@@ -62,6 +62,9 @@ ytimes = c(120, 60, 30, 20, 15, 12, 10)
 ytimes = c(ytimes,-ytimes)
 #	lists for frame rates of interest, both positive and negative for some of the graph axes
 
+labelRound = function(x) sprintf("%.2f", x)
+#	this function can be used so the graph labels are rounded versions of the breaks, instead of requiring the labels being manually set or otherwise messy
+
 options(error=expression(NULL))
 #	supresses errors if there are issue when running the script
 
@@ -151,7 +154,7 @@ if(TRUE) {
 	ggplot(results, aes(MsBetweenPresents)) + 
 	ggtitle(paste0("Frequency Plot of Frame Times", setname), subtitle="MsBetweenPresents") + 
 	geom_freqpoly(binwidth=0.03, size=0) + 
-	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1000/120), 2), limits=c(NA, min(max(results$MsBetweenPresents), 100)), expand=c(0.02, 0)) + 
+	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1000/120), labels=labelRound, limits=c(NA, min(max(results$MsBetweenPresents), 100)), expand=c(0.02, 0)) + 
 	expand_limits(x=c(1000/60, 1000/30)) + 
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 
@@ -234,10 +237,11 @@ if (pdf) {
 #QQ Plot
 if(TRUE) {
 	ggplot(results, aes(sample=MsBetweenPresents)) + 
-	ggtitle(paste0("QQ Distrubtion Plot", setname), subtitle="MsBetweenPresents") + 
-	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2), quantile(results$MsBetweenPresents, .9999)), labels=c(0, round(1000/ytimes, 2), paste0(round(quantile(results$MsBetweenPresents, .9999), 2), "\n(99.99%)")), limits=c(0, max(quantile(results$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0)) + 
+	ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresents") + 
+	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenPresents, .9999), labels = paste0(round(quantile(results$MsBetweenPresents, .9999), 2), "\n(99.99%)"))) + 
 	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
-	annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + geom_point(stat="qq")
+	annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + 
+	geom_point(stat="qq")
 
 if (pdf) {
 	ggsave(filename=paste0(gameF, " - ", recording, " - QQ.pdf"), device="pdf", width=16, height=9, scale=ggscale)
@@ -304,7 +308,7 @@ if(TRUE){
 	geom_point(alpha = 0.1) + 
 	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 	geom_point(x=median(results$MsBetweenPresents), y=median(diff(results$MsBetweenPresents)), color = "magenta", shape ="x") + 
-	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), 2), limits=c(0, 1000/10), expand=c(0.02, 0)) + 
+	scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=labelRound, limits=c(0, 1000/10), expand=c(0.02, 0)) + 
 	scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 	
 if (pdf) {
@@ -325,9 +329,8 @@ if(FALSE){
 	geom_point(alpha = 0.1) + 
 	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 	geom_point(x=median(results$MsBetweenDisplayChange), y=median(diff(results$MsBetweenDisplayChange)), color = "magenta", shape ="x") + 
-	scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120), labels=round(seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120)/(1000/60), 2), limits=c(0, 1000/10), expand=c(0.02, 0)) + 
+	scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120), labels=labelRound, limits=c(0, 1000/10), expand=c(0.02, 0)) + 
 	scale_y_continuous(name="Consecutive Display Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
-	
 	
 if (pdf) {
 	ggsave(filename=paste0(gameF, " - ", recording, " - Time vs Diff - Display.pdf"), device="pdf", width=16, height=9, scale=ggscale)
