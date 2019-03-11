@@ -6,10 +6,15 @@ library(foreach)
 library(doParallel)
 #	both foreach and doParallel are for making this multithreaded
 
-#setwd("!PATH!")
-#	sets the working directory
-#		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
-#		keeping it though for when working in the GUI though
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL)
+}
+#	interactive() will be TRUE when in the GUI and FALSE when not
+#		it is necessary to set the working directory when in the GUI, but the directory of the script is the working directory when run otherwise
+#	when not run in the GUI, rplots.pdf is made but PDF(null) prevents this
+
 results <- read_csv("!FILEX!")
 #	reads the CSV to the results data frame
 dir.create("Frames - !FILE!", showWarnings=FALSE)
@@ -20,9 +25,6 @@ setwd("Frames - !FILE!")
 count = 1/60
 back = 60
 #	how many previous frames to also show
-
-pdf(NULL)
-#	to prevent an unnecessary PDF from being made
 
 registerDoParallel(cores=detectCores() - 4)
 #	sets how many threads can be used by detecting the number present and subtracting 4, for continued system usability

@@ -4,10 +4,15 @@ library(ggplot2)
 #	loads the GGPlot2 library for generating graphs
 library(gridExtra)
 #	loads the gridExtra library for saving the Clocks table to an image/graphic
-#setwd("!PATH!")
-#	sets the working directory
-#		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
-#		keeping it though for when working in the GUI though
+
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL)
+}
+#	interactive() will be TRUE when in the GUI and FALSE when not
+#		it is necessary to set the working directory when in the GUI, but the directory of the script is the working directory when run otherwise
+#	when not run in the GUI, rplots.pdf is made but PDF(null) prevents this
 
 pngname = "Combined Results"
 settext = "Killing Floor 2 (Stock)"
@@ -247,8 +252,6 @@ dev.off()
 
 options(error=expression(NULL))
 #	supresses errors if there are issue when running the script
-
-pdf(NULL) #prevents rplots.pdf from being generated
 
 #Power Average
 if (TRUE){

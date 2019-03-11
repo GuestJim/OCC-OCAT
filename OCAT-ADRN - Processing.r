@@ -2,10 +2,16 @@ library(readr)
 #	loads the library for reading CSVs into R
 library(ggplot2)
 #	loads the GGPlot2 library for generating graphs
-#setwd("!PATH!")
-#	sets the working directory
-#		checked and when not using the GUI, the scripts location is the working directory, so this is not necessary and impairs working across computers
-#		keeping it though for when working in the GUI though
+
+if (interactive()) { 
+	setwd("!PATH!")
+} else {
+	pdf(NULL)
+}
+#	interactive() will be TRUE when in the GUI and FALSE when not
+#		it is necessary to set the working directory when in the GUI, but the directory of the script is the working directory when run otherwise
+#	when not run in the GUI, rplots.pdf is made but PDF(null) prevents this
+
 ADRN <- read_csv("!FILEADRNX!")
 OCAT <- read_csv("!FILEOCATX!")
 #	read the input CSVs to appropriate data frames
@@ -142,9 +148,6 @@ if(FALSE) {
 sink()
 #	closes the text file, applying all of this information to it
 }
-
-pdf(NULL)
-#	prevents rplots.pdf from being generated
 
 if(TRUE) {
 #Frame Time Course and Power
@@ -327,7 +330,7 @@ if (pdf) {
 if(FALSE) {
 	ggplot(OCAT, aes(sample=MsBetweenPresents)) + 
 	ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresents") + 
-	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2), quantile(OCAT$MsBetweenPresents, .9999)), labels=c(0, round(1000/ytimes, 2), paste(round(quantile(OCAT$MsBetweenPresents, .9999), 2), "\n(99.99%)")), limits=c(0, max(quantile(OCAT$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0)) + 
+	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenPresents, .9999), labels = paste0(round(quantile(results$MsBetweenPresents, .9999), 2), "\n(99.99%)"))) + 
 	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
 	annotate("rect", ymin=-Inf, ymax=quantile(OCAT$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + geom_point(stat="qq")
 	
