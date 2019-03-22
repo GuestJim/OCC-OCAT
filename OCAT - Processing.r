@@ -64,6 +64,47 @@ labelRound = function(x) sprintf("%.2f", x)
 options(error=expression(NULL))
 #	supresses errors if there are issue when running the script
 
+percFPS = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
+	if (max(listPERC) > 1) listPERC = listPERC/100
+	out = c()
+	for (i in listPERC) {
+		temp = c(1000/quantile(x, i), quantile(x, i))
+		names(temp) = paste0(i * 100, c("% (ms)", "% (FPS)"))
+		out = append(out, temp)
+	}
+	return(round(out, r))
+}
+#	custom function for getting the 0.1%, 1%, 99%, and 99.9% results in both ms and FPS
+#		by using a custom function I can set the output names for optimal labelling
+
+percFPSv = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
+	if (max(listPERC) > 1) listPERC = listPERC/100
+	out = c()
+	for (i in listPERC) {
+		temp = rbind(1000/quantile(x, i), quantile(x, i))
+		names(temp) = paste0(i * 100, "%")
+		rownames(temp) = c("FPS", "ms")
+		out = cbind(out, temp)
+	}
+	return(round(out, r))
+}
+#	custom function similar to above but has the information stacked vertically, instead of being horizontal
+
+ecdfFPS = function(x, listFPS=c(60, 50, 30, 20, 15), r = 2) {
+	out = 100*(1-ecdf(x)(1000/listFPS))
+	names(out) = paste0(listFPS, " FPS")
+	return(round(out, r))
+}
+#	custom function that will return the percentiles for the provided FPS values, and have them properly named
+
+ecdfMSd = function(x, listFPS=1000/c(-60, -120, 120, 60), r = 7) {
+	out = 100*(ecdf(x)(listFPS))
+	names(out) = paste0(round(listFPS, 2), " ms")
+	return(round(out, r))
+}
+#	custom function that returns the percentiles for specific frame times
+#		meant to be used to look at the difference data
+
 if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
 #	creates a device for saving output to a text file
@@ -84,15 +125,10 @@ writeLines("\nAverage of FPS")
 print(length(results$TimeInSeconds)/max(results$TimeInSeconds))
 writeLines("\nRatio Dropped Frames")
 print(sum(results$Dropped)/length(results$Dropped))
-writeLines("\nPercentiles (Frame Time)")
-writeLines("0.1%,\t1%,\t99%,\t99.9%")
-print(round(quantile(results$MsBetweenPresents, c(.001, .01, .99, 0.999)), 2))
-writeLines("\nPercentiles (Frame Rate)")
-writeLines("0.1%,\t1%,\t99%,\t99.9%")
-print(round(1000/quantile(results$MsBetweenPresents, c(.001, .01, .99, 0.999)), 2))
+writeLines("\nPercentiles")
+print(percFPSv(results$MsBetweenPresents))
 writeLines("\nECDF")
-writeLines("60 FPS,\t50 FPS,\t30 FPS,\t20 FPS,\t15 FPS")
-print(100*(1-ecdf(results$MsBetweenPresents)(c(1000/60, 1000/50, 1000/30, 1000/20, 1000/15))))
+print(ecdfFPS(results$MsBetweenPresents))
 writeLines("\nMedian")
 print(median(results$MsBetweenPresents))
 writeLines("\nStandard Deviation")
