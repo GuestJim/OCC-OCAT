@@ -1,0 +1,1 @@
+These files are for the purpose of creating and processing CSVs that are the combination of multiple files. These original files could be covering different GPUs or different recordings. Currently the files are only for the latter.
