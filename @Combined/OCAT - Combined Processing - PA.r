@@ -8,14 +8,14 @@ theme_set(theme_grey(base_size = 16))
 DPI = 120
 
 if (interactive()) {
-	setwd(paste0("!PATH!"))
+	setwd("!PATH!")
 } else {
 	pdf(NULL)
 }
 #	checks if the script is being run in the GUI or not
 #	prevents rplots.pdf from being generated
 
-results <- read_csv("@Combined - Review.csv", col_types = "????????????????????c")
+results <- read_csv("@Combined - High.csv", col_types = "?????????????????ffff")
 
 listGPU = c(
 "RX 580",
@@ -29,15 +29,15 @@ listGPU = c(
 )
 
 listQUA = c(
-"Review"
+"High"
 )
 
 listLOC = c(
-!LOC!
+""
 )
 
 listAPI = c(
-"DX12"
+!API!
 )
 
 results$GPU = factor(results$GPU, levels = listGPU)
@@ -49,6 +49,10 @@ ytimes = c(120, 60, 30, 20, 15, 12, 10)
 ytimes = c(ytimes,-ytimes)
 
 labelRound = function(x) sprintf("%.1f", x)
+labelBreak = function(input) {
+	return(paste0(rep(c("", "\n"), length.out = length(input)), input))
+}
+
 FtimeLimit = 1000/15
 
 BoxPerc = function (DATA) {
@@ -85,10 +89,15 @@ ecdfFPS = function(x, listFPS=c(60, 50, 30, 20, 15), r = 2) {
 	return(round(out, r))
 }
 
-if (length(levels(results$API)) >= 2) {
-	dataMEAN = aggregate(results$MsBetweenPresents, list(results$GPU, results$Location, results$API), meanFPS)
-	dataPERC = aggregate(results$MsBetweenPresents, list(results$GPU, results$Location, results$API), percFPS)
-	dataECDF = aggregate(results$MsBetweenPresents, list(results$GPU, results$Location, results$API), ecdfFPS)
+
+if ("API" %in% colnames(results)) {
+	# results$APIf = sapply(results$API, as.character)
+	# results$APIf[is.na(results$APIf)] = "RTX Off"
+	# results$APIf = factor(results$APIf, levels = c("RTX Off", listAPI[-1]), ordered = TRUE)
+
+	dataMEAN = aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), meanFPS)
+	dataPERC = aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), percFPS)
+	dataECDF = aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), ecdfFPS)
 	names(dataMEAN) = c("GPU", "Location", "API", "")
 	names(dataPERC) = c("GPU", "Location", "API", "")
 	names(dataECDF) = c("GPU", "Location", "API", "")
@@ -102,7 +111,7 @@ if (length(levels(results$API)) >= 2) {
 }
 
 options(width = 1000)
-sink(paste0(game, " - Review Data.txt"), split = TRUE)
+sink(paste0(game, " - High Data.txt"), split = TRUE)
 writeLines(game)
 writeLines("\nMean")
 print(dataMEAN)
@@ -112,17 +121,16 @@ writeLines("\nPercentile of FPS")
 print(dataECDF)
 sink()
 
-
 #Averages
 ggplot(data = results) + ggtitle(paste0(game, " - High Quality"), subtitle = "Averages, Medians, and Percentiles") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), outlier.alpha = 0) + 
-stat_summary(aes(x = Location, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", width = 0.6) + 
-geom_bar(aes(x = Location, y = MsBetweenPresents, fill = GPU), stat = "summary", fun.y = "mean") + 
-stat_summary(aes(x = Location, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) + 
+stat_summary(aes(x = GPU, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", width = 0.6) + 
+geom_bar(aes(x = GPU, y = MsBetweenPresents, fill = GPU), stat = "summary", fun.y = "mean") + 
+stat_summary(aes(x = GPU, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), alpha = 0.50, outlier.alpha = 0.1) + 
-# facet_grid(rows = vars(GPU), cols = vars(Location, API), switch = "y") + 
-facet_grid(rows = vars(GPU), cols = vars(API), switch = "y") + 
+facet_grid(rows = vars(API), cols = vars(Location), switch = "y") + 
+scale_x_discrete(labels = labelBreak) + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
@@ -130,26 +138,26 @@ ggsave(paste0(game, " - Averages.png"), width = 16, height = 9, dpi = DPI)
 
 #Course - Frame Time
 ggplot(data = results, aes(x = TimeInSeconds, y = MsBetweenPresents)) + 
-ggtitle(paste0(game, " - Review"), subtitle = "MsBetweenPresent") + 
+ggtitle(paste0(game, " - High Quality"), subtitle = "MsBetweenPresent") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(alpha = 0.05) + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
+scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), labels = labelBreak, expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 guides(color = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
-ggsave(paste0(game, " - Course Frame Time.png"), width = 8, height = 9, dpi = DPI)
+ggsave(paste0(game, " - Course Frame Time.png"), width = 16, height = 9, dpi = DPI)
 
 #Course - Display Time
 if (showDisplay) {
 ggplot(data = results, aes(x = TimeInSeconds, y = MsBetweenDisplayChange)) + 
-ggtitle(paste0(game, " - Review"), subtitle = "MsBetweenDisplayChange") + 
+ggtitle(paste0(game, " - High Quality"), subtitle = "MsBetweenDisplayChange") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(alpha = 0.05) + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
+scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), labels = labelBreak, expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 guides(color = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
@@ -164,7 +172,7 @@ geom_point(alpha = 0.1) +
 stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 # geom_point(x=median(results$MsBetweenPresents), y=median(diff(results$MsBetweenPresents)), color = "magenta", shape ="x") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels = labelBreak, limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 
 ggsave(paste0(game, " - Diff Frame Time.png"), width = 16, height = 9, dpi = DPI)
@@ -178,7 +186,7 @@ geom_point(alpha = 0.1) +
 stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 # geom_point(x=median(results$MsBetweenDisplayChange), y=median(diff(results$MsBetweenDisplayChange)), color = "magenta", shape ="x") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels = labelBreak, limits=c(NA,66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 
 ggsave(paste0(game, " - Diff Display Time.png"), width = 16, height = 9, dpi = DPI)
@@ -187,7 +195,7 @@ ggsave(paste0(game, " - Diff Display Time.png"), width = 16, height = 9, dpi = D
 
 #Frequency Plot - Frame Time
 ggplot(results, aes(MsBetweenPresents)) + 
-ggtitle(paste0(game, " Frequency Plot of Frame Times"), subtitle="MsBetweenPresents") + 
+ggtitle(paste0(game, " - High Quality"), subtitle="Frequency Plot of MsBetweenPresents") + 
 geom_vline(xintercept = 1000/60, color = "red") + 
 geom_freqpoly(binwidth=0.03, size=0) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
@@ -200,7 +208,7 @@ ggsave(paste0(game, " - Freq Frame.png"), width = 16, height = 9, dpi = DPI)
 
 #QQ Plot - Frame Time
 ggplot(results, aes(sample=MsBetweenPresents)) + 
-ggtitle(paste0(game, " QQ Distribution"), subtitle="MsBetweenPresents") + 
+ggtitle(paste0(game, " - High Quality"), subtitle="QQ Plot of MsBetweenPresents") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(stat="qq") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
