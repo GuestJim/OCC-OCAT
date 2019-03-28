@@ -6,7 +6,7 @@ scriptPath=sys.argv[0].rsplit("\\", 1)[0]
 
 for place in droppedPath.split("\\"):
 	if " Review" in place:
-		droppedGame = place.split(" Review")[0]
+		droppedGame = place.replace(" Review", "")
 
 for files in os.listdir(droppedPath):
 	if files.endswith(".csv") and "OCAT" in files:
