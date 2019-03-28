@@ -19,9 +19,8 @@ FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
 #	the difference between consecutive MsBetweenPresents values
 
-game = character(0)
-game = "!FILE!"
-#	sets a variable for easier identification of what is being worked on
+game = "!GAME!"
+#	variable for identifying the game the data is for
 
 gameF = gsub(":", "-", game)
 gameF = unlist(strsplit(gameF, split=" [(]"))[1]
