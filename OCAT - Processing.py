@@ -16,6 +16,13 @@ droppedFiles = sys.argv[1:]
 droppedPath = droppedFiles[0].rsplit("\\",1)[0] + "\\"
 #	the path to the files dropped onto the Python script
 
+for place in droppedPath.split("\\"):
+#	works through the directory names in the droppedPath information
+	if " Review" in place:
+#		finds the directory with " Review" in the name, which would be the name for the review's folder
+		droppedGame = place.replace(" Review", "")
+#			removes the " Review" to get just the name of the game
+
 for droppedFile in droppedFiles:
 #	works through the files dropped onto the Python script
 	droppedName = droppedFile.rsplit("\\",1)[1].split(".csv")[0]
