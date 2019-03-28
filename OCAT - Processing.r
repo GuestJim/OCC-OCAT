@@ -11,8 +11,7 @@ results <- read_csv("!FILEX!")
 FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
 
-game = character(0)
-game = "!FILE!"
+game = "!GAME!"
 
 gameF = gsub(":", "-", game)
 gameF = unlist(strsplit(gameF, split=" [(]"))[1]
@@ -39,7 +38,42 @@ ytimes = c(ytimes,-ytimes)
 
 labelRound = function(x) sprintf("%.2f", x)
 
-options(error=expression(NULL))
+options(error=expression(NULL), width = 1000)
+
+percFPS = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
+	if (max(listPERC) > 1) listPERC = listPERC/100
+	out = c()
+	for (i in listPERC) {
+		temp = c(1000/quantile(x, i), quantile(x, i))
+		names(temp) = paste0(i * 100, c("% (ms)", "% (FPS)"))
+		out = append(out, temp)
+	}
+	return(round(out, r))
+}
+
+percFPSv = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
+	if (max(listPERC) > 1) listPERC = listPERC/100
+	out = c()
+	for (i in listPERC) {
+		temp = rbind(1000/quantile(x, i), quantile(x, i))
+		names(temp) = paste0(i * 100, "%")
+		rownames(temp) = c("FPS", "ms")
+		out = cbind(out, temp)
+	}
+	return(round(out, r))
+}
+
+ecdfFPS = function(x, listFPS=c(60, 50, 30, 20, 15), r = 2) {
+	out = 100*(1-ecdf(x)(1000/listFPS))
+	names(out) = paste0(listFPS, " FPS")
+	return(round(out, r))
+}
+
+ecdfMSd = function(x, listFPS=1000/c(-60, -120, 120, 60), r = 7) {
+	out = 100*(ecdf(x)(listFPS))
+	names(out) = paste0(round(listFPS, 2), " ms")
+	return(round(out, r))
+}
 
 if(TRUE) {
 sink("Output - !FILE!.txt", split=TRUE)
@@ -59,15 +93,10 @@ writeLines("\nAverage of FPS")
 print(length(results$TimeInSeconds)/max(results$TimeInSeconds))
 writeLines("\nRatio Dropped Frames")
 print(sum(results$Dropped)/length(results$Dropped))
-writeLines("\nPercentiles (Frame Time)")
-writeLines("0.1%,\t1%,\t99%,\t99.9%")
-print(round(quantile(results$MsBetweenPresents, c(.001, .01, .99, 0.999)), 2))
-writeLines("\nPercentiles (Frame Rate)")
-writeLines("0.1%,\t1%,\t99%,\t99.9%")
-print(round(1000/quantile(results$MsBetweenPresents, c(.001, .01, .99, 0.999)), 2))
+writeLines("\nPercentiles")
+print(percFPSv(results$MsBetweenPresents))
 writeLines("\nECDF")
-writeLines("60 FPS,\t50 FPS,\t30 FPS,\t20 FPS,\t15 FPS")
-print(100*(1-ecdf(results$MsBetweenPresents)(c(1000/60, 1000/50, 1000/30, 1000/20, 1000/15))))
+print(ecdfFPS(results$MsBetweenPresents))
 writeLines("\nMedian")
 print(median(results$MsBetweenPresents))
 writeLines("\nStandard Deviation")
@@ -76,8 +105,7 @@ print(sd(results$MsBetweenPresents))
 writeLines("\nDiff Percentiles")
 print(quantile(DIFF, c(.001, .01, .99, 0.999)))
 writeLines("\nECDF Diff")
-writeLines("-16.667,\t-8.333,\t8.333,\t16.667")
-print(100*(ecdf(DIFF)(c(-1000/60, -1000/120, 1000/120, 1000/60))))
+print(ecdfMSd(DIFF, 1000/c(-60, -120, 120, 60)))
 inc = length(subset(diff(results$MsBetweenPresents), diff(results$MsBetweenPresents) > 0))
 dec = length(subset(diff(results$MsBetweenPresents), diff(results$MsBetweenPresents) <= 0))
 writeLines("\nDiff Balance")
