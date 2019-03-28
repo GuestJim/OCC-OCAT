@@ -6,6 +6,13 @@ droppedPath = sys.argv[1].rsplit("\\", 1)[0]+"\\"
 scriptPath=sys.argv[0].rsplit("\\", 1)[0]
 #	the path to the Python and reference R scripts
 
+for place in droppedPath.split("\\"):
+#	works through the directory names in the droppedPath information
+	if " Review" in place:
+#		finds the directory with " Review" in the name, which would be the name for the review's folder
+		droppedGame = place.replace(" Review", "")
+#			removes the " Review" to get just the name of the game
+
 for files in os.listdir(droppedPath):
 #	loops through the list of files in the directory of the dropped file
 	if files.endswith(".csv") and "OCAT" in files:
