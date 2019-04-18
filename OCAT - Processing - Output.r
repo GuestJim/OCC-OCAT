@@ -120,11 +120,11 @@ if(textDIFF){
 sink()
 }
 
-customSave = function(type="", device=ggdevice, Cwidth=16, Cheight=9, Cdpi=DPI, Cscale=ggscale) {
+customSave = function(type="", device=ggdevice, width=16, height=9, Cdpi=DPI, scale=ggscale) {
 	if (device=="png") {
-		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".png"), device=device, width=Cwidth, height=Cheight, scale=Cscale, dpi=Cdpi)
+		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".png"), device=device, width=width, height=height, scale=scale, dpi=Cdpi)
 	} else if (device=="pdf"){
-		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".pdf"), device=device, width=Cwidth, height=Cheight, scale=Cscale)
+		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".pdf"), device=device, width=width, height=height, scale=scale)
 	}
 }
 
