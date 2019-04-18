@@ -228,7 +228,7 @@ ggplot(results, aes(TimeInSeconds, results$MsBetweenDisplayChange*60/1000)) +
 ggtitle(paste0("Display Times Through Course", setname), subtitle="MsBetweenDisplayChange") + 
 geom_point() + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
-scale_y_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, ceiling(min(max(results$MsBetweenDisplayChange*60/1000), 10))), expand=c(0.02, 0)) + 
+scale_y_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, ceiling(max(results$MsBetweenDisplayChange*60/1000, 10))), expand=c(0.02, 0)) + 
 scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 3))
 
 customSave("Course - Display")
