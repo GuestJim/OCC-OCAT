@@ -137,7 +137,7 @@ sink()
 
 customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI, scale=ggscale) {
 	if (device=="png") {
-		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".png"), device=device, width=width, height=height, scale=scale, dpi=Cdpi)
+		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".png"), device=device, width=width, height=height, scale=scale, dpi=dpi)
 	} else if (device=="pdf"){
 		ggsave(filename=paste0(gameF, " - ", recording, " - ", type, ".pdf"), device=device, width=width, height=height, scale=scale)
 	}
