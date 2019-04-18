@@ -19,6 +19,7 @@ if " Performance Analysis" in droppedPath:
 	for i in range(len(droppedPath.split("\\"))):
 		if " Performance Analysis" in droppedPath.split("\\")[i]:
 			droppedGame = droppedPath.split("\\")[i].replace(" Performance Analysis", "") + " (" + droppedPath.split("\\")[i+2] + ")"
+			droppedQua = droppedPath.rsplit("\\", 2)[1]
 #	identifies if the recordings are within a folder for a Review or a Performance Analysis
 #	if it is a Performance Analysis, it will get both the game name and the GPU name, and put both pieces of information into the droppedGame variable, which is desired for such articles
 
@@ -67,5 +68,36 @@ if not os.path.exists(droppedPath + "OCAT - Processing - Output.r"):
 #	checks if the Output.r script is already present
 	shutil.copyfile(scriptPath + "\\OCAT - Processing - Output.r", droppedPath + "OCAT - Processing - Output.r")
 #		copies the Output.r script to the data directory
+
+#The below is scripting to replace the 'Recording #' text in the files.
+#	It does run after the scripts are made, which may seem weird, but it has the advantage of being able to run on already existing scripts
+for file in os.listdir(droppedPath):
+	if "Locations.txt" in file:
+		loc = open(droppedPath + file, 'r').readlines()
+		loc = [line.rstrip('\n') for line in loc]
+#	searches for a Locations.txt file, to identify the locations recordings were done at, instead of using 'Recording #'
+#	it will read the lines of the file into a list
+
+try:	loc
+except:	sys.exit()
+#	if no Locations.txt file was found, it will just quit the script here
+
+for file in os.listdir(droppedPath):
+	if file.endswith(".r") and file.startswith("Processing"):
+#		checks to make sure the correct R scripts are read
+		fileText = open(droppedPath + file,'r').read()
+#			reads the text of the file into a variable
+#				droppedPath + file is used so the working directory does not need to change
+
+		fout = open(droppedPath + file, 'w')
+#			opens the file to be written to
+
+		for i in range(len(loc)):
+			fileText = fileText.replace("Recording " + str(i + 1), droppedQua + " - " + loc[i])
+#			goes through the locations file and replaces the appropriate "Recording #" with the location and quality used
+
+		fout.write(fileText)
+		fout.close()
+#			writes the replaced text to the file and closes it
 
 # os.system("pause")
