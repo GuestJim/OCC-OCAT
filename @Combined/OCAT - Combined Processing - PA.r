@@ -90,36 +90,115 @@ ecdfFPS = function(x, listFPS=c(60, 50, 30, 20, 15), r = 2) {
 }
 
 
-if ("API" %in% colnames(results)) {
-	# results$APIf = sapply(results$API, as.character)
-	# results$APIf[is.na(results$APIf)] = "RTX Off"
-	# results$APIf = factor(results$APIf, levels = c("RTX Off", listAPI[-1]), ordered = TRUE)
-
-	dataMEAN = aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), meanFPS)
-	dataPERC = aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), percFPS)
-	dataECDF = aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), ecdfFPS)
-	names(dataMEAN) = c("GPU", "Location", "API", "")
-	names(dataPERC) = c("GPU", "Location", "API", "")
-	names(dataECDF) = c("GPU", "Location", "API", "")
+if (length(levels(results$API)) >= 2) {
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "API", "V"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "API", "V"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "API", "V"))
+	# names(dataMEAN) = c("GPU", "Location", "API", "")
+	# names(dataPERC) = c("GPU", "Location", "API", "")
+	# names(dataECDF) = c("GPU", "Location", "API", "")
+	if (showDisplay){
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "API", "V"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "API", "V"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "API", "V"))	
+	}
 } else {
-	dataMEAN = aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS)
-	dataPERC = aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS)
-	dataECDF = aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS)
-	names(dataMEAN) = c("GPU", "Location", "")
-	names(dataPERC) = c("GPU", "Location", "")
-	names(dataECDF) = c("GPU", "Location", "")
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "V"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "V"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "V"))
+	# names(dataMEAN) = c("GPU", "Location", "")
+	# names(dataPERC) = c("GPU", "Location", "")
+	# names(dataECDF) = c("GPU", "Location", "")
+	if (showDisplay){
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "V"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "V"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange,  list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "V"))
+	}
 }
 
 options(width = 1000)
-sink(paste0(game, " - High Data.txt"), split = TRUE)
+sink(paste0(game, " - ", QUA, " Data.txt"), split = TRUE)
 writeLines(game)
+writeLines("Frame Time")
 writeLines("\nMean")
-print(dataMEAN)
+print(dataMEAN, row.names = FALSE)
 writeLines("\nPercentiles")
-print(dataPERC)
+print(dataPERC, row.names = FALSE)
 writeLines("\nPercentile of FPS")
-print(dataECDF)
+print(dataECDF, row.names = FALSE)
 sink()
+
+for (GPU in listGPU) {
+	options(width = 1000)
+	sink(paste0(GPU, "\\", game, " - ", GPU, " - ", QUA, " Data.txt"), split = TRUE)
+		writeLines(game)
+		writeLines("Frame Time")
+		writeLines("\nMean")
+		print(dataMEAN[dataMEAN$GPU==GPU,], row.names = FALSE)
+		writeLines("\nPercentiles")
+		print(dataPERC[dataPERC$GPU==GPU,], row.names = FALSE)
+		writeLines("\nPercentile of FPS")
+		print(dataECDF[dataECDF$GPU==GPU,], row.names = FALSE)
+	sink()
+}
+
+if (showDisplay){
+	options(width = 1000)
+	sink(paste0(game, " - ", QUA, " Display Data.txt"), split = TRUE)
+	writeLines(game)
+	writeLines("Display Time")
+	writeLines("\nMean")
+	print(dispMEAN, row.names = FALSE)
+	writeLines("\nPercentiles")
+	print(dispPERC, row.names = FALSE)
+	writeLines("\nPercentile of FPS")
+	print(dispECDF, row.names = FALSE)
+	sink()
+	
+	for (GPU in listGPU) {
+	options(width = 1000)
+	sink(paste0(GPU, "\\", game, " - ", GPU, " - ", QUA, " Display Data.txt"), split = TRUE)
+		writeLines(game)
+		writeLines("Display Time")
+		writeLines("\nMean")
+		print(dispMEAN[dispMEAN$GPU==GPU,], row.names = FALSE)
+		writeLines("\nPercentiles")
+		print(dispPERC[dispPERC$GPU==GPU,], row.names = FALSE)
+		writeLines("\nPercentile of FPS")
+		print(dispECDF[dispECDF$GPU==GPU,], row.names = FALSE)
+	sink()
+	}
+}
+
+library(tableHTML)
+OCCHTML = function(tab) {
+	tableHTML(tab[-1], rownames = FALSE, class="OCC") %>% 
+	replace_html('style="border-collapse:collapse;" class=OCC border=1', 'align="center" border="1" cellpadding="1" cellspacing="1" style="width: 90%;"') %>%
+	replace_html(' id=\"tableHTML_header_\\d\"', '', replace_all = TRUE) %>%
+	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE)
+}
+
+write_tableHTML(OCCHTML(dataMEAN), file = paste0(game, " - dataMEAN.html"))
+write_tableHTML(OCCHTML(dataPERC), file = paste0(game, " - dataPERC.html"))
+write_tableHTML(OCCHTML(dataECDF), file = paste0(game, " - dataECDF.html"))
+
+for (GPU in listGPU) {
+	write_tableHTML(OCCHTML(dataMEAN[dataMEAN$GPU==GPU,]), file = paste0(GPU, "\\", game, " - ", GPU, " - dataMEAN.html"))
+	write_tableHTML(OCCHTML(dataPERC[dataPERC$GPU==GPU,]), file = paste0(GPU, "\\", game, " - ", GPU, " - dataPERC.html"))
+	write_tableHTML(OCCHTML(dataECDF[dataECDF$GPU==GPU,]), file = paste0(GPU, "\\", game, " - ", GPU, " - dataECDF.html"))
+}
+
+if (showDisplay){
+	write_tableHTML(OCCHTML(dispMEAN), file = paste0(game, " - dispMEAN.html"))
+	write_tableHTML(OCCHTML(dispPERC), file = paste0(game, " - dispPERC.html"))
+	write_tableHTML(OCCHTML(dispECDF), file = paste0(game, " - dispECDF.html"))
+	
+	for (GPU in listGPU) {
+		write_tableHTML(OCCHTML(dispMEAN[dispMEAN$GPU==GPU,]), file = paste0(GPU, "\\", game, " - ", GPU, " - dispMEAN.html"))
+		write_tableHTML(OCCHTML(dispPERC[dispPERC$GPU==GPU,]), file = paste0(GPU, "\\", game, " - ", GPU, " - dispPERC.html"))
+		write_tableHTML(OCCHTML(dispECDF[dispECDF$GPU==GPU,]), file = paste0(GPU, "\\", game, " - ", GPU, " - dispECDF.html"))
+	}
+}
 
 #Averages
 ggplot(data = results) + ggtitle(paste0(game, " - High Quality"), subtitle = "Averages, Medians, and Percentiles") + 
