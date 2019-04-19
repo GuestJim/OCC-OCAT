@@ -196,7 +196,7 @@ if(TRUE) {
 	ggtitle(paste0("Frame Times Through Course", setname), subtitle="MsBetweenPresents") + 
 	geom_point() + 
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
-	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,100), expand=c(0.02, 0)) + 
+	scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA, 100), expand=c(0.02, 0)) + 
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
 	geom_hline(yintercept = c(quantile(results$MsBetweenPresents, c(.001, .01, .99, 0.999))), color="red")
 #for a boxplot added this
@@ -250,7 +250,7 @@ if(FALSE) {
 	ggtitle(paste0("Display Times Through Course", setname), subtitle="MsBetweenDisplayChange") + 
 	geom_point() + 
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
-	scale_y_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, ceiling(min(max(results$MsBetweenDisplayChange*60/1000), 10))), expand=c(0.02, 0)) + 
+	scale_y_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, 6), expand=c(0.02, 0)) + 
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 3))
 
 if (pdf) {
