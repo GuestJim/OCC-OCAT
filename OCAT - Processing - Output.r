@@ -95,9 +95,6 @@ if(textDISP) {
 
 	writeLines("\nStandard Deviation Display Change")
 	print(sd(cleanDisplay))
-
-	writeLines("\nQuantile Display Change")
-	print(quantile(diff(cleanDisplay), c(.001, .01, .99, 0.999)))
 }
 
 if(textDIFF){
@@ -130,6 +127,8 @@ customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI, sca
 
 if(graphFRAM) {
 #Frequency - Frame Time
+message("Frequency - Frame Time")
+
 ggplot(results, aes(MsBetweenPresents)) + 
 ggtitle(paste0("Frequency Plot of Frame Times", setname), subtitle="MsBetweenPresents") + 
 geom_freqpoly(binwidth=0.03, size=0) + 
@@ -137,9 +136,11 @@ scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(res
 expand_limits(x=c(1000/60, 1000/30)) + 
 scale_y_continuous(name="Count", expand=c(0.02, 0))
 
-customSave("Frame Times")
+customSave("Frequency - Frame Times")
 
 #Frequency - Frame Rate
+message("Frequency - Frame Rate")
+
 ggplot(results, aes(1000/MsBetweenPresents)) + 
 ggtitle(paste0("Frequency Plot of Frame Rates", setname), subtitle="1000 * MsBetweenPresents^-1") + 
 geom_freqpoly(binwidth=1, size=0) + 
@@ -148,7 +149,9 @@ scale_y_continuous(name="Count", expand=c(0.02, 0))
 
 customSave("Frame Rates")
 
-#Course - Frame 
+#Course - Frame Time
+message("Course - Frame Time")
+
 ggplot(results, aes(TimeInSeconds, MsBetweenPresents)) + 
 ggtitle(paste0("Frame Times Through Course", setname), subtitle="MsBetweenPresents") + 
 geom_point() + 
@@ -161,9 +164,11 @@ geom_hline(yintercept = c(quantile(results$MsBetweenPresents, c(.001, .01, .99, 
 #	for quantile regression use this instead
 #	stat_quantile(quantiles = c(0.001, 0.01, 0.99, 0.999), color = "red")
 
-customSave("Course - Frame")
+customSave("Course - Frame Time")
 
-#QQ Plot - Frame Time
+#QQ - Frame Time
+message("QQ - Frame Time")
+
 ggplot(results, aes(sample=MsBetweenPresents)) + 
 ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresents") + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenPresents, .9999), labels = paste0(round(quantile(results$MsBetweenPresents, .9999), 2), "\n(99.99%)"))) + 
@@ -171,9 +176,11 @@ scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)),
 annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + 
 geom_point(stat="qq")
 
-customSave("QQ - Frame")
+customSave("QQ - Frame Time")
 
-#Plotting Frame Time and Diff
+#Diff - Frame Time
+message("Diff - Frame Time")
+
 ggplot(data=results, aes(x=results$MsBetweenPresents, y=rbind(c(diff(results$MsBetweenPresents), 0))[1,])) + 
 ggtitle(paste0("Frame Times vs Frame Time Difference (next frame)", setname), subtitle="MsBetweenPresent consecutive differences") + 
 annotate("rect", ymin=quantile(diff(results$MsBetweenPresents), c(.001, .010)), ymax=quantile(diff(results$MsBetweenPresents), c(.999, .990)), xmin=quantile(results$MsBetweenPresents, c(.001, .010)), xmax=quantile(results$MsBetweenPresents, c(.999, .990)), alpha=c(0.1, 0.075), fill=c("red", "blue")) + 
@@ -183,44 +190,51 @@ geom_point(x=median(results$MsBetweenPresents), y=median(diff(results$MsBetweenP
 scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/30)), by=1000/120), labels=labelRound, limits=c(0, 1000/10), expand=c(0.02, 0)) + 
 scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 	
-customSave("Time vs Diff")
+customSave("Diff - Frame Time")
 }
 
 
 if(graphDISP) {
 #Frequency - Display Time
+message("Frequency - Display Time")
+
 ggplot(as.data.frame(results$MsBetweenDisplayChange), aes(results$MsBetweenDisplayChange*60/1000)) + 
 ggtitle(paste0("Frequency Plot of Display Times", setname), subtitle="MsBetweenDisplayChange") + 
 geom_freqpoly(binwidth=0.003, size=0) + 
-scale_x_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange*60/1000)), by=1), minor_breaks=NULL, limits=c(0, min(max(results$MsBetweenDisplayChange*60/1000),15)), expand=c(0.02, 0)) + 
+scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange*60/1000)), by=1), minor_breaks=NULL, limits=c(0, min(max(results$MsBetweenDisplayChange*60/1000),15)), expand=c(0.02, 0)) + 
 expand_limits(x=c(0, 2)) + 
 scale_y_continuous(name="Count", expand=c(0.02, 0))
 
-customSave("Display Times")
+customSave("Frequency - Display Time")
 
 #Course - Display Time
+message("Course - Display Time")
+
 ggplot(results, aes(TimeInSeconds, results$MsBetweenDisplayChange*60/1000)) + 
 ggtitle(paste0("Display Times Through Course", setname), subtitle="MsBetweenDisplayChange") + 
 geom_point() + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
-scale_y_continuous(name="Frames Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, 6), expand=c(0.02, 0)) + 
+scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, 6), expand=c(0.02, 0)) + 
 scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 3))
 
-customSave("Course - Display")
+customSave("Course - Display Time")
 
 #QQ Plot - Display Time
-if(FALSE){
-	ggplot(results, aes(sample=MsBetweenDisplayChange)) + 
-	ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenDisplayChange") + 
-	scale_y_continuous(name="Display Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenDisplayChange, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenDisplayChange, .9999), labels = paste0(round(quantile(results$MsBetweenDisplayChange, .9999), 2), "\n(99.99%)"))) + 
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
-	annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenDisplayChange, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + 
-	geom_point(stat="qq")
+message("QQ - Display Time")
 
-	customSave("QQ - Frame")
-}
+ggplot(results, aes(sample=MsBetweenDisplayChange)) + 
+ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenDisplayChange") + 
+scale_y_continuous(name="Display Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenDisplayChange, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenDisplayChange, .9999), labels = paste0(round(quantile(results$MsBetweenDisplayChange, .9999), 2), "\n(99.99%)"))) + 
+scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
+annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenDisplayChange, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + 
+geom_point(stat="qq")
 
-#Plotting Display Time and Diff
+customSave("QQ - Display Time")
+
+
+#Diff - Display Time
+message("Diff - Display Time")
+
 ggplot(data=results, aes(x=results$MsBetweenDisplayChange, y=rbind(c(diff(results$MsBetweenDisplayChange), 0))[1,])) + 
 ggtitle(paste0("Display Times vs Display Time Difference (next frame)", setname), subtitle="MsBetweenDisplayChange consecutive differences") + 
 annotate("rect", ymin=quantile(diff(results$MsBetweenDisplayChange), c(.001, .010)), ymax=quantile(diff(results$MsBetweenDisplayChange), c(.999, .990)), xmin=quantile(results$MsBetweenDisplayChange, c(.001, .010)), xmax=quantile(results$MsBetweenDisplayChange, c(.999, .990)), alpha=c(0.1, 0.075), fill=c("red", "blue")) + 
@@ -230,7 +244,7 @@ geom_point(x=median(results$MsBetweenDisplayChange), y=median(diff(results$MsBet
 scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange, 1000/30)), by=1000/120), labels=labelRound, limits=c(0, 1000/10), expand=c(0.02, 0)) + 
 scale_y_continuous(name="Consecutive Display Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 
-customSave("Time vs Diff - Display")
+customSave("Diff - Display Time")
 }
 
 
