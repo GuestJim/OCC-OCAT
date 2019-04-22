@@ -1,17 +1,29 @@
 import sys, os, shutil
 
 droppedPath = sys.argv[1].rsplit("\\", 1)[0]+"\\"
-droppedGPU = droppedPath.rsplit("\\",3)[1]
+for place in range(len(droppedPath.split("\\"))):
+	if 'OCAT Data' == droppedPath.split("\\")[place]:
+		droppedGPU = droppedPath.split("\\")[place+1]
+		droppedOCAT = droppedPath.rsplit("\\",len(droppedPath.split("\\")) - place-1)[0]+"\\"
 
 os.chdir(droppedPath)
 
-if "Locations.txt" in os.listdir(droppedPath):
-	LOCs = open(droppedPath + "Locations.txt", 'r').readlines()
+Z = 1
+#	zero-padding width
+
+if "Locations.txt" in os.listdir(droppedOCAT):
+	LOCs = open(droppedOCAT + "Locations.txt", 'r').readlines()
 	LOCs = [line.rstrip('\n') for line in LOCs]
 else:
-	loc = ["Recording "] * countCSV
+	LOCs = ["Recording "] * countCSV
 	for i in range(countCSV):
-		loc[i] = loc[i] + str(i+1)
+		LOCs[i] = LOCs[i] + str(i+1)
+
+if "APIs.txt" in os.listdir(droppedOCAT):
+	APIs = open(droppedOCAT + "APIs.txt", 'r').readlines()
+	APIs = [line.rstrip('\n') for line in APIs]
+else:
+	APIs = [""]
 
 GPUs = [\
 'RX 580',\
@@ -36,6 +48,8 @@ TYPEs = [\
 'Averages']
 
 def numFind	(filename, list):
+	if list == [""]:
+		return(0)
 	for i in range(len(list)):
 		if list[i] in filename:
 			return(i+1)
@@ -43,17 +57,23 @@ def numFind	(filename, list):
 
 def numGen (filename, GPU=droppedGPU):
 	if GPU not in GPUs:
-		gpu = 0
+		gpu = ""
 	else:
 		gpu	=	numFind(droppedGPU, GPUs)
+	if APIs == [""]:
+		api = 0
+	else:
+		api		=	numFind(filename, APIs)	
 	loc		=	numFind(filename, LOCs)
 	data	=	numFind(filename, DATAs)
 	type	=	numFind(filename, TYPEs)
 	
-	if gpu == 0:
-		return('%02d'%loc + '%02d'%data + '%02d'%type)
-	else:
-		return('%02d'%gpu + '%02d'%loc + '%02d'%data + '%02d'%type)
+	code = ""
+	for x in [gpu, api, loc, data, type]:
+		if x != "":
+			code = code + '%0*d'%(Z,x)
+	
+	return(code)
 
 if not os.path.exists("Graphs"):
 	os.mkdir("Graphs")
