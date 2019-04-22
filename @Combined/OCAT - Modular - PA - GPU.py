@@ -113,8 +113,8 @@ if " Performance Analysis" in droppedPath:
 			droppedGame = droppedPath.split("\\")[i].replace(" Performance Analysis", "")
 			droppedGPU = droppedPath.split("\\")[i+2]
 
-if "Locations.txt" in os.listdir(droppedPath):
-	loc = open(droppedPath + "Locations.txt", 'r').readlines()
+if "Locations.txt" in os.listdir(RelPath):
+	loc = open(RelPath + "Locations.txt", 'r').readlines()
 	loc = [line.rstrip('\n') for line in loc]
 else:
 	loc = ["Recording "] * countCSV

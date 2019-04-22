@@ -114,8 +114,8 @@ for place in droppedPath.split("\\"):
 	if " Performance Analysis" in place:
 		droppedGame = place.split(" Performance Analysis")[0]
 
-if "Locations.txt" in os.listdir(droppedPath):
-	loc = open(droppedPath + "Locations.txt", 'r').readlines()
+if "Locations.txt" in os.listdir(RelPath):
+	loc = open(RelPath + "Locations.txt", 'r').readlines()
 	loc = [line.rstrip('\n') for line in loc]
 else:
 	loc = ["Recording "] * countCSV

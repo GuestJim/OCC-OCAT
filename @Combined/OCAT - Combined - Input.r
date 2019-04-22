@@ -70,7 +70,7 @@ listLOC = c(
 #	add the necessary scripting to replace this using a Location.txt file or to make it ""
 
 listAPI = c(
-""
+!API!
 )
 
 results$GPU = factor(results$GPU, levels = listGPU)
@@ -92,6 +92,10 @@ gameFQUA = paste0(gameF, " - ", QUA)
 gameFqua = paste0(gameF, " - ", qua)
 gameGPU = paste0(game, " (", cGPU, ")")
 
+if (nchar(listAPI[1]) > 1)	{
+	gameFQUA = paste0(gameFQUA, " - ", listAPI[1])
+	gameFqua = paste0(gameFqua, " - ", listAPI[1])
+}
 source("@Combined - Output - !TYPE!.r")
 
 if	(graphs_all)	{
@@ -100,6 +104,9 @@ for	(loc in listLOC)	{
 	results = resultsFull[resultsFull$Location == loc, ]
 	
 	recording = paste0(qua, " - ", loc)
+	if (nchar(listAPI[1]) > 1)	{
+		recording = paste0(recording, " - ", listAPI[1])
+	}
 	fileName = paste0(gameF, " - ", recording)
 
 	if(exists("recording")) {
