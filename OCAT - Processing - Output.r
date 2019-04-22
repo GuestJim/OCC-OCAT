@@ -7,6 +7,8 @@ ytimes = c(ytimes,-ytimes)
 
 labelRound = function(x) sprintf("%.2f", x)
 
+if (!exists("cGPU"))	cGPU = ""
+
 options(error=expression(NULL), width = 1000)
 
 percFPS = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
@@ -48,7 +50,7 @@ if(textOUT) {
 sink(paste0("Output - ", fileName, ".txt"), split=TRUE)
 writeLines(fileName)
 if (exists("recording")) {
-	writeLines(paste0(game, recordnam))
+	writeLines(paste0(gameGPU, recordnam))
 }
 
 #Frame Time/Rate
@@ -136,24 +138,24 @@ scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=ceiling(max(res
 expand_limits(x=c(1000/60, 1000/30)) + 
 scale_y_continuous(name="Count", expand=c(0.02, 0))
 
-customSave("Frequency - Frame Times")
+customSave("Frequency - Frame Time")
 
 #Frequency - Frame Rate
 message("Frequency - Frame Rate")
 
 ggplot(results, aes(1000/MsBetweenPresents)) + 
-ggtitle(paste0("Frequency Plot of Frame Rates", setname), subtitle="1000 * MsBetweenPresents^-1") + 
+ggtitle(paste0("Frequency Plot of Frame Rates", setname), subtitle="1000 * MsBetweenPresents^-1") + labs(caption = cGPU) + 
 geom_freqpoly(binwidth=1, size=0) + 
 scale_x_continuous(name="Frame Rate (FPS)", breaks=c(120, 60, 30, 20, 15, 10,0), expand=c(0.02, 0)) + expand_limits(x=c(30, 60)) + 
 scale_y_continuous(name="Count", expand=c(0.02, 0))
 
-customSave("Frame Rates")
+customSave("Frequency - Frame Rate")
 
 #Course - Frame Time
 message("Course - Frame Time")
 
 ggplot(results, aes(TimeInSeconds, MsBetweenPresents)) + 
-ggtitle(paste0("Frame Times Through Course", setname), subtitle="MsBetweenPresents") + 
+ggtitle(paste0("Frame Times Through Course", setname), subtitle="MsBetweenPresents") + labs(caption = cGPU) + 
 geom_point() + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(NA,100), expand=c(0.02, 0)) + 
@@ -170,7 +172,7 @@ customSave("Course - Frame Time")
 message("QQ - Frame Time")
 
 ggplot(results, aes(sample=MsBetweenPresents)) + 
-ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresents") + 
+ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenPresents") + labs(caption = cGPU) + 
 scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenPresents, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenPresents, .9999), labels = paste0(round(quantile(results$MsBetweenPresents, .9999), 2), "\n(99.99%)"))) + 
 scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
 annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenPresents, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + 
@@ -182,7 +184,7 @@ customSave("QQ - Frame Time")
 message("Diff - Frame Time")
 
 ggplot(data=results, aes(x=results$MsBetweenPresents, y=rbind(c(diff(results$MsBetweenPresents), 0))[1,])) + 
-ggtitle(paste0("Frame Times vs Frame Time Difference (next frame)", setname), subtitle="MsBetweenPresent consecutive differences") + 
+ggtitle(paste0("Frame Times vs Frame Time Difference (next frame)", setname), subtitle="MsBetweenPresent consecutive differences") + labs(caption = cGPU) + 
 annotate("rect", ymin=quantile(diff(results$MsBetweenPresents), c(.001, .010)), ymax=quantile(diff(results$MsBetweenPresents), c(.999, .990)), xmin=quantile(results$MsBetweenPresents, c(.001, .010)), xmax=quantile(results$MsBetweenPresents, c(.999, .990)), alpha=c(0.1, 0.075), fill=c("red", "blue")) + 
 geom_point(alpha = 0.1) + 
 stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
@@ -199,7 +201,7 @@ if(graphDISP) {
 message("Frequency - Display Time")
 
 ggplot(as.data.frame(results$MsBetweenDisplayChange), aes(results$MsBetweenDisplayChange*60/1000)) + 
-ggtitle(paste0("Frequency Plot of Display Times", setname), subtitle="MsBetweenDisplayChange") + 
+ggtitle(paste0("Frequency Plot of Display Times", setname), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) + 
 geom_freqpoly(binwidth=0.003, size=0) + 
 scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenDisplayChange*60/1000)), by=1), minor_breaks=NULL, limits=c(0, min(max(results$MsBetweenDisplayChange*60/1000),15)), expand=c(0.02, 0)) + 
 expand_limits(x=c(0, 2)) + 
@@ -211,7 +213,7 @@ customSave("Frequency - Display Time")
 message("Course - Display Time")
 
 ggplot(results, aes(TimeInSeconds, results$MsBetweenDisplayChange*60/1000)) + 
-ggtitle(paste0("Display Times Through Course", setname), subtitle="MsBetweenDisplayChange") + 
+ggtitle(paste0("Display Times Through Course", setname), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) + 
 geom_point() + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
 scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=ceiling(max(results$MsBetweenPresents, 1000/60)), by=1), minor_breaks=NULL, limits=c(NA, 6), expand=c(0.02, 0)) + 
@@ -223,7 +225,7 @@ customSave("Course - Display Time")
 message("QQ - Display Time")
 
 ggplot(results, aes(sample=MsBetweenDisplayChange)) + 
-ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenDisplayChange") + 
+ggtitle(paste("QQ Distrubtion Plot", setname, sep = ""), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) + 
 scale_y_continuous(name="Display Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, max(quantile(results$MsBetweenDisplayChange, .9999), 1000/60)), expand=c(0.02, 0), sec.axis = sec_axis(~., breaks = quantile(results$MsBetweenDisplayChange, .9999), labels = paste0(round(quantile(results$MsBetweenDisplayChange, .9999), 2), "\n(99.99%)"))) + 
 scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "1", "50 (Median)", "99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0)) + 
 annotate("rect", ymin=-Inf, ymax=quantile(results$MsBetweenDisplayChange, c(.001, .010, .500, .990, .999)), xmin=-Inf, xmax=qnorm(c(.001, .010, .500, .990, .999)), alpha=0.1, fill=c("blue", "blue", "blue", "red", "red"), color="grey") + 
@@ -236,7 +238,7 @@ customSave("QQ - Display Time")
 message("Diff - Display Time")
 
 ggplot(data=results, aes(x=results$MsBetweenDisplayChange, y=rbind(c(diff(results$MsBetweenDisplayChange), 0))[1,])) + 
-ggtitle(paste0("Display Times vs Display Time Difference (next frame)", setname), subtitle="MsBetweenDisplayChange consecutive differences") + 
+ggtitle(paste0("Display Times vs Display Time Difference (next frame)", setname), subtitle="MsBetweenDisplayChange consecutive differences") + labs(caption = cGPU) + 
 annotate("rect", ymin=quantile(diff(results$MsBetweenDisplayChange), c(.001, .010)), ymax=quantile(diff(results$MsBetweenDisplayChange), c(.999, .990)), xmin=quantile(results$MsBetweenDisplayChange, c(.001, .010)), xmax=quantile(results$MsBetweenDisplayChange, c(.999, .990)), alpha=c(0.1, 0.075), fill=c("red", "blue")) + 
 geom_point(alpha = 0.1) + 
 stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 

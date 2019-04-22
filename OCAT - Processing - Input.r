@@ -13,9 +13,15 @@ FPS <- hist(results$TimeInSeconds, breaks=300,plot=FALSE)$counts
 DIFF = diff(results$MsBetweenPresents)
 
 game = "!GAME!"
+GPU = "!GPU!"
 
 gameF = gsub(":", "-", game)
 gameF = unlist(strsplit(gameF, split=" [(]"))[1]
+if (GPU != paste0("!GPU","!"))	{
+	gameGPU = paste0(game, " (", GPU, ")")
+}	else	{
+	gameGPU = game
+}
 
 recording = "Recording !REC!"
 
