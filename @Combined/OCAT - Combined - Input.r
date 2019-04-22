@@ -2,6 +2,7 @@ library(readr)
 library(ggplot2)
 
 game = "!GAME!"
+cGPU = "!GPU!"
 
 gameF = gsub(":", "-", game)
 gameF = unlist(strsplit(gameF, split=" [(]"))[1]
@@ -13,27 +14,28 @@ ggdevice = "png"
 textOUT		=	TRUE
 HTMLOUT		=	TRUE
 graphs		=	TRUE
+graphs_all	=	TRUE
 
 textFRAM	=	TRUE
 graphFRAM	=	TRUE
 
-textDISP	=	FALSE
-graphDISP	=	FALSE
+textDISP	=	TRUE
+graphDISP	=	TRUE
 
 textDIFF	=	FALSE
 graphDIFF	=	FALSE
 
 if (!textOUT)	{
-	textFRAM = FALSE
-	textDISP = FALSE
-	HTMLOUT = FALSE
-	textDIFF = FALSE
+	textFRAM	=	FALSE
+	textDISP	=	FALSE
+	HTMLOUT		=	FALSE
+	textDIFF	=	FALSE
 }
 
 if (!graphs){
-	graphFRAM = FALSE
-	graphDISP = FALSE
-	graphDIFF = FALSE
+	graphFRAM	=	FALSE
+	graphDISP	=	FALSE
+	graphDIFF	=	FALSE
 }
 
 if (interactive()) {
@@ -44,9 +46,8 @@ if (interactive()) {
 #	checks if the script is being run in the GUI or not
 #	prevents rplots.pdf from being generated
 
-results <- read_csv("@Combined - !QUA!.csv", col_types = "????????????????????c")
-#	VERY IMPORTANT
-#		remember to add to the Python script to change the !TYPE! based on if it is a PA or a review
+resultsFull <- read_csv("@Combined - !QUA!.csv", col_types = "????????????????????c")
+results = resultsFull
 
 listGPU = c(
 "RX 580",
@@ -89,5 +90,26 @@ if (levels(results$Quality)[1] != "Review")	{
 gameQUA = paste0(game, " - ", QUA)
 gameFQUA = paste0(gameF, " - ", QUA)
 gameFqua = paste0(gameF, " - ", qua)
+gameGPU = paste0(game, " (", cGPU, ")")
 
-source("@Combined - Output - GPU.r")
+source("@Combined - Output - !TYPE!.r")
+
+if	(graphs_all)	{
+
+for	(loc in listLOC)	{
+	results = resultsFull[resultsFull$Location == loc, ]
+	
+	recording = paste0(qua, " - ", loc)
+	fileName = paste0(gameF, " - ", recording)
+
+	if(exists("recording")) {
+		recordnam = paste0(" - (", recording, ")")
+		setname = paste0(" - \n", game, recordnam)
+	} else {
+		recording = character(0)
+		setname = character(0)
+	}
+	
+	source("OCAT - Processing - Output.r")
+}
+}

@@ -1,7 +1,7 @@
 ytimes = c(120, 60, 30, 20, 15, 12, 10)
 ytimes = c(ytimes,-ytimes)
 
-# labelRound = function(x)	sprintf("%.1f", x)
+# labelRound = function(x) sprintf("%.1f", x)
 labelRound = function(x)	round(x, 1)
 labelBreak = function(input)	paste0(rep(c("", "\n"), length.out = length(input)), input)
 labelDisp = function(breaks)	round(breaks * 60/1000, 1)
@@ -30,7 +30,7 @@ percFPS = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
 	out = c()
 	for (i in listPERC) {
 		temp = c(1000/quantile(x, i), quantile(x, i))
-		names(temp) = paste0(i * 100, c("% (FPS)", "% (ms)"))
+		names(temp) = paste0(i * 100, c("% (ms)", "% (FPS)"))
 		out = append(out, temp)
 	}
 	return(round(out, r))
@@ -88,7 +88,7 @@ if (length(levels(results$API)) >= 2) {
 if (textFRAM){
 options(width = 1000)
 sink(paste0(game, " - ", QUA, " Frame Data.txt"), split = TRUE)
-writeLines(paste0(gameGPU, " - ", QUA))
+writeLines(game)
 writeLines("Frame Time")
 writeLines("\nMean")
 print(dataMEAN, row.names = FALSE)
@@ -101,7 +101,7 @@ sink()
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	options(width = 1000)
 	sink(paste0(GPU, "\\", game, " - ", GPU, " - ", QUA, " Frame Data.txt"), split = TRUE)
-		writeLines(paste0(gameGPU, " - ", QUA))
+		writeLines(game)
 		writeLines("Frame Time")
 		writeLines("\nMean")
 		print(dataMEAN[dataMEAN$GPU==GPU,], row.names = FALSE)
@@ -116,7 +116,7 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 if (textDISP){
 	options(width = 1000)
 	sink(paste0(game, " - ", QUA, " Display Data.txt"), split = TRUE)
-	writeLines(paste0(gameGPU, " - ", QUA))
+	writeLines(game)
 	writeLines("Display Time")
 	writeLines("\nMean")
 	print(dispMEAN, row.names = FALSE)
@@ -129,7 +129,7 @@ if (textDISP){
 	for (GPU in listGPU) {	if (file.exists(GPU))	{
 	options(width = 1000)
 	sink(paste0(GPU, "\\", game, " - ", GPU, " - ", QUA, " Display Data.txt"), split = TRUE)
-		writeLines(paste0(gameGPU, " - ", QUA))
+		writeLines(game)
 		writeLines("Display Time")
 		writeLines("\nMean")
 		print(dispMEAN[dispMEAN$GPU==GPU,], row.names = FALSE)
@@ -182,169 +182,169 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 }
 }
 
+
 if (graphFRAM) {
 #Averages - Frame Time
 message("Averages - Frame Time")
 
 results$Location = factor(results$Location, levels = listLOC)
 
-ggplot(data = results) + 
-ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenPresent)") + labs(caption = cGPU) + 
+ggplot(data = results) + ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenPresent)") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), outlier.alpha = 0) + 
-stat_summary(aes(x = Location, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", width = 0.6) + 
-geom_bar(aes(x = Location, y = MsBetweenPresents, fill = Location), stat = "summary", fun.y = "mean") + 
-stat_summary(aes(x = Location, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) + 
+stat_summary(aes(x = GPU, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", width = 0.6) + 
+geom_bar(aes(x = GPU, y = MsBetweenPresents, fill = GPU), stat = "summary", fun.y = "mean") + 
+stat_summary(aes(x = GPU, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), alpha = 0.50, outlier.alpha = 0.1) + 
-facet_grid(rows = vars(GPU), cols = vars(API), switch = "y") + 
-scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + scale_x_discrete(labels = labelBreak) + 
-guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "none")
-
-customSave("@Averages - Frame Time", width = 8)
+facet_grid(rows = vars(API), cols = vars(Location), switch = "y") + 
+scale_x_discrete(labels = labelBreak) + 
+scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
 results$Location = factor(results$Location, levels = rev(listLOC))
 #	reverses the levels so they go in the order I want
+
+customSave("@Averages - Frame Time")
 
 
 #Course - Frame Time
 message("Course - Frame Time")
 
 ggplot(data = results, aes(x = TimeInSeconds, y = MsBetweenPresents)) + 
-ggtitle(gameQUA, subtitle = "MsBetweenPresent") + labs(caption = cGPU) + 
+ggtitle(gameQUA, subtitle = "MsBetweenPresent") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(alpha = 0.05) + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
-scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), labels = labelBreak, expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
+scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(0, 66.67), labels = labelBreak, expand=c(0.02, 0), sec.axis = dup_axis()) + 
 guides(color = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
-customSave("@Course - Frame Time", width = 8)
+customSave("@Course - Frame Time")
 
 
 #Diff - Frame Time
 message("Diff - Frame Time")
 
 ggplot(data=results, aes(x=results$MsBetweenPresents, y=rbind(c(diff(results$MsBetweenPresents), 0))[1,])) + 
-ggtitle(gameQUA, subtitle="MsBetweenPresent consecutive differences") + labs(caption = cGPU) + 
+ggtitle(gameQUA, subtitle="MsBetweenPresent consecutive differences") + 
 geom_point(alpha = 0.1) + 
 stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 # geom_point(x=median(results$MsBetweenPresents), y=median(diff(results$MsBetweenPresents)), color = "magenta", shape ="x") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels = labelBreak, limits=c(0, 66.67), expand=c(0.02, 0)) + 
 scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 
-customSave("@Diff - Frame Time", width = 8)
+customSave("@Diff - Frame Time")
 
 #Frequency - Frame Time
 message("Frequency - Frame Time")
 
 ggplot(results, aes(MsBetweenPresents)) + 
-ggtitle(paste0(gameQUA, " Frequency Plot"), subtitle="MsBetweenPresents") + labs(caption = cGPU) + 
+ggtitle(paste0(gameQUA, " Frequency Plot of Frame Times"), subtitle="MsBetweenPresents") + 
 geom_vline(xintercept = 1000/60, color = "red") + 
 geom_freqpoly(binwidth=0.03, size=0) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=FtimeLimit, by=1000/60), labels=labelRound, limits = c(0, FtimeLimit), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Frame Time (ms)", breaks=seq(from=0, to=FtimeLimit, by=1000/60), labels=labelRound, limits = c(0,  FtimeLimit), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 expand_limits(x=c(1000/60, 1000/30)) + 
-scale_y_continuous(name="Count", expand=c(0.02, 0))
+scale_y_continuous(name="Count", expand=c(0.02, 0)) + theme(panel.spacing.x = unit(1, "lines"))
 
-customSave("@Freq - Frame Time", width = 8)
+customSave("@Freq - Frame Time")
 
 
 #QQ - Frame Time
 message("QQ - Frame Time")
 
 ggplot(results, aes(sample=MsBetweenPresents)) + 
-ggtitle(paste0(gameQUA, " QQ Distribution"), subtitle="MsBetweenPresents") +labs(caption = cGPU) + 
+ggtitle(paste0(gameQUA, " QQ Distribution"), subtitle="MsBetweenPresents") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(stat="qq") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0, FtimeLimit), expand=c(0.02, 0)) + 
-scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "\n1", "50 (Median)", "\n99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0))
+scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0,  FtimeLimit), expand=c(0.02, 0)) + 
+scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "\n1", "50", "\n99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0))
 
-customSave("@QQ - Frame Time", width = 8)
+customSave("@QQ - Frame Time")
 }
 
 
 if (graphDISP) {
 #Averages - Display Time
 message("Averages - Display Time")
-
 results$Location = factor(results$Location, levels = listLOC)
 
-ggplot(data = results) + 
-ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenDisplayChange)") + labs(caption = cGPU) + 
+ggplot(data = results) + ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenDisplayChange)") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenDisplayChange), outlier.alpha = 0) + 
-stat_summary(aes(x = Location, y = MsBetweenDisplayChange), fun.data = BoxPerc, geom = "boxplot", width = 0.6) + 
-geom_bar(aes(x = Location, y = MsBetweenDisplayChange, fill = Location), stat = "summary", fun.y = "mean") + 
-stat_summary(aes(x = Location, y = MsBetweenDisplayChange), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) + 
+stat_summary(aes(x = GPU, y = MsBetweenDisplayChange), fun.data = BoxPerc, geom = "boxplot", width = 0.6) + 
+geom_bar(aes(x = GPU, y = MsBetweenDisplayChange, fill = GPU), stat = "summary", fun.y = "mean") + 
+stat_summary(aes(x = GPU, y = MsBetweenDisplayChange), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenDisplayChange), alpha = 0.50, outlier.alpha = 0.1) + 
-facet_grid(rows = vars(GPU), cols = vars(API), switch = "y") + 
+facet_grid(rows = vars(API), cols = vars(Location), switch = "y") + 
+scale_x_discrete(labels = labelBreak) + 
 scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/ytimes, 2)), labels = labelDisp, limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + scale_x_discrete(labels = labelBreak) + 
-guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "none")
-
-customSave("@Averages - Display Time", width = 8)
+guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
 results$Location = factor(results$Location, levels = rev(listLOC))
+
+customSave("@Averages - Display Time")
 
 
 #Course - Display Time
 message("Course - Display Time")
 
 ggplot(data = results, aes(x = TimeInSeconds, y = MsBetweenDisplayChange)) + 
-ggtitle(gameQUA, subtitle = "MsBetweenDisplayChange") + labs(caption = cGPU) + 
+ggtitle(gameQUA, subtitle = "MsBetweenDisplayChange") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(alpha = 0.05) + 
 geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
+scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), labels = labelBreak, expand=c(0.02, 0)) + expand_limits(y=c(0, 1000/30)) + 
 scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/ytimes, 2)), labels = labelDisp, limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 guides(color = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 
-customSave("@Course - Display Time", width = 8)
+customSave("@Course - Display Time")
 
 
 #Diff - Display Time
 message("Diff - Display Time")
 
 ggplot(data=results, aes(x=results$MsBetweenDisplayChange, y=rbind(c(diff(results$MsBetweenDisplayChange), 0))[1,])) + 
-ggtitle(gameQUA, subtitle="MsBetweenDisplayChange consecutive differences") + labs(caption = cGPU) + 
+ggtitle(gameQUA, subtitle="MsBetweenDisplayChange consecutive differences") + 
 geom_point(alpha = 0.1) + 
 stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() + 
 # geom_point(x=median(results$MsBetweenDisplayChange), y=median(diff(results$MsBetweenDisplayChange)), color = "magenta", shape ="x") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/ytimes, 2)), labels = labelDisp, limits=c(0, 66.67), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/ytimes, 2)), labels = labelDisp, limits=c(0, 66.67), expand=c(0.02, 0)) + 
 scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0))
 
-customSave("@Diff - Display Time", width = 8)
+customSave("@Diff - Display Time")
 
 
 #Frequency - Display Time
-message("Frequency - Display Time")
+message("Diff - Display Time")
 
 ggplot(results, aes(MsBetweenDisplayChange)) + 
-ggtitle(paste0(gameQUA, " Frequency Plot"), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) + 
+ggtitle(paste0(gameQUA, " Frequency Plot of Display Times"), subtitle="MsBetweenDisplayChange") + 
 geom_vline(xintercept = 1000/60, color = "red") + 
 geom_freqpoly(binwidth=0.03, size=0) + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=FtimeLimit, by=1000/60), labels=labelDisp, limits = c(0, FtimeLimit), expand=c(0.02, 0), sec.axis = dup_axis()) + 
+scale_x_continuous(name="Refresh Cycles Later (1/60 s)", breaks=seq(from=0, to=FtimeLimit, by=1000/60), labels=labelDisp, limits = c(0,  FtimeLimit), expand=c(0.02, 0), sec.axis = dup_axis()) + 
 expand_limits(x=c(1000/60, 1000/30)) + 
 scale_y_continuous(name="Count", expand=c(0.02, 0))
 
-customSave("@Freq - Display Time", width = 8)
+customSave("@Freq - Display Time")
 
 
 #QQ - Display Time
 message("QQ - Display Time")
 
 ggplot(results, aes(sample=MsBetweenDisplayChange)) + 
-ggtitle(paste0(gameQUA, " QQ Distribution"), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) + 
+ggtitle(paste0(gameQUA, " QQ Distribution"), subtitle="MsBetweenDisplayChange") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 geom_point(stat="qq") + 
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") + 
-scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/ytimes, 2)), labels=labelDisp, limits=c(0, FtimeLimit), expand=c(0.02, 0)) + 
-scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "\n1", "50 (Median)", "\n99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0))
+scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/ytimes, 2)), labels=labelDisp, limits=c(0,  FtimeLimit), expand=c(0.02, 0)) + 
+scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "\n1", "50", "\n99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0))
 
-customSave("@QQ - Display Time", width = 8)
+customSave("@QQ - Display Time")
 }

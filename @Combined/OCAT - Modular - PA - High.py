@@ -43,7 +43,7 @@ for paths, folders, files in os.walk(droppedPath):
 	countCSV = 0
 	for file in files:
 		if file.startswith("OCAT-"):
-			listfile.append(str(paths).replace(RelPath, "") + str(file))
+			listfile.append(str(paths).replace(RelPath, "") + "\\" + str(file))
 			countCSV = countCSV + 1
 #	produces a list of all OCAT CSVs with the directory information
 
@@ -66,6 +66,7 @@ for item in listmap:
 	APIs.append(item[1])
 	QUAs.append(item[2])
 
+GPUs = list(set(GPUs))
 GPUs = [\
 'RX 580',\
 'RX Vega 64',\
@@ -75,9 +76,11 @@ GPUs = [\
 'GTX 1080',\
 'RTX 2060',\
 'RTX 2080']
-GPUs = list(set(GPUs))
+
 APIs = list(set(APIs))
+
 QUAs = list(set(QUAs))
+QUAs = ["High"]
 
 GROUPS = []
 
@@ -107,11 +110,9 @@ for file in grouped:
 					if file[0] == GPU and file[1][0] == API and file[1][1][0] == QUA:
 						out = out + "\n" + CSVlistR(GPU, API, QUA, file[1][1][1])
 
-if " Performance Analysis" in droppedPath:
-	for i in range(len(droppedPath.split("\\"))):
-		if " Performance Analysis" in droppedPath.split("\\")[i]:
-			droppedGame = droppedPath.split("\\")[i].replace(" Performance Analysis", "")
-			droppedGPU = droppedPath.split("\\")[i+2]
+for place in droppedPath.split("\\"):
+	if " Performance Analysis" in place:
+		droppedGame = place.split(" Performance Analysis")[0]
 
 if "Locations.txt" in os.listdir(droppedPath):
 	loc = open(droppedPath + "Locations.txt", 'r').readlines()
@@ -127,7 +128,7 @@ scriptType = "OCAT"
 scriptName = "Combined - PA"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 
-outputName = scriptName + " - GPU - " + droppedGame + ".r"
+outputName = scriptName + " - " + droppedGame + ".r"
 outputFull = droppedPath + "@" + outputName
 
 RPath = droppedPath.replace("\\", "/")
@@ -135,21 +136,25 @@ RPath = droppedPath.replace("\\", "/")
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!GPU!", droppedGPU).replace("!LONG!", out).replace("!QUA!", QUAs[0]).replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!LONG!", out).replace("!QUA!", QUAs[0]).replace("!LOC!", locStr))
 		fout.close()
+
 
 scriptType = "OCAT"
 scriptName = "Combined - Input"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 
-outputName = scriptName + " - GPU - " + droppedGame + ".r"
+outputName = scriptName + " - " + droppedGame + ".r"
 outputFull = droppedPath + "@" + outputName
 
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!GPU!", droppedGPU).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "GPU").replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "PA").replace("!LOC!", locStr))
 		fout.close()
+
+print(outputFull)
+os.system("pause")
 
 for file in os.listdir(droppedPath):
 	if file.endswith(".r") and file.startswith("Processing"):
@@ -162,10 +167,7 @@ for file in os.listdir(droppedPath):
 		fout.write(fileText)
 		fout.close()
 
-if not os.path.exists(droppedPath + "OCAT - Combined - Output - GPU.r"):
-	shutil.copyfile(scriptPath + "\\OCAT - Combined - Output - GPU.r", droppedPath + "@Combined - Output - GPU.r")
+if not os.path.exists(droppedPath + "OCAT - Combined - Output - High.r"):
+	shutil.copyfile(scriptPath + "\\OCAT - Combined - Output - High.r", droppedPath + "@Combined - Output - High.r")
 
-if not os.path.exists(droppedPath + "OCAT - Processing - Output.r"):
-	shutil.copyfile(scriptPath.rsplit("\\", 1)[0] + "\\OCAT - Processing - Output.r", droppedPath + "OCAT - Processing - Output.r")
-	
 # os.system("pause")

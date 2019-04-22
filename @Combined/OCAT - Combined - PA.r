@@ -12,18 +12,24 @@ OCATcomb = data.frame(matrix(ncol = 21, nrow = 0))
 OCATtemp = data.frame(matrix(ncol = 21, nrow = 0))
 
 LOC = c(
-"",
-"",
-""
+!LOC!
 )
 
 READ = function(fold="", Quality = "", API="") {
 	if (API != "") {
 		API = paste0(API, "/")
 	}
-	for (place in 1:length(LOC)) {
+	if (length(LOC[1]) == 0)	{
+		LOC = paste0(rep("Recording ", length(CSV)), 1:length(CSV))
+	}
+	len = min(length(LOC), length(CSV))	
+	for (place in 1:len) {
 		if (CSV[place] != ".csv") {
-			OCATtemp = read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:17]
+			if (grepl(GPU, getwd()))	{
+				OCATtemp = read_csv(paste0(CSV[place]))[,1:17]
+			}	else	{
+				OCATtemp = read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:17]
+			}
 		} else {next}
 		OCATtemp[,18] = GPU
 		OCATtemp[,19] = Quality
@@ -37,4 +43,4 @@ READ = function(fold="", Quality = "", API="") {
 !LONG!
 
 colnames(OCATcomb)[18:21] = c("GPU", "Quality", "Location", "API")
-write_csv(OCATcomb, "@Combined - High.csv")
+write_csv(OCATcomb, "@Combined - !QUA!.csv")
