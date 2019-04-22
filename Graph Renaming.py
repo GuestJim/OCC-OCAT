@@ -25,6 +25,16 @@ if "APIs.txt" in os.listdir(droppedOCAT):
 else:
 	APIs = [""]
 
+
+if "Qualities.txt" in os.listdir(droppedOCAT):
+	QUAs = open(droppedOCAT + "Qualities.txt", 'r').readlines()
+	QUAs = [line.rstrip('\n') for line in QUAs]
+else:
+	QUAs =	[\
+		"Minimum Acceptable",\
+		"High",\
+		"Max"]
+
 GPUs = [\
 'RX 580',\
 'RX Vega 64',\
@@ -61,15 +71,16 @@ def numGen (filename, GPU=droppedGPU):
 	else:
 		gpu	=	numFind(droppedGPU, GPUs)
 	if APIs == [""]:
-		api = 0
+		api = ""
 	else:
 		api		=	numFind(filename, APIs)	
 	loc		=	numFind(filename, LOCs)
+	qua		=	numFind(filename, QUAs)
 	data	=	numFind(filename, DATAs)
 	type	=	numFind(filename, TYPEs)
 	
 	code = ""
-	for x in [gpu, api, loc, data, type]:
+	for x in [gpu, api, qua, loc, data, type]:
 		if x != "":
 			code = code + '%0*d'%(Z,x)
 	
