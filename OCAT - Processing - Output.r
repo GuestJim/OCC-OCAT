@@ -34,7 +34,8 @@ percFPSv = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
 	return(round(out, r))
 }
 
-ecdfFPS = function(x, listFPS=c(60, 50, 30, 20, 15), r = 2) {
+ecdfFPS = function(x, listFPS=NULL, r = 2) {
+	listFPS = unique(sort(append(c(60, 50, 30, 20, 15), listFPS), decreasing = TRUE))
 	out = 100*(1-ecdf(x)(1000/listFPS))
 	names(out) = paste0(listFPS, " FPS")
 	return(round(out, r))
@@ -75,7 +76,7 @@ if (textFRAM) {
 	print(percFPSv(results$MsBetweenPresents))
 	
 	writeLines("\nECDF Frame Time")
-	print(ecdfFPS(results$MsBetweenPresents))
+	print(ecdfFPS(results$MsBetweenPresents, listFPS))
 	
 	writeLines("\nMedian")
 	print(median(results$MsBetweenPresents))
@@ -90,7 +91,7 @@ if(textDISP) {
 	print(percFPSv(cleanDisplay))
 
 	writeLines("\nECDF Display Change")
-	print(ecdfFPS(cleanDisplay))
+	print(ecdfFPS(cleanDisplay, listFPS))
 
 	writeLines("\nMedian Display Change")
 	print(median(cleanDisplay))

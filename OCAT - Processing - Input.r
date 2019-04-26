@@ -36,21 +36,23 @@ if(exists("recording")) {
 	setname = character(0)
 }
 
-textOUT = TRUE
+textOUT		=	TRUE
 
-textFRAM = TRUE
-graphFRAM = TRUE
+textFRAM	=	TRUE
+graphFRAM	=	TRUE
 
-textDISP = FALSE
-graphDISP = FALSE
+textDISP	=	FALSE
+graphDISP	=	FALSE
 
-textDIFF = FALSE
-graphDIFF = FALSE
+textDIFF	=	FALSE
+graphDIFF	=	FALSE
+
+listFPS		=	NULL
 
 if (!graphs){
-	graphFRAM = FALSE
-	graphDISP = FALSE
-	graphDIFF = FALSE
+	graphFRAM	=	FALSE
+	graphDISP	=	FALSE
+	graphDIFF	=	FALSE
 }
 
 source("OCAT - Processing - Output.r")
