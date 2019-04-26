@@ -13,17 +13,20 @@ ggdevice = "png"
 
 textOUT		=	TRUE
 HTMLOUT		=	TRUE
-graphs		=	TRUE
-graphs_all	=	TRUE
+graphs		=	FALSE
+graphs_all	=	FALSE
 
 textFRAM	=	TRUE
 graphFRAM	=	TRUE
 
-textDISP	=	TRUE
-graphDISP	=	TRUE
+textDISP	=	FALSE
+graphDISP	=	FALSE
 
 textDIFF	=	FALSE
 graphDIFF	=	FALSE
+
+listFPS		=	NULL
+#	for adding to the FPS Percentile list
 
 if (!textOUT)	{
 	textFRAM	=	FALSE

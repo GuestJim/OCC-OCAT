@@ -36,7 +36,8 @@ percFPS = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
 	return(round(out, r))
 }
 
-ecdfFPS = function(x, listFPS=c(60, 50, 30, 20, 15), r = 2) {
+ecdfFPS = function(x, listFPS=NULL, r = 2) {
+	listFPS = unique(sort(append(c(60, 50, 30, 20, 15), listFPS), decreasing = TRUE))
 	out = 100*(1-ecdf(x)(1000/listFPS))
 	names(out) = paste0(listFPS, " FPS")
 	return(round(out, r))
@@ -46,6 +47,62 @@ sepCOL = function(tab, name = c("GPU", "Location", "V")) {
 	names(tab) = name
 	out = as.data.frame(as.matrix(tab))
 	colnames(out) = gsub("V.", "", colnames(out))
+	return(out)
+}
+nameFIND = function (FRAME, name)	{
+	grep(name, names(FRAME), value=TRUE)
+}
+#	gets the column names with ms in them
+
+nameSEARCH = function(FRAME, name)	{
+	if (is.vector(name)){
+		out = numeric(0)
+		for (i in name)	{
+			print(i)
+			out = append(out, which(colnames(FRAME)==i))
+		}
+	}	else	{
+		out = which(colnames(FRAME)==name)
+	}
+	return(out)
+}
+#	this returns the column number with the name of the 'name' variable
+
+findSEARCH = function(FRAME, term)	{
+	name = grep(term, names(FRAME), value=TRUE)
+	if (is.vector(name)){
+		out = numeric(0)
+		for (i in name)	{
+			out = append(out, which(colnames(FRAME)==i))
+		}
+	}	else	{
+		out = which(colnames(FRAME)==name)
+	}
+	return(out)
+}
+
+compMEAN = function(FRAME)	{
+	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1) = c("GPU", "Location", "", "Average")
+	colnames(temp2) = c("GPU", "Location", "", "Average")
+
+	return(rbind(temp1, temp2))
+}
+
+
+compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
+	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1) = c("GPU", "Location", "", paste0(listPERC, "%"))
+	colnames(temp2) = c("GPU", "Location", "", paste0(listPERC, "%"))
+
+	return(rbind(temp1, temp2))
+}
+
+compTAB = function(MEAN, PERC, ECDF, endECDF = 3)	{
+	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:3)], ECDF[3:endECDF])
+	colnames(out)[3] = ""
 	return(out)
 }
 
@@ -66,22 +123,22 @@ customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI) {
 }
 
 if (length(levels(results$API)) >= 2) {
-	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "API", "V"))
-	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "API", "V"))
-	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "API", "V"))
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Frame Time)", "API", "V"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Frame Time)", "API", "V"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Frame Time)", "API", "V"))
 	if (textDISP){
-		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "API", "V"))
-		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "API", "V"))
-		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "API", "V"))	
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Display Time)", "API", "V"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Display Time)", "API", "V"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Display Time)", "API", "V"))	
 	}
 } else {
-	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "V"))
-	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "V"))
-	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "V"))
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Frame Time)", "V"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Frame Time)", "V"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Frame Time)", "V"))
 	if (textDISP){
-		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average", "V"))
-		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile", "V"))
-		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange,  list(results$GPU, results$Location), ecdfFPS), c("GPU", "FPS Percentile", "V"))
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Display Time)", "V"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Display Time)", "V"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange,  list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Display Time)", "V"))
 	}
 }
 
@@ -162,6 +219,7 @@ if (HTMLOUT){
 writeOCC(dataMEAN)
 writeOCC(dataPERC)
 writeOCC(dataECDF)
+writeOCC(compTAB(dataMEAN, dataPERC, dataECDF), typeName = "dataCOMP")
 
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dataMEAN, GPU)
@@ -173,6 +231,7 @@ if (textDISP){
 writeOCC(dispMEAN)
 writeOCC(dispPERC)
 writeOCC(dispECDF)
+writeOCC(compTAB(dispMEAN, dispPERC, dispECDF), typeName = "dispCOMP")
 
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dispMEAN, GPU)
