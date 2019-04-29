@@ -1,22 +1,30 @@
-import sys, os, fileinput
-droppedFile = sys.argv[1]
-droppedName = sys.argv[2]
-droppedPath = sys.argv[3]
+import sys, os
 
-scriptPath = os.path.abspath('')
+scriptPath = sys.argv[0].rsplit("\\",1)[0]
+
 scriptType = "OCAT"
 scriptName = "Processing"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
-outputFull = droppedPath + outputName
 
-RPath = droppedPath.replace("\\", "/")
+droppedFiles = sys.argv[1:]
+#	this is a list of all of the dropped files
+droppedPath = droppedFiles[0].rsplit("\\",1)[0] + "\\"
 
-os.chdir(droppedPath)
+for place in droppedPath.split("\\"):
+	if " Review" in place:
+		droppedGame = place.split(" Review")[0]
 
-from shutil import copyfile
-copyfile(scriptFull, outputFull)
+for droppedFile in droppedFiles:
+	droppedName = droppedFile.rsplit("\\",1)[1].split(".csv")[0]
 
-with fileinput.FileInput(outputName, inplace=True) as file:
-	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
+	outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
+	outputFull = droppedPath + outputName
+	
+	RPath = droppedPath.replace("\\", "/")
+
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+		for line in fref:
+			fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv").replace("!GAME!", droppedGame))
+		fout.close()
+
+#os.system("pause")

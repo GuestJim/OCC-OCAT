@@ -25,7 +25,7 @@ for n in range(0, len(CSV)):
 	LOC[n] = LOC[n] + str(n + 1)
 
 scriptType = "OCAT"
-scriptName = "Combined"
+scriptName = "Combined - Review"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 
 outputName = scriptName + " " + scriptType + " - " + droppedGame + ".r"
@@ -40,7 +40,7 @@ if not os.path.exists(outputFull):
 		fout.close()
 
 scriptType = "OCAT"
-scriptName = "Processing Combined"
+scriptName = "Processing Combined - Review"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
 
 outputName = scriptName + " " + scriptType + " - " + droppedGame + ".r"

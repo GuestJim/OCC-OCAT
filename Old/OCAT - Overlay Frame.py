@@ -1,22 +1,23 @@
-import sys, os, fileinput
-droppedFile = sys.argv[1]
-droppedName = sys.argv[2]
-droppedPath = sys.argv[3]
+import sys, os
 
-scriptPath = os.path.abspath('')
+scriptPath = sys.argv[0].rsplit("\\",1)[0]
+
 scriptType = "OCAT"
-scriptName = "Overlay Frame"
-scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
-outputFull = droppedPath + outputName
+scriptNameF = "Overlay Frame"
+scriptFullF = scriptPath + "\\" + scriptType + " - " + scriptNameF + ".r"
+
+droppedFile = sys.argv[1]
+droppedName = droppedFile.rsplit("\\",1)[1].split(".")[0]
+droppedPath = droppedFile.rsplit("\\",1)[0] + "\\"
+
+outputNameF = scriptNameF + " " + scriptType + " - " + droppedName + ".r"
+outputFullF = droppedPath + outputNameF
 
 RPath = droppedPath.replace("\\", "/")
 
-os.chdir(droppedPath)
-
-from shutil import copyfile
-copyfile(scriptFull, outputFull)
-
-with fileinput.FileInput(outputName, inplace=True) as file:
-	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
+with open(scriptFullF, 'r') as fref, open(outputFullF, 'w') as fout:
+	for line in fref:
+		fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
+	fout.close()
+	
+#os.system("pause")
