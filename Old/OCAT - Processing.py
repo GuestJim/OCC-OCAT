@@ -1,34 +1,50 @@
-import sys, os, fileinput
+import sys, os
 #	loads different modules for Python
 
-droppedFile = sys.argv[1]
-droppedName = sys.argv[2]
-droppedPath = sys.argv[3]
-#	assigns the values of the Batch Parameters passed to the Python script to these variables
+scriptPath = sys.argv[0].rsplit("\\",1)[0]
+#	gets the path to the Python script, which is the same location as the reference R scripts
 
-scriptPath = os.path.abspath('')
-#	gets the path of the Python script, which is the same path for the R source scripts
 scriptType = "OCAT"
+#	sets the script type is for OCAT files
 scriptName = "Processing"
-#	separate Type and Name variables for use with the outputName variable below
+#	sets the specific script to be used
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
-#	full path and name of the source R script
-outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
-#	name of output R script
-outputFull = droppedPath + outputName
-#	full path and name of output R script
+#	constructs the complete path to the desired script
 
-RPath = droppedPath.replace("\\", "/")
+droppedFiles = sys.argv[1:]
+#	this is a list of all of the dropped files
+droppedPath = droppedFiles[0].rsplit("\\",1)[0] + "\\"
+#	the path to the files dropped onto the Python script
+
+for place in droppedPath.split("\\"):
+#	works through the directory names in the droppedPath information
+	if " Review" in place:
+#		finds the directory with " Review" in the name, which would be the name for the review's folder
+		droppedGame = place.replace(" Review", "")
+#			removes the " Review" to get just the name of the game
+
+for droppedFile in droppedFiles:
+#	works through the files dropped onto the Python script
+	droppedName = droppedFile.rsplit("\\",1)[1].split(".csv")[0]
+#		gets just the file name of the dropped file
+
+	outputName = scriptName + " " + scriptType + " - " + droppedName + ".r"
+#		constructs the name for the output file
+	outputFull = droppedPath + outputName
+#		constructs the complete path for the output file
+
+	RPath = droppedPath.replace("\\", "/")
 #	R needs to use / instead of \ for file paths, hence this conversion
 
-os.chdir(droppedPath)
-#	changes the current working directory to where the CSV is
+	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
+#		opens and reads the reference R script to the fref variable
+#		opens the output R script, and calls it fout
+		for line in fref:
+#			reads through each line from the reference file
+			fout.write(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"))
+#				replaces the !PATH!, !FILE!, and !FILEX! text in the reference file
+#					note it is writing to fout, not fref, so the reference file is never changed
+		fout.close()
+#			closes fout, which finishes the file so it can be used
 
-from shutil import copyfile
-copyfile(scriptFull, outputFull)
-#	copies the source R script to the output R script location and name
-
-with fileinput.FileInput(outputName, inplace=True) as file:
-	for line in file:
-		print(line.replace("!PATH!", RPath).replace("!FILE!", droppedName).replace("!FILEX!", droppedName + ".csv"), end='')
-#	reads the lines of the outpur R script and replaces specific strings with the correct references
+#os.system("pause")
