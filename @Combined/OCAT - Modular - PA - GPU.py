@@ -43,7 +43,7 @@ for paths, folders, files in os.walk(droppedPath):
 	countCSV = 0
 	for file in files:
 		if file.startswith("OCAT-"):
-			listfile.append(str(paths).replace(RelPath, "") + str(file))
+			listfile.append((str(paths).replace(RelPath, "") + "\\" + str(file)).replace("\\\\", "\\"))
 			countCSV = countCSV + 1
 #	produces a list of all OCAT CSVs with the directory information
 
