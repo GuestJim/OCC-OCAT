@@ -52,9 +52,10 @@ for paths, folders, files in os.walk(droppedPath):
 	countCSV = 0
 	for file in files:
 		if file.startswith("OCAT-"):
-			listfile.append(str(paths).replace(RelPath, "") + str(file))
+			listfile.append((str(paths).replace(RelPath, "") + "\\" + str(file)).replace("\\\\", "\\"))
 			countCSV = countCSV + 1
 #	produces a list of all OCAT CSVs with the directory information
+#		in some scenarios the slashes for the directories were not present, but this will now make sure to add them, and remove duplicates if necessary
 #	it also counts the number of CSVs within a single folder for use with setting names for each run
 #		it does assume it wil be the same number of CSVs for each scenario
 
