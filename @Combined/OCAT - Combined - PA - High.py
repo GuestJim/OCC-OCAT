@@ -37,7 +37,7 @@ listfile = []
 for paths, folders, files in os.walk(droppedPath):
 	for file in files:
 		if file.startswith("OCAT-"):
-			listfile.append(str(paths).replace(droppedPath, "") + "\\" + str(file))
+			listfile.append((str(paths).replace(RelPath, "") + "\\" + str(file)).replace("\\\\", "\\"))
 #	produces a list of all OCAT CSVs with the directory information
 
 listsplit = [file.split("\\") for file in listfile]
