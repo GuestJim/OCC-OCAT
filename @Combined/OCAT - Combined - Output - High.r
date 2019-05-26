@@ -224,7 +224,9 @@ if (graphFRAM) {
 message("Averages - Frame Time")
 
 results$Location = factor(results$Location, levels = listLOC)
-
+results$API = factor(results$API, levels = rev(listAPI))
+#	reverses the levels so they go in the order I want
+	
 ggplot(data = results) + ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenPresent)") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), outlier.alpha = 0) + 
