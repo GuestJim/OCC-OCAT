@@ -151,7 +151,7 @@ OCCHTML = function(tab) {
 	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE)
 }
 
-writeOCC = function(type, typeName=substitute(type), name=gameFQUA)	{
+writeOCC = function(type, typeName=substitute(type), name=paste0(game, " - ", QUA))	{
 	write_tableHTML(OCCHTML(type), file = paste0(name, " - ", typeName,".html"))
 }
 
