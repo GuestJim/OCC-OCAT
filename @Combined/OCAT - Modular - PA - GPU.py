@@ -96,7 +96,14 @@ GPUs = [\
 'RTX 2080']
 #	I know the GPU so I set it here manually anyway
 GPUs = list(set(GPUs))
-APIs = list(set(APIs))
+
+if "APIs.txt" in os.listdir(RelPath):
+	APIs = open(RelPath + "APIs.txt", 'r').readlines()
+	APIs = [line.rstrip('\n') for line in APIs]
+else:
+	APIs = list(set(APIs))
+#	sets the list of APIs either from a TXT file provided or by reading it from the CSVs
+#		list(set(###)) removes duplicates from the list
 QUAs = list(set(QUAs))
 #	removes duplicates from the lists created earlier and makes them into lists for these variables
 
