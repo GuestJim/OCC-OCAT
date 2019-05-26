@@ -58,6 +58,67 @@ sepCOL = function(tab, name = c("GPU", "Location", "V")) {
 #	a function that will take the multi-level lists the aggregate function will generate and convert them into a data frame with separate columns
 #		the V. is placed by the aggregate function but this function will remove it
 
+nameFIND = function (FRAME, name)	{
+	grep(name, names(FRAME), value=TRUE)
+}
+#	finds and returns the column numbers for a frame that contain a certain name in them
+
+nameSEARCH = function(FRAME, name)	{
+	if (is.vector(name)){
+		out = numeric(0)
+		for (i in name)	{
+			print(i)
+			out = append(out, which(colnames(FRAME)==i))
+		}
+	}	else	{
+		out = which(colnames(FRAME)==name)
+	}
+	return(out)
+}
+#	this returns the columns with 'name' in its column name
+
+findSEARCH = function(FRAME, term)	{
+	name = grep(term, names(FRAME), value=TRUE)
+	if (is.vector(name)){
+		out = numeric(0)
+		for (i in name)	{
+			out = append(out, which(colnames(FRAME)==i))
+		}
+	}	else	{
+		out = which(colnames(FRAME)==name)
+	}
+	return(out)
+}
+#	combination of the above two functions
+
+compMEAN = function(FRAME)	{
+	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1) = c("GPU", "Location", "", "Average")
+	colnames(temp2) = c("GPU", "Location", "", "Average")
+
+	return(rbind(temp1, temp2))
+}
+#	compact mean (average) function that will take a frame containing FPS and ms columns and produce a frame with FPS rows followed by ms rows
+
+compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
+	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1) = c("GPU", "Location", "", paste0(listPERC, "%"))
+	colnames(temp2) = c("GPU", "Location", "", paste0(listPERC, "%"))
+
+	return(rbind(temp1, temp2))
+}
+#	compact percentile function that will take a frame containing FPS and ms columns and produce a frame with FPS rows followed by ms rows
+
+compTAB = function(MEAN, PERC, ECDF, endECDF = nameSEARCH(ECDF, "60 FPS"))	{
+	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (ms)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
+	colnames(out)[3] = ""
+	return(out)
+}
+#	compact table function for creating a single table holding the mean, percentile, and ECDF data in it
+#	be default it will only get the 60 FPS ECDF value, but by passing a different endECDF value, it will include more
+
 customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI) {
 	if (exists("recording")) {	
 		if (device=="png") {
@@ -195,8 +256,9 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dataMEAN, GPU)
 	writeGPU(dataPERC, GPU)
 	writeGPU(dataECDF, GPU)
+	writeGPU(compTAB(dataMEAN, dataPERC, dataECDF), GPU, typeName = "dataCOMP")
 	}	}
-	
+
 if (textDISP){
 writeOCC(dispMEAN)
 writeOCC(dispPERC)
@@ -207,6 +269,7 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dispMEAN, GPU)
 	writeGPU(dispPERC, GPU)
 	writeGPU(dispECDF, GPU)
+	writeGPU(compTAB(dispMEAN, dispPERC, dispECDF), GPU, typeName = "dataCOMP")
 	}	}
 }
 }
@@ -226,7 +289,7 @@ message("Averages - Frame Time")
 results$Location = factor(results$Location, levels = listLOC)
 results$API = factor(results$API, levels = rev(listAPI))
 #	reverses the levels so they go in the order I want
-	
+
 ggplot(data = results) + ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenPresent)") + 
 geom_hline(yintercept = 1000/60, color = "red") + 
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), outlier.alpha = 0) + 

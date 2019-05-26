@@ -104,6 +104,7 @@ else:
 	APIs = list(set(APIs))
 #	sets the list of APIs either from a TXT file provided or by reading it from the CSVs
 #		list(set(###)) removes duplicates from the list
+
 QUAs = list(set(QUAs))
 #	removes duplicates from the lists created earlier and makes them into lists for these variables
 

@@ -111,13 +111,13 @@ compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 }
 #	compact percentile function that will take a frame containing FPS and ms columns and produce a frame with FPS rows followed by ms rows
 
-compTAB = function(MEAN, PERC, ECDF, endECDF = 3)	{
-	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:3)], ECDF[3:endECDF])
+compTAB = function(MEAN, PERC, ECDF, endECDF = nameSEARCH(ECDF, "60 FPS"))	{
+	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (ms)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
 	colnames(out)[3] = ""
 	return(out)
 }
 #	compact table function for creating a single table holding the mean, percentile, and ECDF data in it
-#	be default it will only get the 60 FPS ECDF value, but by changing passing a different endECDF value, it will include more
+#	be default it will only get the 60 FPS ECDF value, but by passing a different endECDF value, it will include more
 
 customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI) {
 	if (exists("recording")) {	
@@ -258,8 +258,9 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dataMEAN, GPU)
 	writeGPU(dataPERC, GPU)
 	writeGPU(dataECDF, GPU)
+	writeGPU(compTAB(dataMEAN, dataPERC, dataECDF), GPU, typeName = "dataCOMP")
 	}	}
-	
+
 if (textDISP){
 writeOCC(dispMEAN)
 writeOCC(dispPERC)
@@ -270,6 +271,7 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dispMEAN, GPU)
 	writeGPU(dispPERC, GPU)
 	writeGPU(dispECDF, GPU)
+	writeGPU(compTAB(dispMEAN, dispPERC, dispECDF), GPU, typeName = "dataCOMP")
 	}	}
 }
 }
@@ -287,6 +289,8 @@ if (graphFRAM) {
 message("Averages - Frame Time")
 
 results$Location = factor(results$Location, levels = listLOC)
+results$API = factor(results$API, levels = rev(listAPI))
+#	reverses the levels so they go in the order I want
 
 ggplot(data = results) + 
 ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenPresent)") + labs(caption = cGPU) + 
