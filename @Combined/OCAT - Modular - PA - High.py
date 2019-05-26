@@ -97,8 +97,14 @@ GPUs = [\
 'RTX 2080']
 #	I know the GPU so I set it here manually anyway
 
-APIs = list(set(APIs))
-#	removes duplicates from the lists created earlier and makes them into lists for these variables
+if "APIs.txt" in os.listdir(RelPath):
+	APIs = open(RelPath + "APIs.txt", 'r').readlines()
+	APIs = [line.rstrip('\n') for line in APIs]
+else:
+	APIs = list(set(APIs))
+#	sets the list of APIs either from a TXT file provided or by reading it from the CSVs
+#		list(set(###)) removes duplicates from the list
+
 QUAs = list(set(QUAs))
 QUAs = ["High"]
 #	this is for working just with the High quality data, and by setting it here, only that data will be used
