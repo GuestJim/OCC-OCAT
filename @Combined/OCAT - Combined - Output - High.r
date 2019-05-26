@@ -175,7 +175,7 @@ OCCHTML = function(tab) {
 }
 #	custom function that will produce an HTML version of the provided table, but strip out the undesired code and have it approximately match my desired formatting for OCC articles
 
-writeOCC = function(type, typeName=substitute(type), name=gameFQUA)	{
+writeOCC = function(type, typeName=substitute(type), name=paste0(game, " - ", QUA))	{
 	write_tableHTML(OCCHTML(type), file = paste0(name, " - ", typeName,".html"))
 }
 #	function to take a table, create the OCCHTML table, and then actually write the HTML to a file with the desired name
