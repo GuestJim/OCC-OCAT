@@ -1,6 +1,6 @@
 import sys, os, shutil
 
-droppedPath = sys.argv[1].rsplit("\\", 1)[0]+"\\"
+droppedPath = sys.argv[1].rsplit("\\", 1)[0] + "\\"
 
 scriptPath=sys.argv[0].rsplit("\\", 1)[0]
 
@@ -154,11 +154,11 @@ outputFull = droppedPath + "@" + outputName
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "PA").replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "High").replace("!LOC!", locStr))
 		fout.close()
 
-print(outputFull)
-os.system("pause")
+# print(outputFull)
+# os.system("pause")
 
 for file in os.listdir(droppedPath):
 	if file.endswith(".r") and file.startswith("Processing"):
