@@ -77,7 +77,11 @@ GPUs = [\
 'RTX 2060',\
 'RTX 2080']
 
-APIs = list(set(APIs))
+if "APIs.txt" in os.listdir(RelPath):
+	APIs = open(RelPath + "APIs.txt", 'r').readlines()
+	APIs = [line.rstrip('\n') for line in APIs]
+else:
+	APIs = list(set(APIs))
 
 QUAs = list(set(QUAs))
 QUAs = ["High"]
