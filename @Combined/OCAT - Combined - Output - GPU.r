@@ -92,14 +92,16 @@ findSEARCH = function(FRAME, term)	{
 #	combination of the above two functions
 
 compMEAN = function(FRAME)	{
-	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
-	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
-	colnames(temp1) = c("GPU", "Location", "", "Average")
-	colnames(temp2) = c("GPU", "Location", "", "Average")
+	temp1 = cbind(FRAME[1:findSEARCH(FRAME, "Average")], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:findSEARCH(FRAME, "Average")], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1)[findSEARCH(FRAME, "Average"):length(temp1)] = c("Location", "", "Average")
+	colnames(temp2)[findSEARCH(FRAME, "Average"):length(temp1)] = c("Location", "", "Average")
 
 	return(rbind(temp1, temp2))
 }
 #	compact mean (average) function that will take a frame containing FPS and ms columns and produce a frame with FPS rows followed by ms rows
+#		by using the findSEARCH function, it is able to identify the columns specific strings are in
+#		this allows it to work with data where there are different APIs to consider
 
 compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
@@ -112,12 +114,14 @@ compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 #	compact percentile function that will take a frame containing FPS and ms columns and produce a frame with FPS rows followed by ms rows
 
 compTAB = function(MEAN, PERC, ECDF, endECDF = nameSEARCH(ECDF, "60 FPS"))	{
-	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (ms)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
-	colnames(out)[3] = ""
+	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (FPS)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
+	colnames(out)[findSEARCH(out, "Var")] = ""
 	return(out)
 }
 #	compact table function for creating a single table holding the mean, percentile, and ECDF data in it
 #	be default it will only get the 60 FPS ECDF value, but by passing a different endECDF value, it will include more
+#		by using the findSEARCH function, it is able to identify the columns specific strings are in
+#		this allows it to work with data where there are different APIs to consider
 
 customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI) {
 	if (exists("recording")) {	
@@ -137,15 +141,13 @@ customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI) {
 #	custom function for saving graphs that automates the sizing and naming, significantly cleaning up the command to save the graphs
 
 if (length(levels(results$API)) >= 2) {
-#	check for if there are multiple APIs to consider
-	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Frame Time)", "API", "V"))
-	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Frame Time)", "API", "V"))
-	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Frame Time)", "API", "V"))
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), meanFPS), c("GPU", "API", "Average (Frame Time)", "V"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), percFPS), c("GPU", "API", "Percentile (Frame Time)", "V"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), ecdfFPS, listFPS), c("GPU", "API", "FPS Percentile (Frame Time)", "V"))
 	if (textDISP){
-#		check for if the display time data should also be used
-		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Display Time)", "API", "V"))
-		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Display Time)", "API", "V"))
-		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Display Time)", "API", "V"))	
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), meanFPS), c("GPU", "API", "Average (Display Time)", "V"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), percFPS), c("GPU", "API", "Percentile (Display Time)", "V"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), ecdfFPS, listFPS), c("GPU", "API", "FPS Percentile (Display Time)", "V"))
 	}
 } else {
 	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Frame Time)", "V"))
