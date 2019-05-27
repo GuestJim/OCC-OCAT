@@ -30,7 +30,7 @@ percFPS = function(x, listPERC = c(0.1, 1, 99, 99.9), r = 2) {
 	out = c()
 	for (i in listPERC) {
 		temp = c(1000/quantile(x, i), quantile(x, i))
-		names(temp) = paste0(i * 100, c("% (ms)", "% (FPS)"))
+		names(temp) = paste0(i * 100, c("% (FPS)", "% (ms)"))
 		out = append(out, temp)
 	}
 	return(round(out, r))
@@ -82,14 +82,15 @@ findSEARCH = function(FRAME, term)	{
 }
 
 compMEAN = function(FRAME)	{
-	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
-	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
-	colnames(temp1) = c("GPU", "Location", "", "Average")
-	colnames(temp2) = c("GPU", "Location", "", "Average")
+	temp1 = cbind(FRAME[1:findSEARCH(FRAME, "Average")], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:findSEARCH(FRAME, "Average")], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1)[findSEARCH(FRAME, "Average"):length(temp1)] = c("Location", "", "Average")
+	colnames(temp2)[findSEARCH(FRAME, "Average"):length(temp1)] = c("Location", "", "Average")
+	# colnames(temp1) = c("GPU", "Location", "", "Average")
+	# colnames(temp2) = c("GPU", "Location", "", "Average")
 
 	return(rbind(temp1, temp2))
 }
-
 
 compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
@@ -101,8 +102,8 @@ compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 }
 
 compTAB = function(MEAN, PERC, ECDF, endECDF = nameSEARCH(ECDF, "60 FPS"))	{
-	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (ms)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
-	colnames(out)[3] = ""
+	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (FPS)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
+	colnames(out)[findSEARCH(out, "Var")] = ""
 	return(out)
 }
 
