@@ -299,7 +299,7 @@ customSave("@Diff - Frame Time", width = 8)
 message("Frequency - Frame Time")
 
 ggplot(results, aes(MsBetweenPresents)) +
-ggtitle(paste0(gameQUA, " Frequency Plot"), subtitle="MsBetweenPresents") + labs(caption = cGPU) +
+ggtitle(paste0(gameQUA), subtitle="MsBetweenPresents - Frequency Plot") + labs(caption = cGPU) +
 geom_vline(xintercept = 1000/60, color = "red") +
 geom_freqpoly(binwidth=0.03, size=0) +
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
@@ -314,7 +314,7 @@ customSave("@Freq - Frame Time", width = 8)
 message("QQ - Frame Time")
 
 ggplot(results, aes(sample=MsBetweenPresents)) +
-ggtitle(paste0(gameQUA, " QQ Distribution"), subtitle="MsBetweenPresents") +labs(caption = cGPU) +
+ggtitle(paste0(gameQUA), subtitle="MsBetweenPresents - QQ Distribution") + labs(caption = cGPU) +
 geom_hline(yintercept = 1000/60, color = "red") +
 geom_point(stat="qq") +
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
@@ -383,7 +383,7 @@ customSave("@Diff - Display Time", width = 8)
 message("Frequency - Display Time")
 
 ggplot(results, aes(MsBetweenDisplayChange)) +
-ggtitle(paste0(gameQUA, " Frequency Plot"), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) +
+ggtitle(paste0(gameQUA), subtitle="MsBetweenDisplayChange - Frequency Plot") + labs(caption = cGPU) +
 geom_vline(xintercept = 1000/60, color = "red") +
 geom_freqpoly(binwidth=0.03, size=0) +
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
@@ -398,7 +398,7 @@ customSave("@Freq - Display Time", width = 8)
 message("QQ - Display Time")
 
 ggplot(results, aes(sample=MsBetweenDisplayChange)) +
-ggtitle(paste0(gameQUA, " QQ Distribution"), subtitle="MsBetweenDisplayChange") + labs(caption = cGPU) +
+ggtitle(paste0(gameQUA), subtitle="MsBetweenDisplayChange - QQ Distribution") + labs(caption = cGPU) +
 geom_hline(yintercept = 1000/60, color = "red") +
 geom_point(stat="qq") +
 facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
