@@ -33,6 +33,9 @@ textDISP	=	FALSE
 graphDISP	=	FALSE
 #	specific controls for display time data
 
+textAPI		=	FALSE
+#	will generate TXT and HTML, if HTML is enabled, files for each API
+
 textDIFF	=	FALSE
 graphDIFF	=	FALSE
 #	specific controls for consecutive frame time difference data
@@ -121,11 +124,11 @@ gameFqua = paste0(gameF, " - ", qua)
 gameGPU = paste0(game, " (", cGPU, ")")
 #	game name with GPU
 
-if (nchar(listAPI[1]) > 1)	{
+if (length(unique(results$GPU)) == 1 & nchar(listAPI[1]) > 1)	{
 	gameFQUA = paste0(gameFQUA, " - ", listAPI[1])
 	gameFqua = paste0(gameFqua, " - ", listAPI[1])
 }
-#	checks if the API list has anything in it and then adds the API name to the two variables
+#	this is only necessary for the GPU scripts, not the High scripts, so this checks for if multiple GPUs are in the data
 source("@Combined - Output - !TYPE!.r")
 #	calls the appropriate output R script
 #		!TYPE! is set by the Python script

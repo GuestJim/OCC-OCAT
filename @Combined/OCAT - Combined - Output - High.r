@@ -194,8 +194,24 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 		print(dataECDF[dataECDF$GPU==GPU,], row.names = FALSE)
 	sink()
 	}	}
-}
 #	will run through the different GPUs tested, if there is a sub-folder for them, and generates similar files to the above but only for the specific GPU
+
+if (textAPI)	{
+for (API in listAPI) {
+	options(width = 1000)
+	sink(paste0(game, " - ", API, " - ", QUA, " Frame Data.txt"), split = TRUE)
+		writeLines(game)
+		writeLines("Frame Time")
+		writeLines("\nMean")
+		print(dataMEAN[dataMEAN$API==API,], row.names = FALSE)
+		writeLines("\nPercentiles")
+		print(dataPERC[dataPERC$API==API,], row.names = FALSE)
+		writeLines("\nPercentile of FPS")
+		print(dataECDF[dataECDF$API==API,], row.names = FALSE)
+	sink()
+	}	}
+#	will run through the different APIs tested, creating a separate TXT file for each
+}
 
 if (textDISP){
 	options(width = 1000)
@@ -223,6 +239,21 @@ if (textDISP){
 		print(dispECDF[dispECDF$GPU==GPU,], row.names = FALSE)
 	sink()
 	}	}
+	
+	if (textAPI)	{
+	for (API in listAPI) {
+		options(width = 1000)
+		sink(paste0(game, " - ", API, " - ", QUA, " Frame Data.txt"), split = TRUE)
+			writeLines(game)
+			writeLines("Frame Time")
+			writeLines("\nMean")
+			print(dispMEAN[dispMEAN$API==API,], row.names = FALSE)
+			writeLines("\nPercentiles")
+			print(dispPERC[dispPERC$API==API,], row.names = FALSE)
+			writeLines("\nPercentile of FPS")
+			print(dispECDF[dispECDF$API==API,], row.names = FALSE)
+		sink()
+		}	}
 }
 #	precisely the same as above, but for display time data
 message("")
@@ -248,6 +279,13 @@ writeGPU = function(type, GPU, typeName=substitute(type), name=gameF)	{
 }
 #	similar to the above but is for generating HTML tables for each GPU
 
+writeSUB = function(type, SUB, typeName=substitute(type), name=gameF)	{
+	COL = deparse(substitute(SUB))
+	write_tableHTML(OCCHTML(type[type[,COL]==SUB,]), file = paste0(name, " - ", SUB, " - ", QUA, " - ", typeName,".html"))
+}
+#	similar to the above but is for subsetting the data, though variable name passed as SUB must be the column name for this to work (like API)
+#		it differs from writeGPU as it does not place the outputs in a different folder
+
 if (HTMLOUT){
 writeOCC(dataMEAN)
 writeOCC(dataPERC)
@@ -260,6 +298,16 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dataECDF, GPU)
 	writeGPU(compTAB(dataMEAN, dataPERC, dataECDF), GPU, typeName = "dataCOMP")
 	}	}
+#	steps through the GPU list, generating files for each one
+
+if	(textAPI){
+	for	(API in listAPI)	{
+	writeSUB(dataMEAN, API)
+	writeSUB(dataPERC, API)
+	writeSUB(dataECDF, API)
+	writeSUB(compTAB(dataMEAN, dataPERC, dataECDF), API, typeName = "dataCOMP")
+	}	}
+#	steps through the API list, generating files for each one
 
 if (textDISP){
 writeOCC(dispMEAN)
@@ -273,7 +321,16 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dispECDF, GPU)
 	writeGPU(compTAB(dispMEAN, dispPERC, dispECDF), GPU, typeName = "dataCOMP")
 	}	}
+	
+if	(textAPI){
+	for	(API in listAPI)	{
+	writeSUB(dispMEAN, API)
+	writeSUB(dispPERC, API)
+	writeSUB(dispECDF, API)
+	writeSUB(compTAB(dispMEAN, dispPERC, dispECDF), API, typeName = "dataCOMP")
+	}	}
 }
+#	similar as above, but for Display Time data, if desired
 }
 #	the commands to actually generate the HTML tables, if desired
 #		the generated tables are of the mean, percentile, and ECDF statistics as well as the compact table described earlier
