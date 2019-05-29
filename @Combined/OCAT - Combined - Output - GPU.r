@@ -168,6 +168,21 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 		print(dataECDF[dataECDF$GPU==GPU,], row.names = FALSE)
 	sink()
 	}	}
+	
+if	(textLOC)	{
+for (LOC in listLOC) {
+	options(width = 1000)
+	sink(paste0(game, " - ", LOC, " - ", QUA, " Frame Data.txt"), split = TRUE)
+		writeLines(game)
+		writeLines("Frame Time")
+		writeLines("\nMean")
+		print(dataMEAN[dataMEAN$LOC==LOC,], row.names = FALSE)
+		writeLines("\nPercentiles")
+		print(dataPERC[dataPERC$LOC==LOC,], row.names = FALSE)
+		writeLines("\nPercentile of FPS")
+		print(dataECDF[dataECDF$LOC==LOC,], row.names = FALSE)
+	sink()
+	}	}
 }
 
 if (textDISP){
@@ -196,6 +211,21 @@ if (textDISP){
 		print(dispECDF[dispECDF$GPU==GPU,], row.names = FALSE)
 	sink()
 	}	}
+	
+	if (textAPI)	{
+	for (API in listAPI) {
+		options(width = 1000)
+		sink(paste0(game, " - ", API, " - ", QUA, " Frame Data.txt"), split = TRUE)
+			writeLines(game)
+			writeLines("Frame Time")
+			writeLines("\nMean")
+			print(dispMEAN[dispMEAN$API==API,], row.names = FALSE)
+			writeLines("\nPercentiles")
+			print(dispPERC[dispPERC$API==API,], row.names = FALSE)
+			writeLines("\nPercentile of FPS")
+			print(dispECDF[dispECDF$API==API,], row.names = FALSE)
+		sink()
+		}	}
 }
 message("")
 
@@ -215,16 +245,31 @@ writeGPU = function(type, GPU, typeName=substitute(type), name=gameF)	{
 	write_tableHTML(OCCHTML(type[type$GPU==GPU,]), file = paste0(GPU, "\\", name, " - ", GPU, " - ", QUA, " - ", typeName,".html"))
 }
 
+writeSUB = function(type, SUB, typeName=substitute(type), name=gameF)	{
+	COL = deparse(substitute(SUB))
+	write_tableHTML(OCCHTML(type[type[,COL]==SUB,]), file = paste0(name, " - ", SUB, " - ", QUA, " - ", typeName,".html"))
+}
+
 if (HTMLOUT){
 writeOCC(dataMEAN)
 writeOCC(dataPERC)
 writeOCC(dataECDF)
 writeOCC(compTAB(dataMEAN, dataPERC, dataECDF), typeName = "dataCOMP")
 
+if	(textAPI){
+	for	(API in listAPI)	{
+	writeSUB(dataMEAN, API)
+	writeSUB(dataPERC, API)
+	writeSUB(dataECDF, API)
+	writeSUB(compTAB(dataMEAN, dataPERC, dataECDF), API, typeName = "dataCOMP")
+	}
+}
+
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dataMEAN, GPU)
 	writeGPU(dataPERC, GPU)
 	writeGPU(dataECDF, GPU)
+	writeGPU(compTAB(dataMEAN, dataPERC, dataECDF), GPU, typeName = "dataCOMP")
 	}	}
 
 if (textDISP){
@@ -233,10 +278,20 @@ writeOCC(dispPERC)
 writeOCC(dispECDF)
 writeOCC(compTAB(dispMEAN, dispPERC, dispECDF), typeName = "dispCOMP")
 
+if	(textAPI){
+	for	(API in listAPI)	{
+	writeSUB(dispMEAN, API)
+	writeSUB(dispPERC, API)
+	writeSUB(dispECDF, API)
+	writeSUB(compTAB(dispMEAN, dispPERC, dispECDF), API, typeName = "dataCOMP")
+	}
+}
+
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dispMEAN, GPU)
 	writeGPU(dispPERC, GPU)
 	writeGPU(dispECDF, GPU)
+	writeGPU(compTAB(dispMEAN, dispPERC, dispECDF), GPU, typeName = "dataCOMP")
 	}	}
 }
 }

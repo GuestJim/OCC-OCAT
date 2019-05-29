@@ -22,6 +22,9 @@ graphFRAM	=	TRUE
 textDISP	=	FALSE
 graphDISP	=	FALSE
 
+textAPI		=	FALSE
+#	will generate TXT and HTML, if HTML is enabled, files for each API
+
 textDIFF	=	FALSE
 graphDIFF	=	FALSE
 
@@ -95,10 +98,11 @@ gameFQUA = paste0(gameF, " - ", QUA)
 gameFqua = paste0(gameF, " - ", qua)
 gameGPU = paste0(game, " (", cGPU, ")")
 
-if (nchar(listAPI[1]) > 1)	{
+if (length(unique(results$GPU)) == 1 & nchar(listAPI[1]) > 1)	{
 	gameFQUA = paste0(gameFQUA, " - ", listAPI[1])
 	gameFqua = paste0(gameFqua, " - ", listAPI[1])
 }
+#	this is only necessary for the GPU scripts, not the High scripts, so this checks for if multiple GPUs are in the data
 source("@Combined - Output - !TYPE!.r")
 
 if	(graphs_all)	{
