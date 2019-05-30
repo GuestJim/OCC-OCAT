@@ -101,7 +101,12 @@ compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 	return(rbind(temp1, temp2))
 }
 
-compTAB = function(MEAN, PERC, ECDF, endECDF = nameSEARCH(ECDF, "60 FPS"))	{
+compTAB = function(MEAN, PERC, ECDF, endECDF = NULL)	{
+	if (is.null(endECDF) && !is.null(listFPS))	{
+		endECDF = nameSEARCH(ECDF, paste0(min(listFPS), " FPS"))
+	}	else if	(is.null(endECDF) && is.null(listFPS)) {
+		endECDF = nameSEARCH(ECDF, "60 FPS")
+	}
 	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (FPS)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
 	colnames(out)[findSEARCH(out, "Var")] = ""
 	return(out)
