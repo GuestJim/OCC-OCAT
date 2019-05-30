@@ -113,13 +113,20 @@ compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 }
 #	compact percentile function that will take a frame containing FPS and ms columns and produce a frame with FPS rows followed by ms rows
 
-compTAB = function(MEAN, PERC, ECDF, endECDF = nameSEARCH(ECDF, "60 FPS"))	{
+compTAB = function(MEAN, PERC, ECDF, endECDF = NULL)	{
+	if (is.null(endECDF) && !is.null(listFPS))	{
+		endECDF = nameSEARCH(ECDF, paste0(min(listFPS), " FPS"))
+	}	else if	(is.null(endECDF) && is.null(listFPS)) {
+		endECDF = nameSEARCH(ECDF, "60 FPS")
+	}
 	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (FPS)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
 	colnames(out)[findSEARCH(out, "Var")] = ""
 	return(out)
 }
 #	compact table function for creating a single table holding the mean, percentile, and ECDF data in it
 #	be default it will only get the 60 FPS ECDF value, but by passing a different endECDF value, it will include more
+#		it will now check the listFPS variable set in the Input file for adding to the list of FPS targets to include
+#			when additional values are present in listFPS that are less than 60, this will automatically add them to the table
 #		by using the findSEARCH function, it is able to identify the columns specific strings are in
 #		this allows it to work with data where there are different APIs to consider
 

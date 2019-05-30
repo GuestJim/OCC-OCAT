@@ -34,7 +34,8 @@ graphDISP	=	FALSE
 #	specific controls for display time data
 
 textAPI		=	FALSE
-#	will generate TXT and HTML, if HTML is enabled, files for each API
+textLOC		=	FALSE
+#	will generate TXT and HTML, if HTML is enabled, files for each API/Location
 
 textDIFF	=	FALSE
 graphDIFF	=	FALSE
