@@ -82,14 +82,15 @@ findSEARCH = function(FRAME, term)	{
 }
 
 compMEAN = function(FRAME)	{
-	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
-	temp2 = cbind(FRAME[1:2], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
-	colnames(temp1) = c("GPU", "Location", "", "Average")
-	colnames(temp2) = c("GPU", "Location", "", "Average")
+	temp1 = cbind(FRAME[1:findSEARCH(FRAME, "Average")], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
+	temp2 = cbind(FRAME[1:findSEARCH(FRAME, "Average")], rep("ms", nrow(FRAME)), FRAME[findSEARCH(FRAME, "ms")])
+	colnames(temp1)[findSEARCH(FRAME, "Average"):length(temp1)] = c("Location", "", "Average")
+	colnames(temp2)[findSEARCH(FRAME, "Average"):length(temp1)] = c("Location", "", "Average")
+	# colnames(temp1) = c("GPU", "Location", "", "Average")
+	# colnames(temp2) = c("GPU", "Location", "", "Average")
 
 	return(rbind(temp1, temp2))
 }
-
 
 compPERC = function(FRAME, listPERC = c(0.1, 1, 99, 99.9))	{
 	temp1 = cbind(FRAME[1:2], rep("FPS", nrow(FRAME)), FRAME[findSEARCH(FRAME, "FPS")])
@@ -147,7 +148,7 @@ if (length(levels(results$API)) >= 2) {
 	}
 }
 
-if (textFRAM){
+if (textFRAM)	{
 options(width = 1000)
 sink(paste0(game, " - ", QUA, " Frame Data.txt"), split = TRUE)
 writeLines(paste0(gameGPU, " - ", QUA))
@@ -173,7 +174,7 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 		print(dataECDF[dataECDF$GPU==GPU,], row.names = FALSE)
 	sink()
 	}	}
-	
+
 if	(textLOC)	{
 for (LOC in listLOC) {
 	options(width = 1000)
@@ -216,7 +217,7 @@ if (textDISP){
 		print(dispECDF[dispECDF$GPU==GPU,], row.names = FALSE)
 	sink()
 	}	}
-	
+
 	if (textAPI)	{
 	for (API in listAPI) {
 		options(width = 1000)
@@ -261,14 +262,13 @@ writeOCC(dataPERC)
 writeOCC(dataECDF)
 writeOCC(compTAB(dataMEAN, dataPERC, dataECDF), typeName = "dataCOMP")
 
-if	(textAPI){
-	for	(API in listAPI)	{
-	writeSUB(dataMEAN, API)
-	writeSUB(dataPERC, API)
-	writeSUB(dataECDF, API)
-	writeSUB(compTAB(dataMEAN, dataPERC, dataECDF), API, typeName = "dataCOMP")
-	}
-}
+if	(textLOC){
+	for	(Location in textLOC)	{
+	writeSUB(dataMEAN, Location)
+	writeSUB(dataPERC, Location)
+	writeSUB(dataECDF, Location)
+	writeSUB(compTAB(dataMEAN, dataPERC, dataECDF), Location, typeName = "dataCOMP")
+	}	}
 
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dataMEAN, GPU)
@@ -283,14 +283,13 @@ writeOCC(dispPERC)
 writeOCC(dispECDF)
 writeOCC(compTAB(dispMEAN, dispPERC, dispECDF), typeName = "dispCOMP")
 
-if	(textAPI){
-	for	(API in listAPI)	{
-	writeSUB(dispMEAN, API)
-	writeSUB(dispPERC, API)
-	writeSUB(dispECDF, API)
-	writeSUB(compTAB(dispMEAN, dispPERC, dispECDF), API, typeName = "dataCOMP")
-	}
-}
+if	(textLOC){
+	for	(Location in textLOC)	{
+	writeSUB(dispMEAN, Location)
+	writeSUB(dispPERC, Location)
+	writeSUB(dispECDF, Location)
+	writeSUB(compTAB(dispMEAN, dispPERC, dispECDF), Location, typeName = "dataCOMP")
+	}	}
 
 for (GPU in listGPU) {	if (file.exists(GPU))	{
 	writeGPU(dispMEAN, GPU)
