@@ -156,7 +156,7 @@ writeLines("Frame Time")
 writeLines("\nMean")
 print(dataMEAN, row.names = FALSE)
 writeLines("\nPercentiles")
-print(dataPERC, row.names = FALSE)
+print(compPERC(dataPERC), row.names = FALSE)
 writeLines("\nPercentile of FPS")
 print(dataECDF, row.names = FALSE)
 sink()
@@ -176,17 +176,17 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	}	}
 
 if	(textLOC)	{
-for (LOC in listLOC) {
+for (Location in listLOC) {
 	options(width = 1000)
-	sink(paste0(game, " - ", LOC, " - ", QUA, " Frame Data.txt"), split = TRUE)
+	sink(paste0(game, " - ", Location, " - ", QUA, " Frame Data.txt"), split = TRUE)
 		writeLines(game)
 		writeLines("Frame Time")
 		writeLines("\nMean")
-		print(dataMEAN[dataMEAN$LOC==LOC,], row.names = FALSE)
+		print(dataMEAN[dataMEAN[nameSEARCH(dataMEAN, "FPS")-1]==Location,], row.names = FALSE)
 		writeLines("\nPercentiles")
-		print(dataPERC[dataPERC$LOC==LOC,], row.names = FALSE)
+		print(compPERC[compPERC[nameSEARCH(compPERC, "0.1% (FPS)")-1]==Location,], row.names = FALSE)
 		writeLines("\nPercentile of FPS")
-		print(dataECDF[dataECDF$LOC==LOC,], row.names = FALSE)
+		print(dataECDF[dataECDF[nameSEARCH(dataECDF, "60 FPS")-1]==Location,], row.names = FALSE)
 	sink()
 	}	}
 }
@@ -218,18 +218,18 @@ if (textDISP){
 	sink()
 	}	}
 
-	if (textAPI)	{
-	for (API in listAPI) {
+	if (textLOC)	{
+	for (Location in textLOC) {
 		options(width = 1000)
-		sink(paste0(game, " - ", API, " - ", QUA, " Frame Data.txt"), split = TRUE)
+		sink(paste0(game, " - ", Location, " - ", QUA, " Frame Data.txt"), split = TRUE)
 			writeLines(game)
 			writeLines("Frame Time")
 			writeLines("\nMean")
-			print(dispMEAN[dispMEAN$API==API,], row.names = FALSE)
+			print(dispMEAN[dispMEAN[nameSEARCH(dispMEAN, "FPS")-1]==Location,], row.names = FALSE)
 			writeLines("\nPercentiles")
-			print(dispPERC[dispPERC$API==API,], row.names = FALSE)
+			print(compPERC[compPERC[nameSEARCH(compPERC, "0.1% (FPS)")-1]==Location,], row.names = FALSE)
 			writeLines("\nPercentile of FPS")
-			print(dispECDF[dispECDF$API==API,], row.names = FALSE)
+			print(dispECDF[dispECDF[nameSEARCH(dispECDF, "60 FPS")-1]==Location,], row.names = FALSE)
 		sink()
 		}	}
 }
