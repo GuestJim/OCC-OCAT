@@ -125,9 +125,9 @@ gameFqua = paste0(gameF, " - ", qua)
 gameGPU = paste0(game, " (", cGPU, ")")
 #	game name with GPU
 
-if (length(unique(results$GPU)) == 1 & nchar(listAPI[1]) > 1)	{
-	gameFQUA = paste0(gameFQUA, " - ", listAPI[1])
-	gameFqua = paste0(gameFqua, " - ", listAPI[1])
+if (length(unique(results$GPU)) == 1 & nchar(unique(results$API[1]) > 1)	{
+	gameFQUA = paste0(gameFQUA, " - ", unique(results$API))
+	gameFqua = paste0(gameFqua, " - ", unique(results$API))
 }
 #	this is only necessary for the GPU scripts, not the High scripts, so this checks for if multiple GPUs are in the data
 source("@Combined - Output - !TYPE!.r")
@@ -141,8 +141,8 @@ for	(loc in listLOC)	{
 	results = resultsFull[resultsFull$Location == loc, ]
 #		subsets the data frame for just those entries of the current location
 	recording = paste0(qua, " - ", loc)
-	if (nchar(listAPI[1]) > 1)	{
-		recording = paste0(recording, " - ", listAPI[1])
+	if (nchar(unique(results$API)[1]) > 1)	{
+		recording = paste0(recording, " - ", unique(results$API))
 	}
 	fileName = paste0(gameF, " - ", recording)
 #	creates 'recording' and 'fileName' variables that are needed for the script

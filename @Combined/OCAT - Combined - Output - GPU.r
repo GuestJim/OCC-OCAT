@@ -204,19 +204,20 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 	}	}
 
 if	(textLOC)	{
-for (LOC in listLOC) {
+for (Location in listLOC) {
 	options(width = 1000)
-	sink(paste0(game, " - ", LOC, " - ", QUA, " Frame Data.txt"), split = TRUE)
+	sink(paste0(game, " - ", Location, " - ", QUA, " Frame Data.txt"), split = TRUE)
 		writeLines(game)
 		writeLines("Frame Time")
 		writeLines("\nMean")
-		print(dataMEAN[dataMEAN$LOC==LOC,], row.names = FALSE)
+		print(dataMEAN[dataMEAN[nameSEARCH(dataMEAN, "FPS")-1]==Location,], row.names = FALSE)
 		writeLines("\nPercentiles")
-		print(dataPERC[dataPERC$LOC==LOC,], row.names = FALSE)
+		print(compPERC[compPERC[nameSEARCH(compPERC, "0.1% (FPS)")-1]==Location,], row.names = FALSE)
 		writeLines("\nPercentile of FPS")
-		print(dataECDF[dataECDF$LOC==LOC,], row.names = FALSE)
+		print(dataECDF[dataECDF[nameSEARCH(dataECDF, "60 FPS")-1]==Location,], row.names = FALSE)
 	sink()
 #	will create separate files for each location if desired
+#		to cover when Location is not the name of the column, and when an API column is also present, nameSEARCH is used to find the first column with data, and then go back one, as this is always the Location column
 }
 #	will run through the different GPUs tested, if there is a sub-folder for them, and generates similar files to the above but only for the specific GPU
 #		actually this likely is not necessary here, as this is the output file for data concerning a single GPU, but there is no harm in leaving it
@@ -255,11 +256,11 @@ if (textDISP){
 			writeLines(game)
 			writeLines("Frame Time")
 			writeLines("\nMean")
-			print(dispMEAN[dispMEAN$Location==Location,], row.names = FALSE)
+			print(dispMEAN[dispMEAN[nameSEARCH(dispMEAN, "FPS")-1]==Location,], row.names = FALSE)
 			writeLines("\nPercentiles")
-			print(dispPERC[dispPERC$Location==Location,], row.names = FALSE)
+			print(compPERC[compPERC[nameSEARCH(compPERC, "0.1% (FPS)")-1]==Location,], row.names = FALSE)
 			writeLines("\nPercentile of FPS")
-			print(dispECDF[dispECDF$Location==Location,], row.names = FALSE)
+			print(dispECDF[dispECDF[nameSEARCH(dispECDF, "60 FPS")-1]==Location,], row.names = FALSE)
 		sink()
 }
 #	precisely the same as above, but for display time data
