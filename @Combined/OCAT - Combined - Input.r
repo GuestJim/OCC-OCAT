@@ -13,7 +13,7 @@ ggdevice = "png"
 
 textOUT		=	TRUE
 HTMLOUT		=	TRUE
-graphs		=	FALSE
+graphs		=	TRUE
 graphs_all	=	FALSE
 
 textFRAM	=	TRUE
@@ -74,17 +74,53 @@ listQUA = c(
 listLOC = c(
 !LOC!
 )
-#	add the necessary scripting to replace this using a Location.txt file or to make it ""
+
+shortLOC = c(
+!LOCSHO!
+)
 
 listAPI = c(
 !API!
 )
 
-results$GPU = factor(results$GPU, levels = listGPU)
+if (graphDIFF)	{
+	DIFF = as.data.frame(NULL)
+	cols = c("MsDifferencePresents", "MsDifferenceDisplayChange")
+
+	for (gpu in unique(results$GPU))		{
+	for (qua in unique(results$Quality))	{
+	for (loc in unique(results$Location))	{
+	for (api in unique(results$API))	{
+		if (paste0(unique(results$API[1])) == "NA"){
+			temp	=	results[results$GPU == gpu & results$Quality == qua & results$Location == loc, ]
+		}	else	{
+			temp	=	results[results$GPU == gpu & results$Quality == qua & results$Location == loc & results$API == api, ]
+		}
+		tempD	=	as.data.frame(cbind(c(diff(temp$MsBetweenPresents), 0), c(diff(temp$MsBetweenDisplayChange), 0)))
+
+		if (dim(tempD)[1] > 1)	{
+			DIFF	=	rbind(DIFF, tempD)
+		}
+	}	}	}	}
+	colnames(DIFF) = cols
+	
+	resultsFull = cbind(resultsFull, DIFF)
+	results = resultsFull
+}
+
+results$GPU = factor(results$GPU, levels = listGPU, ordered = TRUE)
 results$Quality = factor(results$Quality, levels = listQUA)
 if (length(listLOC[1]) != 0) {
-	results$Location = factor(results$Location, levels = listLOC)
+	results$Location = factor(results$Location, levels = listLOC, ordered = TRUE)
 }
+
+reLoc = function(DATA, shortLoc = NULL)	{
+	if (!is.null(shortLoc))	{
+		levels(DATA$Location) = shortLoc
+	}
+	return(DATA)
+}
+
 results$API = factor(results$API, levels = listAPI, ordered = TRUE)
 
 if (levels(results$Quality)[1] != "Review")	{
@@ -94,12 +130,13 @@ if (levels(results$Quality)[1] != "Review")	{
 	QUA = "Review"
 }
 
+
 gameQUA = paste0(game, " - ", QUA)
 gameFQUA = paste0(gameF, " - ", QUA)
 gameFqua = paste0(gameF, " - ", qua)
 gameGPU = paste0(game, " (", cGPU, ")")
 
-if (length(unique(results$GPU)) == 1 & nchar(unique(results$API)[1]) > 1)	{
+if (length(unique(results$GPU)) == 1 & nchar(paste0(unique(results$API)[1])) > 1)	{
 	gameFQUA = paste0(gameFQUA, " - ", unique(results$API))
 	gameFqua = paste0(gameFqua, " - ", unique(results$API))
 }

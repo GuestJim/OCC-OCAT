@@ -129,6 +129,13 @@ else:
 
 locStr = listclean(loc)
 
+if "Locations Short.txt" in os.listdir(RelPath):
+	locsho = open(RelPath + "Locations Short.txt", 'r').readlines()
+	locsho = [line.rstrip('\n') for line in locsho]
+	locshoStr = listclean(locsho)
+else:
+	locshoStr = "NULL"
+
 scriptType = "OCAT"
 scriptName = "Combined - PA"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
@@ -141,7 +148,7 @@ RPath = droppedPath.replace("\\", "/")
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!GPU!", droppedGPU).replace("!LONG!", out).replace("!QUA!", QUAs[0]).replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!GPU!", droppedGPU).replace("!LONG!", out).replace("!QUA!", QUAs[0]).replace("!LOC!", locStr).replace("!LOCSHO!", locshoStr))
 		fout.close()
 
 scriptType = "OCAT"
@@ -154,7 +161,7 @@ outputFull = droppedPath + "@" + outputName
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!GPU!", droppedGPU).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "GPU").replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!GPU!", droppedGPU).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "GPU").replace("!LOC!", locStr).replace("!LOCSHO!", locshoStr))
 		fout.close()
 
 for file in os.listdir(droppedPath):

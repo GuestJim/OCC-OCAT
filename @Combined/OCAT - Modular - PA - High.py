@@ -1,3 +1,5 @@
+#	in case it breaks, the last thing I did was add the Location Short stuff, including the .replace command
+
 import sys, os, shutil
 
 droppedPath = sys.argv[1].rsplit("\\", 1)[0] + "\\"
@@ -128,6 +130,13 @@ else:
 
 locStr = listclean(loc)
 
+if "Locations Short.txt" in os.listdir(RelPath):
+	locsho = open(RelPath + "Locations Short.txt", 'r').readlines()
+	locsho = [line.rstrip('\n') for line in locsho]
+	locshoStr = listclean(locsho)
+else:
+	locshoStr = "NULL"
+
 scriptType = "OCAT"
 scriptName = "Combined - PA"
 scriptFull = scriptPath + "\\" + scriptType + " - " + scriptName + ".r"
@@ -140,7 +149,7 @@ RPath = droppedPath.replace("\\", "/")
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!LONG!", out).replace("!QUA!", QUAs[0]).replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!LONG!", out).replace("!QUA!", QUAs[0]).replace("!LOC!", locStr).replace("!LOCSHO!", locshoStr))
 		fout.close()
 
 
@@ -154,7 +163,7 @@ outputFull = droppedPath + "@" + outputName
 if not os.path.exists(outputFull):
 	with open(scriptFull, 'r') as fref, open(outputFull, 'w') as fout:
 		for line in fref:
-			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "High").replace("!LOC!", locStr))
+			fout.write(line.replace("!PATH!", RPath).replace("!GAME!", droppedGame).replace("!API!", listclean(APIs)).replace("!QUA!", QUAs[0]).replace("!TYPE!", "High").replace("!LOC!", locStr).replace("!LOCSHO!", locshoStr))
 		fout.close()
 
 # print(outputFull)
@@ -166,7 +175,7 @@ for file in os.listdir(droppedPath):
 
 		fout = open(droppedPath + file, 'w')
 
-		fileText = fileText.replace("!LOC!", locStr)
+		fileText = fileText.replace("!LOC!", locStr).replace("!LOCSHO!", locshoStr)
 
 		fout.write(fileText)
 		fout.close()

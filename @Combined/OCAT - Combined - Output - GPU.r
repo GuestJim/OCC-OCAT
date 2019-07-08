@@ -15,12 +15,37 @@ BoxPerc = function (DATA) {
 }
 #	by using this with stat_summary I can have custom quantiles for the boxplot
 
-#saves file with the desired statistics
-#	checks if API is a column or not and currently assumes RTX Off is the meaning of an empty cell
-#	should still work if not using RTX, but there cannot be empty cells then
+FramPerc = function(DATA, Type)	{
+	out = data.frame(
+		"0.1"	=	double(),
+		"1"		=	double(),
+		"50"	=	double(),
+		"99"	=	double(),
+		"99.9"	=	double(),
+		"Location"	=	character()
+		)
+	colnames(out) = gsub("X", "", colnames(out))
+	for (loc in listLOC)	{
+		temp = unlist(DATA[DATA$Location==loc, Type])
+		tmp = cbind(t(as.data.frame(BoxPerc(temp))), loc)
+		out = rbind(out, cbind(t(as.data.frame(BoxPerc(temp))), loc))
+	}
+	row.names(out)	=	NULL
+	colnames(out)	=	c("0.1", "1", "50", "99", "99.9", "Location")
+	return(out)
+}
+
+# FramPerc(results, "MsBetweenPresents")
+#	FramePerc is an early experiment to create a frame to add the rectangles for the Diff graph, but it will be too horrendously ugly to manage it all correctly, so not bothering with it now. This function can remain though, as it works and will not hurt anything.
 
 meanFPS = function(x, r = 2) {
 	out = c(1000/mean(x), mean(x))
+	names(out) = c("FPS", "ms")
+	return(round(out, r))
+}
+
+meanGEO = function(x, r = 2) {
+	out = c(1000/exp(mean(log(x))), exp(mean(log(x))))
 	names(out) = c("FPS", "ms")
 	return(round(out, r))
 }
@@ -43,10 +68,22 @@ ecdfFPS = function(x, listFPS=NULL, r = 2) {
 	return(round(out, r))
 }
 
-sepCOL = function(tab, name = c("GPU", "Location", "V")) {
+stdevMS = function(x, r = 2)	{
+	out = c(sd(x))
+	names(out) = c("ms")
+	return(round(out, r))
+}
+
+CoeVar = function(x, r = 2)	{
+	out = sd(x)/mean(x)*100
+	names(out) = c("%")
+	return(round(out, r))
+}
+
+sepCOL = function(tab, name = c("GPU", "Location", "_")) {
 	names(tab) = name
 	out = as.data.frame(as.matrix(tab))
-	colnames(out) = gsub("V.", "", colnames(out))
+	colnames(out) = gsub("_.", "", colnames(out))
 	return(out)
 }
 
@@ -107,7 +144,7 @@ compTAB = function(MEAN, PERC, ECDF, endECDF = NULL)	{
 	}	else if	(is.null(endECDF) && is.null(listFPS)) {
 		endECDF = nameSEARCH(ECDF, "60 FPS")
 	}
-	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (FPS)")-1)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
+	out = cbind(compMEAN(MEAN), compPERC(PERC)[-(1:nameSEARCH(PERC, "0.1% (FPS)") - 0)], ECDF[nameSEARCH(ECDF, "60 FPS"):endECDF])
 	colnames(out)[findSEARCH(out, "Var")] = ""
 	return(out)
 }
@@ -129,24 +166,28 @@ customSave = function(type="", device=ggdevice, width=16, height=9, dpi=DPI) {
 }
 
 if (length(levels(results$API)) >= 2) {
-	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), meanFPS), c("GPU", "API", "Average (Frame Time)", "V"))
-	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), percFPS), c("GPU", "API", "Percentile (Frame Time)", "V"))
-	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), ecdfFPS, listFPS), c("GPU", "API", "FPS Percentile (Frame Time)", "V"))
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), meanFPS), c("GPU", "API", "Average (Frame Time)", "_"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), percFPS), c("GPU", "API", "Percentile (Frame Time)", "_"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$API, results$Location), ecdfFPS, listFPS), c("GPU", "API", "FPS Percentile (Frame Time)", "_"))
 	if (textDISP){
-		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), meanFPS), c("GPU", "API", "Average (Display Time)", "V"))
-		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), percFPS), c("GPU", "API", "Percentile (Display Time)", "V"))
-		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), ecdfFPS, listFPS), c("GPU", "API", "FPS Percentile (Display Time)", "V"))
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), meanFPS), c("GPU", "API", "Average (Display Time)", "_"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), percFPS), c("GPU", "API", "Percentile (Display Time)", "_"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$API, results$Location), ecdfFPS, listFPS), c("GPU", "API", "FPS Percentile (Display Time)", "_"))
 	}
 } else {
-	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Frame Time)", "V"))
-	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Frame Time)", "V"))
-	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Frame Time)", "V"))
+	dataMEAN = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Frame Time)", "_"))
+	dataPERC = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Frame Time)", "_"))
+	dataECDF = sepCOL(aggregate(results$MsBetweenPresents, list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Frame Time)", "_"))
 	if (textDISP){
-		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Display Time)", "V"))
-		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Display Time)", "V"))
-		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange,  list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Display Time)", "V"))
+		dispMEAN = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), meanFPS), c("GPU", "Average (Display Time)", "_"))
+		dispPERC = sepCOL(aggregate(results$MsBetweenDisplayChange, list(results$GPU, results$Location), percFPS), c("GPU", "Percentile (Display Time)", "_"))
+		dispECDF = sepCOL(aggregate(results$MsBetweenDisplayChange,  list(results$GPU, results$Location), ecdfFPS, listFPS), c("GPU", "FPS Percentile (Display Time)", "_"))
 	}
 }
+
+#saves file with the desired statistics
+#	checks if API is a column or not and currently assumes RTX Off is the meaning of an empty cell
+#	should still work if not using RTX, but there cannot be empty cells then
 
 if (textFRAM)	{
 options(width = 1000)
@@ -300,18 +341,18 @@ for (GPU in listGPU) {	if (file.exists(GPU))	{
 }
 }
 
+results = reLoc(results, shortLOC)
+#	because these are smaller graphs, I want to the short location list to be used
 if (graphFRAM) {
 #Averages - Frame Time
 message("Averages - Frame Time")
-
-results$Location = factor(results$Location, levels = listLOC)
 
 ggplot(data = results) +
 ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenPresent)") + labs(caption = cGPU) +
 geom_hline(yintercept = 1000/60, color = "red") +
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), outlier.alpha = 0) +
 stat_summary(aes(x = Location, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-geom_bar(aes(x = Location, y = MsBetweenPresents, fill = Location), stat = "summary", fun.y = "mean") +
+geom_bar(aes(x = Location, y = MsBetweenPresents, fill = Location), stat = "summary", fun.y = "mean") + scale_fill_hue() + 
 stat_summary(aes(x = Location, y = MsBetweenPresents), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 # geom_boxplot(aes(x = GPU, y = MsBetweenPresents), alpha = 0.50, outlier.alpha = 0.1) +
 facet_grid(rows = vars(GPU), cols = vars(API), switch = "y") +
@@ -320,9 +361,8 @@ guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "none")
 
 customSave("@Averages - Frame Time", width = 8)
 
-results$Location = factor(results$Location, levels = rev(listLOC))
+results$Location = factor(results$Location, levels = rev(levels(results$Location)))
 #	reverses the levels so they go in the order I want
-
 
 #Course - Frame Time
 message("Course - Frame Time")
@@ -388,14 +428,14 @@ if (graphDISP) {
 #Averages - Display Time
 message("Averages - Display Time")
 
-results$Location = factor(results$Location, levels = listLOC)
+results$Location = factor(results$Location, levels = levels(results$Location))
 
 ggplot(data = results) +
 ggtitle(gameQUA, subtitle = "Averages, Medians, and Percentiles (MsBetweenDisplayChange)") + labs(caption = cGPU) +
 geom_hline(yintercept = 1000/60, color = "red") +
 # geom_boxplot(aes(x = GPU, y = MsBetweenDisplayChange), outlier.alpha = 0) +
 stat_summary(aes(x = Location, y = MsBetweenDisplayChange), fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-geom_bar(aes(x = Location, y = MsBetweenDisplayChange, fill = Location), stat = "summary", fun.y = "mean") +
+geom_bar(aes(x = Location, y = MsBetweenDisplayChange, fill = Location), stat = "summary", fun.y = "mean") + scale_fill_hue() + 
 stat_summary(aes(x = Location, y = MsBetweenDisplayChange), fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 # geom_boxplot(aes(x = GPU, y = MsBetweenDisplayChange), alpha = 0.50, outlier.alpha = 0.1) +
 facet_grid(rows = vars(GPU), cols = vars(API), switch = "y") +
@@ -404,8 +444,7 @@ guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "none")
 
 customSave("@Averages - Display Time", width = 8)
 
-results$Location = factor(results$Location, levels = rev(listLOC))
-
+results$Location = factor(results$Location, levels = rev(levels(results$Location)))
 
 #Course - Display Time
 message("Course - Display Time")
@@ -465,4 +504,47 @@ scale_y_continuous(name="Refresh Cycles Later (1/60 s)", breaks=c(0, round(1000/
 scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "\n1", "50 (Median)", "\n99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0))
 
 customSave("@QQ - Display Time", width = 8)
+}
+
+if (graphDIFF){
+#Course - Difference Frame
+message("Course - Difference Frame")
+
+ggplot(data = results, aes(x = TimeInSeconds, y = MsDifferencePresents)) +
+ggtitle(gameQUA, subtitle="MsBetweenPresents consecutive differences") + labs(caption = cGPU) +
+geom_point(alpha = 0.05) +
+geom_hline(yintercept = 0, color = "red", alpha = 0.5) +
+facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
+scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0, 0)) +
+scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=signif(max(results$TimeInSeconds), digits=1), by=60), expand=c(0.02, 0))
+
+customSave("@Course - Difference Frame")
+
+#Frequency - Frame Time
+message("Frequency - Difference Frame")
+
+ggplot(results, aes(MsDifferencePresents)) +
+ggtitle(paste0(gameQUA, " Frequency Plot of Frame Time Differences"), subtitle="MsBetweenPresents") +
+geom_vline(xintercept = 0, color = "red") +
+geom_freqpoly(binwidth=0.03, size=0) +
+facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
+scale_x_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), limits=c(-1000/50, 1000/50), expand=c(0.02, 0), sec.axis = dup_axis()) +
+expand_limits(x=c(-1000/50, 1000/50)) +
+scale_y_continuous(name="Count", expand=c(0.02, 0)) + theme(panel.spacing.x = unit(1, "lines"))
+
+customSave("@Freq - Difference Frame")
+
+#QQ - Frame Time
+message("QQ - Frame Time")
+
+ggplot(results, aes(sample=MsDifferencePresents)) +
+ggtitle(paste0(gameQUA, " QQ Distribution of Frame Time Differences"), subtitle="MsBetweenPresents") +
+geom_hline(yintercept = 0, color = "red") +
+geom_point(stat="qq") +
+facet_grid(cols = vars(GPU), rows = vars(Location, API), switch = "y") +
+# scale_y_continuous(name="Frame Time (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(0,  FtimeLimit), expand=c(0.02, 0)) +
+scale_y_continuous(name="Consecutive Frame Time Difference (ms)", breaks=c(0, round(1000/ytimes, 2)), labels=labelRound, limits=c(-1000/50, 1000/50), expand=c(0.02, 0)) +
+scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=c("0.1", "\n1", "50", "\n99", "99.9"), minor_breaks=NULL, expand=c(0.02, 0))
+
+customSave("@QQ - Difference Frame")
 }
