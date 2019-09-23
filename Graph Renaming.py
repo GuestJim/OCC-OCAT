@@ -1,58 +1,50 @@
 import sys, os, shutil
-#	loads different modules for Python
+#	loads the sys, os, and shutil modules for Python to use
 
-droppedPath = sys.argv[1].rsplit("\\", 1)[0]+"\\"
-#	gets the path to the file dropped onto the script
-for place in range(len(droppedPath.split("\\"))):
-	if 'OCAT Data' == droppedPath.split("\\")[place]:
-		droppedGPU = droppedPath.split("\\")[place+1]
-		droppedOCAT = droppedPath.rsplit("\\",len(droppedPath.split("\\")) - place-1)[0]+"\\"
-#	works through the path to identify the current GPU and the OCAT Data folder that holds all of the folders
-#		to be clear the folder structure is:
-#			GAME Performance Analysis\OCAT Data\GPU\API\Quality
-#		the API is not always present
+droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
+#	sys.argv is a list of the arguments passed to the script
+#		the second and subsequent items are the paths of files dropped onto the script
+#	rsplit is a command to split a string at the designated pattern, optionally into a specified number of pieces
+#		it is used here to remove the file name of what was dropped onto the script
+
+droppedGPU	=	droppedPath.split("OCAT Data")[1].split("\\")[1]
+droppedOCAT	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
+#	by splitting the path at OCAT Data, we can get the current GPU and the path to OCAT Data
 
 os.chdir(droppedPath)
-#	 it is necessary to set the current working directory to the droppedPath for later stuff to work
+#	changes the current directory to droppedPath location
 
-Z = 1
+Z	=	1
 #	zero-padding width
-#	though I suspect for my uses this can remain 1, which means they will not be any zero padding, but still want this, just in case
 
-if "Locations.txt" in os.listdir(droppedOCAT):
-	LOCs = open(droppedOCAT + "Locations.txt", 'r').readlines()
-	LOCs = [line.rstrip('\n') for line in LOCs]
-#	this checks for if there is a Locations.txt file in the OCAT Data folder
-#	the Locations.txt file is used by this and other scripts to identify the locations for the tests, allowing me to not have to manually type it into each script
+if	"Locations.txt"	in	os.listdir(droppedOCAT):
+	LOCs	=	open(droppedOCAT + "Locations.txt", 'r').readlines()
+	LOCs	=	[line.rstrip('\n') for line in LOCs]
+#	if a Locations.txt file exists, it is opened and its contents read in as a list
+
+if	"APIs.txt"		in	os.listdir(droppedOCAT):
+	APIs	=	open(droppedOCAT + "APIs.txt", 'r').readlines()
+	APIs	=	[line.rstrip('\n') for line in APIs]
+	APIs	=	[API + " -" for API in APIs]
+#		this last bit makes it check for the hyphen that separates the parts of the filename
 else:
-	LOCs = ["Recording "] * countCSV
-	for i in range(countCSV):
-		LOCs[i] = LOCs[i] + str(i+1)
-#	if there is no Location.txt file, it will use the generic Recording # label
-
-if "APIs.txt" in os.listdir(droppedOCAT):
-	APIs = open(droppedOCAT + "APIs.txt", 'r').readlines()
-	APIs = [line.rstrip('\n') for line in APIs]
-#	this checks if there is an APIs.txt file in the OCAT Data folder
-#	the APIs.txt file is used by this and other scripts to identify the API for the tests, if multiple were used, allowing me to not have to manually type it into each script
-else:
-	APIs = [""]
-#	if there is no APIs.txt script, it assumes the API never changed
+	APIs	=	[""]
+#	if a APIs.txt file exists, it is opened and its contents read in as a list
+#	if a APIs.txt file does not exist, the list is an empty string
 
 
-if "Qualities.txt" in os.listdir(droppedOCAT):
-	QUAs = open(droppedOCAT + "Qualities.txt", 'r').readlines()
-	QUAs = [line.rstrip('\n') for line in QUAs]
-#	this checks if there is a Qualities.txt file in the OCAT Data folder
-#	only this script uses this file to identify what quality options may have been used
+if	"Qualities.txt"	in	os.listdir(droppedOCAT):
+	QUAs	=	open(droppedOCAT + "Qualities.txt", 'r').readlines()
+	QUAs	=	[line.rstrip('\n') for line in QUAs]
 else:
 	QUAs =	[\
 		"Minimum Acceptable",\
 		"High",\
 		"Max"]
-#	if no Qualities.txt file is present, it uses a default list that will cover most circumstances for my testing
+#	if a Qualities.txt file exists, it is opened and its contents read in as a list
+#	if a Qualities.txt file does not exists, a default list is created
 
-GPUs = [\
+GPUs	=	[\
 'RX 580',\
 'RX Vega 64',\
 'GTX 770',\
@@ -61,21 +53,21 @@ GPUs = [\
 'GTX 1080',\
 'RTX 2060',\
 'RTX 2080']
-#	ordered list of the GPUs I test with
+#	the list of GPUs, in order
 
-DATAs = [\
+DATAs	=	[\
 'Frame',\
-'Display Time']
-#	I will use frame time/rate and display time data based graphs, and this list is necessary for distinguishing between the graphs
+'Display',\
+'Rend']
+#	list of data types
 
-TYPEs = [\
+TYPEs	=	[\
+'Means',\
 'Course',\
-'Rate',\
 'Freq',\
 'QQ',\
-'Diff',\
-'Averages']
-#	the different types of graphs
+'Diff']
+#	list of graph types
 
 def numFind	(filename, list):
 	if list == [""]:
@@ -84,52 +76,46 @@ def numFind	(filename, list):
 		if list[i] in filename:
 			return(i+1)
 	return(0)
-#	will search a file name for the occurence of items on the lists above, and then return the number for the position in the list
-#		if no item from the list is found, 0 is returned.
+#	function for finding which item from a list is present in the file name and returning the index
+#	if the list is empty or no element in the list is found in the file name, 0 is returned
 
-def numGen (filename, GPU=droppedGPU):
+def numGen (filename, GPU = droppedGPU):
 	if GPU not in GPUs:
-		gpu = ""
-#	not yet tested, but should allow this to work with Reviews, where GPU is not specified
-#	when the GPU is not found in the list of GPUs, then it will be an empty value and not be in the code
+		gpu	=	""
 	else:
 		gpu	=	numFind(droppedGPU, GPUs)
-#	if the GPU is in the list of GPUs, then it will find and return the number for the list
+#		checks if the GPU is in ther list of GPUs, then finds the index for that GPU
 	if APIs == [""]:
-		api = ""
-#	if the list of APIs is empty, then the API will be an empty value and not be int he code
+		api	=	""
 	else:
 		api		=	numFind(filename, APIs)	
-#	if there is a list of APIs, it will find and return the number for the list
+#		checks if the API list has contents, then finds the API in the file name and gets its list index
 	loc		=	numFind(filename, LOCs)
 	qua		=	numFind(filename, QUAs)
 	data	=	numFind(filename, DATAs)
 	type	=	numFind(filename, TYPEs)
-#	these will read the filename and return the code number for the appropriate piece of information
+#		gets the index numbers for the location, quality, data type, and graph type
 	
-	code = ""
-#	just creating an empty variable to hold the code information
+	code	=	""
+#		creates an empty string to hold the code number
 	for x in [gpu, api, qua, loc, data, type]:
-#	the for loop will work through each code numbers found above in the order GPU, API, Quality, Location, Data type, Graph type
+#		loop to go through the numbers found above
 		if x != "":
-#		if the code number is empty, this will skip it
-			code = code + '%0*d'%(Z,x)
-#			appends the code string with the code number that is padded to Z characters
+#			catches GPU not being in list, so a code number is not added
+			code	=	code + str(x).zfill(Z)
+#				concatenates onto the code name the current number, with some amount of zero padded
 	
 	return(code)
-#	returns the code name
+#	generates the code number for the graph based on the file name
 
 if not os.path.exists("Graphs"):
 	os.mkdir("Graphs")
-#	checks if there is a folder to hold the graphs and creates it if necessary
+#	if a Graphs folder does not already exists, it makes it
 
 for file in os.listdir(droppedPath):
-#	works through the files in same folder as the file dropped onto the list
 	if file.endswith(".png"):
-#		checks if the files are PNGs, which is how I save the graphs
-		# print(numGen(file) + " -- " + file)
-#		was just here for troubleshooting and I am leaving it
+#		loop going through droppedPath, checking just for the PNG files
 		shutil.copyfile(file, "Graphs\\" + numGen(file) + ".png")
-#		copies the original graph PNG to the Graphs folder with the new code name for its filename
+#			copies the PNG file found to the Graphs folder with the code name
 
 # os.system("pause")
