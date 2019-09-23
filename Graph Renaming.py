@@ -22,6 +22,8 @@ else:
 if "APIs.txt" in os.listdir(droppedOCAT):
 	APIs = open(droppedOCAT + "APIs.txt", 'r').readlines()
 	APIs = [line.rstrip('\n') for line in APIs]
+	APIs = [API + " -" for API in APIs]
+#		this last bit makes it check for the Hyphen that separates the parts of the filename
 else:
 	APIs = [""]
 
@@ -55,7 +57,7 @@ TYPEs = [\
 'Freq',\
 'QQ',\
 'Diff',\
-'Averages']
+'Means']
 
 def numFind	(filename, list):
 	if list == [""]:
