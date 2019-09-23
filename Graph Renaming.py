@@ -1,43 +1,37 @@
 import sys, os, shutil
 
-droppedPath = sys.argv[1].rsplit("\\", 1)[0]+"\\"
-for place in range(len(droppedPath.split("\\"))):
-	if 'OCAT Data' == droppedPath.split("\\")[place]:
-		droppedGPU = droppedPath.split("\\")[place+1]
-		droppedOCAT = droppedPath.rsplit("\\",len(droppedPath.split("\\")) - place-1)[0]+"\\"
+droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
+
+droppedGPU	=	droppedPath.split("OCAT Data")[1].split("\\")[1]
+droppedOCAT	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
 
 os.chdir(droppedPath)
 
-Z = 1
+Z	=	1
 #	zero-padding width
 
-if "Locations.txt" in os.listdir(droppedOCAT):
-	LOCs = open(droppedOCAT + "Locations.txt", 'r').readlines()
-	LOCs = [line.rstrip('\n') for line in LOCs]
+if	"Locations.txt"	in	os.listdir(droppedOCAT):
+	LOCs	=	open(droppedOCAT + "Locations.txt", 'r').readlines()
+	LOCs	=	[line.rstrip('\n') for line in LOCs]
+
+if	"APIs.txt"		in	os.listdir(droppedOCAT):
+	APIs	=	open(droppedOCAT + "APIs.txt", 'r').readlines()
+	APIs	=	[line.rstrip('\n') for line in APIs]
+	APIs	=	[API + " -" for API in APIs]
+#		this last bit makes it check for the hyphen that separates the parts of the filename
 else:
-	LOCs = ["Recording "] * countCSV
-	for i in range(countCSV):
-		LOCs[i] = LOCs[i] + str(i+1)
+	APIs	=	[""]
 
-if "APIs.txt" in os.listdir(droppedOCAT):
-	APIs = open(droppedOCAT + "APIs.txt", 'r').readlines()
-	APIs = [line.rstrip('\n') for line in APIs]
-	APIs = [API + " -" for API in APIs]
-#		this last bit makes it check for the Hyphen that separates the parts of the filename
-else:
-	APIs = [""]
-
-
-if "Qualities.txt" in os.listdir(droppedOCAT):
-	QUAs = open(droppedOCAT + "Qualities.txt", 'r').readlines()
-	QUAs = [line.rstrip('\n') for line in QUAs]
+if	"Qualities.txt"	in	os.listdir(droppedOCAT):
+	QUAs	=	open(droppedOCAT + "Qualities.txt", 'r').readlines()
+	QUAs	=	[line.rstrip('\n') for line in QUAs]
 else:
 	QUAs =	[\
 		"Minimum Acceptable",\
 		"High",\
 		"Max"]
 
-GPUs = [\
+GPUs	=	[\
 'RX 580',\
 'RX Vega 64',\
 'GTX 770',\
@@ -47,45 +41,46 @@ GPUs = [\
 'RTX 2060',\
 'RTX 2080']
 
-DATAs = [\
+DATAs	=	[\
 'Frame',\
-'Display Time']
+'Display',\
+'Render',\
+'Driver']
 
-TYPEs = [\
+TYPEs	=	[\
+'Means',\
 'Course',\
-'Rate',\
 'Freq',\
 'QQ',\
-'Diff',\
-'Means']
+'Diff']
 
 def numFind	(filename, list):
 	if list == [""]:
 		return(0)
-	for i in range(len(list)):
+	for i in reversed(range(len(list))):
 		if list[i] in filename:
 			return(i+1)
 	return(0)
 
-def numGen (filename, GPU=droppedGPU):
+def numGen (filename, GPU = droppedGPU):
 	if GPU not in GPUs:
-		gpu = ""
+		gpu	=	""
 	else:
 		gpu	=	numFind(droppedGPU, GPUs)
 	if APIs == [""]:
-		api = ""
+		api	=	""
 	else:
-		api		=	numFind(filename, APIs)	
+		api		=	numFind(filename, APIs)
 	loc		=	numFind(filename, LOCs)
 	qua		=	numFind(filename, QUAs)
 	data	=	numFind(filename, DATAs)
 	type	=	numFind(filename, TYPEs)
-	
-	code = ""
+
+	code	=	""
 	for x in [gpu, api, qua, loc, data, type]:
 		if x != "":
-			code = code + '%0*d'%(Z,x)
-	
+			code	=	code + str(x).zfill(Z)
+
 	return(code)
 
 if not os.path.exists("Graphs"):
@@ -93,7 +88,6 @@ if not os.path.exists("Graphs"):
 
 for file in os.listdir(droppedPath):
 	if file.endswith(".png"):
-		# print(numGen(file) + " -- " + file)
 		shutil.copyfile(file, "Graphs\\" + numGen(file) + ".png")
 
 # os.system("pause")
