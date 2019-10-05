@@ -332,7 +332,7 @@ sinkHTML	=	function(datatype, COL = "")	{
 #		checks if the COL variable has been given a value and will read what the current value of the FOR variable is
 	
 	FOLD	=	""
-	if	(COL	!=	"GPU")	FOLD	=	eval(parse(text = COL))
+	if	(COL	==	"GPU")	FOLD	=	eval(parse(text = COL))
 #		checks if filtering by GPU so the HTML files can be sent to the GPU folders
 
 	writeOCC(addFPS(MEAN),				dataNAME = paste0(SUB, typeSHORT, "MEAN"),	fold = FOLD)
