@@ -10,8 +10,11 @@ ytimes	=	1000/yrates
 #	function to round values to one decimal place, and will have zero padding
 labelRound	=	function(x)			round(x, 1)
 #	function to found values to one decimal place, without zero padding
-labelBreak	=	function(input)		paste0(rep(c("", "\n"), length.out = length(input)), input)
-#	function to place line breaks on alternating labels on graphs
+labelBreakF	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), breaks)
+labelBreakN	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
+#	functions to place line breaks on alternating labels on graphs
+#		labelBreakF is for factors when we do not want sorting done
+#		labelBreakN is for numbers when we do want sorting
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
 #	function to convert frame times to display cycles, assuming 60 Hz rate, and rounds to one decimal place
 
@@ -487,8 +490,8 @@ graphMEANS	=	function(datatype)	{
 #			the facet rows follow the API value
 #			the facet columns follow the Location value
 #			switches the Y labels for the facets to be on the left side, instead of the right
-	scale_x_discrete(labels = labelBreak) +
-#		the X axis is the GPUs, a discrete scale, and labelBreak will add line breaks to every other label, to avoid overlap
+	scale_x_discrete(labels = labelBreakF) +
+#		the X axis is the GPUs, a discrete scale, and labelBreakF will add line breaks to every other label, to avoid overlap
 	scale_Y +
 #		applies the Y scale set earlier in the function
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
@@ -596,11 +599,11 @@ graphCOURSE	=	function(datatype)	{
 #			the facet rows follow the GPU value
 #			the facet columns follow the Location value and then the API value
 #			switches the Y labels for the facets to be on the left side, instead of the right
-	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
+	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakN, expand=c(0.02, 0)) +
 #		sets the X scale
 #			name is given
 #			breaks are from 0 to the greatest integer from the TimeInSeconds measurement
-#			labelBreak is used to prevent overlap
+#			labelBreakN is used to prevent overlap
 #			the padding along the scale is set
 	scale_Y +
 #		applies the Y scale set earlier
@@ -992,10 +995,10 @@ graphQQ	=	function(datatype)	{
 #		applies the Y scale set earlier
 #		coord_cartesian can crop the plots to specific values
 #			just setting limits sometimes causes issues, as values beyond the limits are dropped, while this just does not show them
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreak(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreakN(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
 #		sets the X scale to show the desired percentiles
 #			qnorm is used to get the correct positions of the breaks
-#			the labelBreak function is used on the desired percentile labels, to avoid overlap
+#			the labelBreakN function is used on the desired percentile labels, to avoid overlap
 #			the minor breaks between the major breaks are disabled
 #			the graphs padding of the scale is set
 }
