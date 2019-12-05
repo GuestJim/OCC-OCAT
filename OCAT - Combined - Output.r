@@ -348,6 +348,11 @@ graphMEANS	=	function(datatype)	{
 			sec.axis	=	dup_axis()
 		)
 	}
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(cols = vars(Location), switch = "y")
+	}
 
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
@@ -357,7 +362,7 @@ graphMEANS	=	function(datatype)	{
 	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-	facet_grid(rows = vars(API), cols = vars(Location), switch = "y") +
+	FACET +
 	scale_x_discrete(labels = labelBreakF) +
 	scale_Y +
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
@@ -401,6 +406,11 @@ graphCOURSE	=	function(datatype)	{
 			sec.axis	=	dup_axis()
 		)
 	}
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
 
 	ALPHA	=	0.05
 	if	(length(unique(results$Location)) == 1)	ALPHA	=	1
@@ -410,8 +420,8 @@ graphCOURSE	=	function(datatype)	{
 	geom_hline(yintercept = 1000/60, color = "red") +
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakD, expand=c(0.02, 0)) +
+	FACET +
+	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakN, expand=c(0.02, 0)) +
 	scale_Y
 }
 
@@ -473,6 +483,12 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			expand	=	c(0, 0)
 		)
 	}
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
+	
 
 	temp	=	eval(parse(text = paste0("results$", datatype)))
 	#	this is to grab the desired column from the data frame
@@ -484,7 +500,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	geom_point(alpha = 0.1) +
 	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+	FACET +
 	scale_X +
 	scale_Y
 }
@@ -531,6 +547,11 @@ graphFREQ	=	function(datatype)	{
 		)
 	}
 	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
 
 	ggplot(results, aes(get(datatype))) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
@@ -538,7 +559,7 @@ graphFREQ	=	function(datatype)	{
 	geom_freqpoly(binwidth=0.03, size=0) +
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+	FACET +
 	scale_X +
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 }
@@ -581,6 +602,11 @@ graphQQ	=	function(datatype)	{
 		)
 	}
 	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
 
 #	sec.axis	=	sec_axis(~.,
 #		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
@@ -601,9 +627,9 @@ graphQQ	=	function(datatype)	{
 	stat_qq(data = results, aes(sample=get(datatype))) +
 	stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "green", alpha = 0.5, size = 1.1, linetype = "dotted") +
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
+	FACET +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreakD(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreakN(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
 }
 
 
