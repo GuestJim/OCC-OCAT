@@ -464,6 +464,16 @@ graphMEANS	=	function(datatype)	{
 #				the first value is a coefficient and the second is additive
 #			a second, duplicate axis is made and placed on the opposite side of the graph
 	}
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(cols = vars(Location), switch = "y")
+	}
+#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
+#		tells ggplot2 to create a faceted graph
+#			the facet rows follow the API value
+#			the facet columns follow the Location value
+#			switches the Y labels for the facets to be on the left side, instead of the right
 
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 #		initiates the creation of a plot using ggplot2
@@ -485,11 +495,7 @@ graphMEANS	=	function(datatype)	{
 #		identical to the layer before, but this time with reduced opacity so the bar plot can be seen underneath
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	#	standard boxplot with reduced opacity, but is not used
-	facet_grid(rows = vars(API), cols = vars(Location), switch = "y") +
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the API value
-#			the facet columns follow the Location value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET +
 	scale_x_discrete(labels = labelBreakF) +
 #		the X axis is the GPUs, a discrete scale, and labelBreakF will add line breaks to every other label, to avoid overlap
 	scale_Y +
@@ -571,6 +577,17 @@ graphCOURSE	=	function(datatype)	{
 #				the first value is a coefficient and the second is additive
 #			a second, duplicate axis is made and placed on the opposite side of the graph
 
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
+#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
+#		tells ggplot2 to create a faceted graph
+#			the facet rows follow the API value
+#			the facet columns follow the Location value
+#			switches the Y labels for the facets to be on the left side, instead of the right
+	
 	if	(length(unique(results$Location)) == 1)	{
 		ALPHA	=	1
 	}	else	{
@@ -594,11 +611,7 @@ graphCOURSE	=	function(datatype)	{
 #		adds a smooth line to indicate the trend of the performance
 #			the method used is the generalized additive module
 #			the formula shown is the default for gam, but helps protect against certain issues
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the GPU value
-#			the facet columns follow the Location value and then the API value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET + 
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakN, expand=c(0.02, 0)) +
 #		sets the X scale
 #			name is given
@@ -731,6 +744,16 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
+#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
+#		tells ggplot2 to create a faceted graph
+#			the facet rows follow the API value
+#			the facet columns follow the Location value
+#			switches the Y labels for the facets to be on the left side, instead of the right
 
 	temp	=	eval(parse(text = paste0("results$", datatype)))
 #		to get the difference data, it is necessary to work around some issues with getting columns from results
@@ -755,11 +778,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #			the viridis scale is used to set the fill colors
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	#	identical to the above, but the alpha value is also based on the density level
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the GPU value
-#			the facet columns follow the Location value and then the API value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET + 
 	scale_X +
 	scale_Y
 #		applies the X and Y scales set earlier
@@ -849,6 +868,16 @@ graphFREQ	=	function(datatype)	{
 	
 	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
 #		applies the desired order to the GPU factors in the table
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
+#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
+#		tells ggplot2 to create a faceted graph
+#			the facet rows follow the API value
+#			the facet columns follow the Location value
+#			switches the Y labels for the facets to be on the left side, instead of the right
 
 	ggplot(data = results, aes(get(datatype))) +
 #		initiates the graph	with the data being results and the aesthetics to be the datatype
@@ -861,11 +890,7 @@ graphFREQ	=	function(datatype)	{
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotted") +
 #			using the STATS provided, vertical lines are added for the Mean and Median, with different colors and line types
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the GPU value
-#			the facet columns follow the Location value and then the API value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET + 
 	scale_X +
 #		applies the X scale set earlier
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
@@ -958,6 +983,16 @@ graphQQ	=	function(datatype)	{
 	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
 #		makes the GPU column of STATS ordered factors based on listGPU
 #			this is necessary for the faceting to work correctly
+	if	(testAPI)	{
+		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	}	else	{
+		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	}
+#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
+#		tells ggplot2 to create a faceted graph
+#			the facet rows follow the API value
+#			the facet columns follow the Location value
+#			switches the Y labels for the facets to be on the left side, instead of the right
 
 	ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
 #		initiates the graph and sets certain things for the rectangles below
@@ -986,11 +1021,7 @@ graphQQ	=	function(datatype)	{
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
 #		adds a label to the plot to show the Slope of the qq line
 #			the label is placed in the lower-right using Inf, but right and bottom aligned so it does not go outside the graph
-	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y") +
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the GPU value
-#			the facet columns follow the Location value and then the API value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET + 
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 #		applies the Y scale set earlier
 #		coord_cartesian can crop the plots to specific values
