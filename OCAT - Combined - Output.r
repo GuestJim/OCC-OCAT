@@ -5,6 +5,8 @@ yrates	=	sort(c(yrates,-yrates))
 #	combines the above list with its opposite and sorts the larger list
 ytimes	=	1000/yrates
 #	converts the frame rates to frame times
+ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
+#	function to convert times to rates for use with secondary axes using FPS instead of ms
 
 # labelRound	=	function(x)	sprintf("%.1f", x)
 #	function to round values to one decimal place, and will have zero padding
@@ -400,7 +402,10 @@ graphMEANS	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
 #			for this data type the appropriate name is Frame time
@@ -409,7 +414,8 @@ graphMEANS	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
@@ -437,7 +443,10 @@ graphMEANS	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
 #			for this data type the appropriate name is Render time
@@ -446,7 +455,8 @@ graphMEANS	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_Y	=	scale_y_continuous(
@@ -515,7 +525,10 @@ graphCOURSE	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
 #			for this data type the appropriate name is Frame Time
@@ -524,7 +537,8 @@ graphCOURSE	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_Y	=	scale_y_continuous(
@@ -550,7 +564,10 @@ graphCOURSE	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
 #			for this data type the appropriate name is Render time
@@ -559,7 +576,8 @@ graphCOURSE	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
 	scale_Y	=	scale_y_continuous(
@@ -796,7 +814,11 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
 			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
@@ -806,6 +828,8 @@ graphFREQ	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the X scale and the STATS used for parts of the graph
@@ -816,7 +840,11 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelDisp,
 			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	c(0, round(ytimes, 2))
+			)
 		)
 	}
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
@@ -826,6 +854,8 @@ graphFREQ	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses time as the unit instead, and while cycles later I feel is appropriate, some viewers may appreciate this
 
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the X scale and the STATS used for parts of the graph
@@ -836,7 +866,11 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
 			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
@@ -846,6 +880,8 @@ graphFREQ	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 
 	if	(datatype == "MsEstimatedDriverLag")	{
 		STATS	=	drivgSTATS
@@ -908,7 +944,11 @@ graphQQ	=	function(datatype)	{
 			name	=	"Frame Time (ms)",
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
@@ -918,6 +958,8 @@ graphQQ	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
@@ -927,7 +969,11 @@ graphQQ	=	function(datatype)	{
 			name	=	"Refresh Cycles Later (1/60 s)",
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelDisp,
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (FPS)",
+				labels	=	c(0, round(ytimes, 2))
+			)
 		)
 	}
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
@@ -937,7 +983,8 @@ graphQQ	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses time as the unit instead, and while cycles later I feel is appropriate, some viewers may appreciate this
 	
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the Y scale
@@ -947,7 +994,11 @@ graphQQ	=	function(datatype)	{
 			name	=	"Render Time (ms)",
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 #			a continuous scale is used because the measured times are on a continuous range, and not discrete values
@@ -957,6 +1008,9 @@ graphQQ	=	function(datatype)	{
 #			the limits for the scale are 0 to the FtimeLimit set in the Input script
 #			how the graph pads out from the scale
 #				the first value is a coefficient and the second is additive
+#			a second axis is made and placed on the opposite side of the graph
+#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
+
 	if	(datatype == "MsEstimatedDriverLag")	{
 		STATS	=	drivgSTATS
 		scale_Y	=	scale_y_continuous(
