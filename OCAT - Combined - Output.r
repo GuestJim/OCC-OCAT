@@ -1,6 +1,7 @@
 yrates	=	c(120, 60, 30, 20, 15, 12, 10)
 yrates	=	sort(c(yrates,-yrates))
 ytimes	=	sort(1000/yrates)
+ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
 
 # labelRound	=	function(breaks)	sprintf("%.1f", breaks)
 labelRound	=	function(breaks)	round(breaks, 1)
@@ -317,7 +318,10 @@ graphMEANS	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
@@ -336,7 +340,10 @@ graphMEANS	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
@@ -375,7 +382,10 @@ graphCOURSE	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
@@ -394,7 +404,10 @@ graphCOURSE	=	function(datatype)	{
 			breaks		=	c(0, round(ytimes, 2)),
 			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
@@ -513,7 +526,11 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
 			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
@@ -523,7 +540,11 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelDisp,
 			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	c(0, round(ytimes, 2))
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
@@ -533,7 +554,11 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
 			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
@@ -571,7 +596,11 @@ graphQQ	=	function(datatype)	{
 			name	=	"Frame Time (ms)",
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
@@ -580,7 +609,11 @@ graphQQ	=	function(datatype)	{
 			name	=	"Refresh Cycles Later (1/60 s)",
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelDisp,
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (FPS)",
+				labels	=	c(0, round(ytimes, 2))
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
@@ -589,7 +622,11 @@ graphQQ	=	function(datatype)	{
 			name	=	"Render Time (ms)",
 			breaks	=	c(0, round(ytimes, 2)),
 			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
