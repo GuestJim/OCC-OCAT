@@ -311,9 +311,12 @@ OCCHTML	=	function(DATA)	{
 #		calls the tableHTML function from tableHTML, but it needs some changes
 	replace_html('style="border-collapse:collapse;" class=OCC border=1', 'align="center" border="1" cellpadding="1" cellspacing="1" style="width: 90%;"') %>%
 	replace_html(' id=\"tableHTML_header_\\d\"', '', replace_all = TRUE) %>%
-	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE)
+	replace_html(' id=\"tableHTML_header_\\d\\d\"', '', replace_all = TRUE) %>%
+	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE) %>%
+	replace_html(' id=\"tableHTML_column_\\d\\d\"', '', replace_all = TRUE)
 #		replace_html will replace patterns in the tableHTML code with what is provided
 #		%>% is how you chain together multiple replace_html functions
+#			\\d indicates to include a single digit so by using two it will also cover when there are more than nine columns in the table
 }
 
 writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = FOLD)	{
