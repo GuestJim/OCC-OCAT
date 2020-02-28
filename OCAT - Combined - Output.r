@@ -254,7 +254,9 @@ OCCHTML	=	function(DATA)	{
 	tableHTML(DATA, rownames = FALSE, class="OCC") %>%
 	replace_html('style="border-collapse:collapse;" class=OCC border=1', 'align="center" border="1" cellpadding="1" cellspacing="1" style="width: 90%;"') %>%
 	replace_html(' id=\"tableHTML_header_\\d\"', '', replace_all = TRUE) %>%
-	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE)
+	replace_html(' id=\"tableHTML_header_\\d\\d\"', '', replace_all = TRUE) %>%
+	replace_html(' id=\"tableHTML_column_\\d\"', '', replace_all = TRUE) %>%
+	replace_html(' id=\"tableHTML_column_\\d\\d\"', '', replace_all = TRUE)
 }
 
 writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = "")	{
