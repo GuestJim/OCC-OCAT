@@ -691,6 +691,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
 
 	if	(graphNAME == "Diff" & !is.null(diffLim))	{
 		PLOT	=	graphtype(datatype, diffLim)
+		graphNAME	=	paste0(graphNAME, " EXT")
 	}	else	{
 		PLOT	=	graphtype(datatype)
 	}
@@ -717,7 +718,7 @@ if	(graphREND)	{	rendgSTATS	=	reLoc(rendgSTATS, shortLOC);	rendgSTATS	=	reAPI(re
 if	(graphDRIV)	{	drivgSTATS	=	reLoc(drivgSTATS, shortLOC);	drivgSTATS	=	reAPI(drivgSTATS, shortAPI)	}
 }
 
-results$Location						=	factor(results$Location, levels = rev(levels(results$Location)))
+results$Location						=	factor(results$Location,	levels = rev(levels(results$Location)))
 if	(graphFRAM)		graphSTATS$Location	=	factor(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
 if	(graphDISP)		dispgSTATS$Location	=	factor(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
 if	(graphREND)		rendgSTATS$Location	=	factor(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))

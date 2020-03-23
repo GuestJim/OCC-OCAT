@@ -4,7 +4,7 @@ droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
 
 scriptPath	=	sys.argv[0].rsplit("\\", 1)[0] + "\\"
 
-if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3]:
+if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3] and "Review" not in droppedPath.rsplit("\\", 3)[1]:
 	TYPE	=	"HIGH"
 else:
 	TYPE	=	"GPU"
@@ -67,6 +67,7 @@ if		TYPE	==	"HIGH":
 elif	TYPE	==	"GPU":
 	GPUs	=	list(set(GPUs))
 	QUAs	=	list(set(QUAs))
+
 
 if "APIs.txt" in os.listdir(RelPath):
 	APIs	=	open(RelPath + "APIs.txt", 'r').readlines()

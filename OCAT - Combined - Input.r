@@ -171,7 +171,9 @@ if	(!multiGPU)	{
 	gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
 	gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
 }
-if	(!testAPI	&	!is.null(listAPI))	{
+
+# if	(!testAPI	&	!is.null(listAPI))	{
+if	(!testAPI	&	listAPI != "")	{
 	gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
 	gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
 }
