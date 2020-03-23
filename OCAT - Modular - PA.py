@@ -10,14 +10,13 @@ scriptPath	=	sys.argv[0].rsplit("\\", 1)[0] + "\\"
 #	rsplit is a command to split a string at the designated pattern, optionally into a specified number of pieces
 #		it is used here to remove the file names, getting just their paths (and the slashes are added back for droppedPath, as they are needed later)
 
-if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3]:
+if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3] and "Review" not in droppedPath.rsplit("\\", 3)[1]:
 	TYPE	=	"HIGH"
 else:
 	TYPE	=	"GPU"
 #	this switch is to determine if I am trying to work on multi-GPU, High Quality data, or single GPU data
-#	The key difference is the path for the file I drop onto this script
-#	for multi-GPU I drag a file from the OCAT Data folder, so OCAT Data is one of the last names in the path string
-#	for single-GPU I drag a file from the folder with the data, which is levels down from OCAT Data, so it will not be one of the last names in the path string.
+#	instead of requiring a different path for the file that is dragged onto the script, this also checks if Review is in the appropriate folder name
+#		this way the same folder structure can be used for Reviews and Performance Analyses and the same behavior for activating this script
 
 def	listclean (list):
 	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");

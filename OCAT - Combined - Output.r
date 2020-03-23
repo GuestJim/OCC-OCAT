@@ -1110,7 +1110,11 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
 	message(paste0(graphNAME, " - ", dataNAME))
 
 	if	(graphNAME == "Diff" & !is.null(diffLim))	{
+	#	because the graphDIFF function can accept the diffLim argument, it needs to be checked for and applied
 		PLOT	=	graphtype(datatype, diffLim)
+		graphNAME	=	paste0(graphNAME, " EXT")
+		#	to identify whether the diffLim argument has been changed, the graphNAME variable is changed
+		#	this also makes it possible to have the script automtically create two versions of the graph; one normal and one extended
 	}	else	{
 		PLOT	=	graphtype(datatype)
 	}
@@ -1146,7 +1150,7 @@ if	(graphDRIV)	{	drivgSTATS	=	reLoc(drivgSTATS, shortLOC);	drivgSTATS	=	reAPI(dr
 #	checks if the shortened versions of the Location and API names should be applied
 #		typically the MEANS graph has enough room to use the longer names, hence this happening after that
 
-results$Location						=	factor(results$Location, levels = rev(levels(results$Location)))
+results$Location						=	factor(results$Location,	levels = rev(levels(results$Location)))
 if	(graphFRAM)		graphSTATS$Location	=	factor(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
 if	(graphDISP)		dispgSTATS$Location	=	factor(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
 if	(graphREND)		rendgSTATS$Location	=	factor(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))
