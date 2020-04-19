@@ -65,6 +65,8 @@ statMS	=	function(DATA, r = 2)	{
 qqslope	=	function (DATA, r = 2, quan = QUAN)	{
 	y		=	quantile(DATA, quan)
 	x		=	qnorm(quan)
+	x		=	100 * quan
+	#	to make this be in percentile instead of Z-score
 	slope	=	diff(y)/diff(x)
 	return(round(slope, r))
 }
