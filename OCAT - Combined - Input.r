@@ -154,8 +154,10 @@ reAPI	=	function(DATA, shortAPI = NULL)	{
 
 multiGPU	=	is.null(cGPU)
 
+overAPI	=	TRUE
 if	(!testAPI)	{
 	testAPI		=	(length(unique(results$API)) >= 2)
+	overAPI		=	FALSE
 }
 
 if (levels(results$Quality)[1] != "Review")	{
@@ -176,7 +178,7 @@ if	(!multiGPU)	{
 }
 
 # if	(!testAPI	&	!is.null(listAPI))	{
-if	(!testAPI	&	listAPI != "")	{
+if	(!testAPI	&	listAPI != ""	|	overAPI)	{
 	gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
 	gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
 }
