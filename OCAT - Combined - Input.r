@@ -61,6 +61,10 @@ graphDiff	=	FALSE
 #	controls if the display consecutive difference-based outputs should be created
 #	cannot be DIFF because of naming conflict in Output
 
+testAPI		=	FALSE
+#	provides an override for if multiple APIs were involved in the test
+#	when FALSE it does the usual behavior of checking if multiple APIs are involved
+#	when TRUE it will not check the number of APIs and will act as though there are multiple regardless
 listFPS		=	NULL
 #	for adding to the FPS Percentile list
 #		default list is 60, 50, 30, 20, 15
@@ -226,8 +230,12 @@ reAPI	=	function(DATA, shortAPI = NULL)	{
 multiGPU	=	is.null(cGPU)
 #	checks if the current GPU variable is NULL, and then stores the result of that check to the multiGPU variable
 
-testAPI		=	(length(unique(results$API)) >= 2)
-#	checks if there are multiple APIs in the data, and therefore if they should be tested
+if	(!testAPI)	{
+#	if testAPI is FALSE, then the following test for number of APIs is done
+#	if testAPI is true TRUE, then the script continues with testAPI being TRUE
+	testAPI		=	(length(unique(results$API)) >= 2)
+#		checks if there are multiple APIs in the data, and therefore if they should be tested
+}
 
 if (levels(results$Quality)[1] != "Review")	{
 #	checks if the quality is set to be the string Review
