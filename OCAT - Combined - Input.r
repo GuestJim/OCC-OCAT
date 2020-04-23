@@ -38,6 +38,7 @@ textDiff	=	FALSE
 graphDiff	=	FALSE
 #	cannot be DIFF because of naming conflict in Output
 
+testAPI		=	FALSE
 listFPS		=	NULL
 #	for adding to the FPS Percentile list
 QUAN		=	c(0.01, 0.99)
@@ -153,7 +154,9 @@ reAPI	=	function(DATA, shortAPI = NULL)	{
 
 multiGPU	=	is.null(cGPU)
 
-testAPI		=	(length(unique(results$API)) >= 2)
+if	(!testAPI)	{
+	testAPI		=	(length(unique(results$API)) >= 2)
+}
 
 if (levels(results$Quality)[1] != "Review")	{
 	QUA	=	paste0(levels(results$Quality)[1], " Quality")
