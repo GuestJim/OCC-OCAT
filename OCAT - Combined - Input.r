@@ -230,11 +230,16 @@ reAPI	=	function(DATA, shortAPI = NULL)	{
 multiGPU	=	is.null(cGPU)
 #	checks if the current GPU variable is NULL, and then stores the result of that check to the multiGPU variable
 
+overAPI	=	TRUE
+#	overAPI is a variable that stores if testAPI has been overriden
+#	it needs a value, so it is set to TRUE here, but is changed to FALSE if the override was not used
 if	(!testAPI)	{
 #	if testAPI is FALSE, then the following test for number of APIs is done
 #	if testAPI is true TRUE, then the script continues with testAPI being TRUE
 	testAPI		=	(length(unique(results$API)) >= 2)
 #		checks if there are multiple APIs in the data, and therefore if they should be tested
+	overAPI		=	FALSE
+#		if testAPI was not overridden will, overAPI will be made FALSE
 }
 
 if (levels(results$Quality)[1] != "Review")	{
@@ -260,8 +265,9 @@ if	(!multiGPU)	{
 	gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
 }
 #	applies the current GPU to the name variables
-if	(!testAPI	&	listAPI != "")	{
+if	(!testAPI	&	listAPI != ""	|	overAPI)	{
 #	checks that API is being tested and that there are multiple APIs in the data
+#	if testAPI was overridden, as overAPI stores, then the API will be added to the names
 	gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
 	gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
 }
