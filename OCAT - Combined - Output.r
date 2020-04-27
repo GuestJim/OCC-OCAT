@@ -7,6 +7,7 @@ ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
 labelRound	=	function(breaks)	round(breaks, 1)
 labelBreakF	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), breaks)
 labelBreakN	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
+labelBreakQQ=	function(breaks)	paste0(rep(c("", "\n"),	length.out = length(breaks)),	pnorm(breaks) * 100, "%")
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
 
 BoxPerc	=	function (DATA)	{
@@ -601,7 +602,7 @@ graphFREQ	=	function(datatype)	{
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 }
 
-graphQQ	=	function(datatype)	{
+graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	if	(datatype == "MsBetweenPresents")	{
 		STATS	=	graphSTATS
 		scale_Y	=	scale_y_continuous(
@@ -678,7 +679,7 @@ graphQQ	=	function(datatype)	{
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
 	FACET +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreakN(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
 }
 
 
