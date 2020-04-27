@@ -146,7 +146,9 @@ if	(textFRAM	|	graphFRAM)	{
 	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
 	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
 	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
-	graphSTATS$GPU	=	factor(graphSTATS$GPU, levels = listGPU, ordered = TRUE)
+
+	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
+	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
 }
 if	(textDISP	|	graphDISP)	{
 	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
@@ -154,7 +156,9 @@ if	(textDISP	|	graphDISP)	{
 	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
 	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
 	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
-	dispgSTATS$GPU	=	factor(dispgSTATS$GPU, levels = listGPU, ordered = TRUE)
+	
+	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
+	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
 }
 if	(textREND	|	graphREND)	{
 	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
@@ -162,7 +166,9 @@ if	(textREND	|	graphREND)	{
 	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
 	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
 	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
-	rendgSTATS$GPU	=	factor(rendgSTATS$GPU, levels = listGPU, ordered = TRUE)
+	
+	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
+	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
 }
 if	(textDRIV	|	graphDRIV)	{
 	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
@@ -170,7 +176,9 @@ if	(textDRIV	|	graphDRIV)	{
 	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
 	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
 	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
-	drivgSTATS$GPU	=	factor(rendgSTATS$GPU, levels = listGPU, ordered = TRUE)
+
+	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
+	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
 }
 #	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
 #		aggregate(list(Hello = data, groups, function)) will label the column Hello
@@ -575,7 +583,7 @@ graphFREQ	=	function(datatype)	{
 			expand	=	c(0.02, 0)
 		)
 	}
-	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
+
 	if	(testAPI)	{
 		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
 	}	else	{
@@ -642,7 +650,7 @@ graphQQ	=	function(datatype)	{
 			expand	=	c(0.02, 0)
 		)
 	}
-	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
+
 	if	(testAPI)	{
 		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
 	}	else	{
@@ -702,7 +710,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
 	PLOT	#shows the current graph, but must be after customSave
 }
 
-results$API	=	factor(results$API, levels = rev(listAPI))
+results$API	=	ordered(results$API, levels = rev(listAPI))
 
 #Means
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS)
@@ -720,11 +728,11 @@ if	(graphREND)	{	rendgSTATS	=	reLoc(rendgSTATS, shortLOC);	rendgSTATS	=	reAPI(re
 if	(graphDRIV)	{	drivgSTATS	=	reLoc(drivgSTATS, shortLOC);	drivgSTATS	=	reAPI(drivgSTATS, shortAPI)	}
 }
 
-results$Location						=	factor(results$Location,	levels = rev(levels(results$Location)))
-if	(graphFRAM)		graphSTATS$Location	=	factor(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
-if	(graphDISP)		dispgSTATS$Location	=	factor(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
-if	(graphREND)		rendgSTATS$Location	=	factor(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))
-if	(graphDRIV)		drivgSTATS$Location	=	factor(drivgSTATS$Location, levels = rev(levels(drivgSTATS$Location)))
+results$Location						=	ordered(results$Location,	levels = rev(levels(results$Location)))
+if	(graphFRAM)		graphSTATS$Location	=	ordered(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
+if	(graphDISP)		dispgSTATS$Location	=	ordered(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
+if	(graphREND)		rendgSTATS$Location	=	ordered(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))
+if	(graphDRIV)		drivgSTATS$Location	=	ordered(drivgSTATS$Location, levels = rev(levels(drivgSTATS$Location)))
 #	reverses the levels so they go in the order I want
 
 #Course

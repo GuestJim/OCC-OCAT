@@ -122,12 +122,12 @@ if	(textDiff	|	graphDiff)	{
 }
 
 
-resultsFull$GPU		=	factor(resultsFull$GPU, levels = listGPU, ordered = TRUE)
+resultsFull$GPU		=	ordered(resultsFull$GPU, levels = listGPU)
 resultsFull$Quality	=	factor(resultsFull$Quality, levels = listQUA)
 if (length(listLOC[1]) != 0) {
-	resultsFull$Location	=	factor(resultsFull$Location, levels = listLOC, ordered = TRUE)
+	resultsFull$Location	=	ordered(resultsFull$Location, levels = listLOC)
 }
-resultsFull$API		=	factor(resultsFull$API, levels = listAPI, ordered = TRUE)
+resultsFull$API		=	ordered(resultsFull$API, levels = listAPI)
 
 results = resultsFull
 
@@ -136,7 +136,7 @@ reLoc	=	function(DATA, shortLOC = NULL)	{
 		for (i in length(shortLOC):1)	{
 			DATA$Location	=	gsub(listLOC[i], shortLOC[i], DATA$Location)
 		}
-		DATA$Location	=	factor(DATA$Location, levels = shortLOC, ordered = TRUE)
+		DATA$Location	=	ordered(DATA$Location, levels = shortLOC)
 	}
 	return(DATA)
 }
@@ -146,7 +146,7 @@ reAPI	=	function(DATA, shortAPI = NULL)	{
 		for (i in length(shortAPI):1)	{
 			DATA$API	=	gsub(listAPI[i], shortAPI[i], DATA$API, fixed=TRUE)
 		}
-		DATA$API	=	factor(DATA$API, levels = shortAPI, ordered = TRUE)
+		DATA$API	=	ordered(DATA$API, levels = shortAPI)
 	}
 	return(DATA)
 }
