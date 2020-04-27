@@ -17,6 +17,9 @@ labelBreakN	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(break
 #	functions to place line breaks on alternating labels on graphs
 #		labelBreakF is for factors when we do not want sorting done
 #		labelBreakN is for numbers when we do want sorting
+labelBreakQQ=	function(breaks)	paste0(rep(c("", "\n"),	length.out = length(breaks)),	pnorm(breaks) * 100, "%")
+#	function to add line breaks and convert Z scores to percentiles, and attach a % simple after the value, for the QQ plots
+#		this will make it easier to use different percentile values, if desired
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
 #	function to convert frame times to display cycles, assuming 60 Hz rate, and rounds to one decimal place
 
@@ -946,9 +949,11 @@ graphFREQ	=	function(datatype)	{
 #		sets the Y scale to have the name Count and the padding for this scale
 }
 
-graphQQ	=	function(datatype)	{
+graphQQ	=	function(datatype, PERCS, PERCS = c(.001, .01, .5, .99, .999))	{
 #	creates a function for the Quantile graph
 #		graph of the frame times against their quantile distribution
+#		the PERCS argument allows one to change the percentiles wanted on the X axis
+#			the default values are for 0.1%, 1%, 50%, 99%, and 99.9%
 	if	(datatype == "MsBetweenPresents")	{
 #		checks if the datatype is "MsBetweenPresents" and will set the Y scale
 		STATS	=	graphSTATS
@@ -1093,10 +1098,10 @@ graphQQ	=	function(datatype)	{
 #		applies the Y scale set earlier
 #		coord_cartesian can crop the plots to specific values
 #			just setting limits sometimes causes issues, as values beyond the limits are dropped, while this just does not show them
-	scale_x_continuous(name="Percentile", breaks=qnorm(c(.001, .01, .5, .99, .999)), labels=labelBreakN(c("0.1", "1", "50", "99", "99.9")), minor_breaks=NULL, expand=c(0.02, 0))
+	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
 #		sets the X scale to show the desired percentiles
-#			qnorm is used to get the correct positions of the breaks
-#			the labelBreakN function is used on the desired percentile labels, to avoid overlap
+#			qnorm is used to get the correct positions of the breaks, as the axis is actually in Z-score
+#			the labelBreakQQ function adds line breaks, converts to percentages, and adds % symboles
 #			the minor breaks between the major breaks are disabled
 #			the graphs padding of the scale is set
 }
