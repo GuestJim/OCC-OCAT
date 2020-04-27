@@ -169,16 +169,20 @@ if	(textFRAM	|	graphFRAM)	{
 	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
 	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
 #		aggregte functions are fun, with sepCOL run on the output and that result saved to a variable
-	graphSTATS$GPU	=	factor(graphSTATS$GPU, levels = listGPU, ordered = TRUE)
-#		makes the GPU column factors, which is necessary for use in graphs
+	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
+	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
+#		makes the GPU and Location columns ordered factors so the graph facets are in the right order
 }
+#	below are equivalent to above but for other data columns in results
 if	(textDISP	|	graphDISP)	{
 	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
 	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
 	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
 	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
 	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
-	dispgSTATS$GPU	=	factor(dispgSTATS$GPU, levels = listGPU, ordered = TRUE)
+
+	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
+	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
 }
 if	(textREND	|	graphREND)	{
 	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
@@ -186,7 +190,9 @@ if	(textREND	|	graphREND)	{
 	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
 	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
 	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
-	rendgSTATS$GPU	=	factor(rendgSTATS$GPU, levels = listGPU, ordered = TRUE)
+
+	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
+	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
 }
 if	(textDRIV	|	graphDRIV)	{
 	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
@@ -194,9 +200,10 @@ if	(textDRIV	|	graphDRIV)	{
 	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
 	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
 	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
-	drivgSTATS$GPU	=	factor(rendgSTATS$GPU, levels = listGPU, ordered = TRUE)
+
+	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
+	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
 }
-#	equivalent aggregate functions to above, but for display time and render time
 
 #	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
 #		aggregate(list(Hello = data, groups, function)) will label the column Hello

@@ -183,13 +183,14 @@ if	(textDiff	|	graphDiff)	{
 }
 
 
-resultsFull$GPU		=	factor(resultsFull$GPU, levels = listGPU, ordered = TRUE)
+resultsFull$GPU		=	ordered(resultsFull$GPU, levels = listGPU)
 results$Quality	=	factor(resultsFull$Quality, levels = listQUA)
 if (length(listLOC[1]) != 0) {
-	resultsFull$Location = factor(resultsFull$Location, levels = listLOC, ordered = TRUE)
+	resultsFull$Location = ordered(resultsFull$Location, levels = listLOC)
 }
-resultsFull$API		=	factor(resultsFull$API, levels = listAPI, ordered = TRUE)
+resultsFull$API		=	ordered(resultsFull$API, levels = listAPI)
 #	for proper ordering, values should be made factors and then have their levels ordered
+#	the ordered function implies the factors should be ordered, and thus the ordered = TRUE argument is not needed
 #		in case list of locations is empty, it will not make the values factors
 
 results = resultsFull
@@ -207,7 +208,7 @@ reLoc	=	function(DATA, shortLOC = NULL)	{
 			DATA$Location	=	gsub(listLOC[i], shortLOC[i], DATA$Location)
 #				searches for and replaces patterns in strings, which is a bit more reliable for what I am doing
 		}
-		DATA$Location	=	factor(DATA$Location, levels = shortLOC, ordered = TRUE)
+		DATA$Location	=	ordered(DATA$Location, levels = shortLOC)
 #			sets the column to be factors and the order for these factors
 	}
 	return(DATA)
@@ -219,7 +220,7 @@ reAPI	=	function(DATA, shortAPI = NULL)	{
 		for (i in length(shortAPI):1)	{
 			DATA$API	=	gsub(listAPI[i], shortAPI[i], DATA$API, fixed=TRUE)
 		}
-		DATA$API	=	factor(DATA$API, levels = shortAPI, ordered = TRUE)
+		DATA$API	=	ordered(DATA$API, levels = shortAPI)
 	}
 	return(DATA)
 }
