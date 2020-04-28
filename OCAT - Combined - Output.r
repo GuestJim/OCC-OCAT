@@ -1127,8 +1127,8 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
 	if	(graphNAME == "Diff" & !is.null(diffLim))	{
 	#	because the graphDIFF function can accept the diffLim argument, it needs to be checked for and applied
 		PLOT	=	graphtype(datatype, diffLim)
-		graphNAME	=	paste0(graphNAME, " EXT")
-		#	to identify whether the diffLim argument has been changed, the graphNAME variable is changed
+		dataNAME	=	paste0(dataNAME, " EXT")
+		#	to identify whether the diffLim argument has been changed, the dataNAME variable is changed
 		#	this also makes it possible to have the script automtically create two versions of the graph; one normal and one extended
 	}	else	{
 		PLOT	=	graphtype(datatype)
@@ -1195,6 +1195,8 @@ if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphQQ)
 
 #Differnce
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF)
+#if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = 1000/50)
+#	example of using extended Y-axis
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF)
