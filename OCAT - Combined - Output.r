@@ -702,7 +702,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
 
 	if	(graphNAME == "Diff" & !is.null(diffLim))	{
 		PLOT	=	graphtype(datatype, diffLim)
-		graphNAME	=	paste0(graphNAME, " EXT")
+		dataNAME	=	paste0(dataNAME, " EXT")
 	}	else	{
 		PLOT	=	graphtype(datatype)
 	}
@@ -756,6 +756,8 @@ if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphQQ)
 
 #Differnce
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF)
+#if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = 1000/50)
+#	example of using extended Y-axis
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF)
