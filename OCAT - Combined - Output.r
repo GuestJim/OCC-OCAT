@@ -166,7 +166,7 @@ if	(testAPI)	{
 #	by using an actual list, not just a vector, the column names for the groups can be set here
 
 levsLOC	=	listLOC
-if	(useSHORT)	levsLOC	=	shortLOC
+if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
 #	sets a list of levels for Location so the below better works with shortened names
 
 if	(textFRAM	|	graphFRAM)	{
