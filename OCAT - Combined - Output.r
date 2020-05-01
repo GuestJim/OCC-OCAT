@@ -141,15 +141,18 @@ if	(testAPI)	{
 	GROUPS	=	list(GPU = results$GPU, Location = results$Location)
 }
 
+levsLOC	=	listLOC
+if	(useSHORT)	levsLOC	=	shortLOC
+
 if	(textFRAM	|	graphFRAM)	{
 	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
 	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
 	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
 	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
 	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
-
+	
 	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
-	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
+	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = levsLOC)
 }
 if	(textDISP	|	graphDISP)	{
 	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
@@ -159,7 +162,7 @@ if	(textDISP	|	graphDISP)	{
 	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
 	
 	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
-	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
+	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = levsLOC)
 }
 if	(textREND	|	graphREND)	{
 	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
@@ -169,7 +172,7 @@ if	(textREND	|	graphREND)	{
 	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
 	
 	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
-	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
+	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = levsLOC)
 }
 if	(textDRIV	|	graphDRIV)	{
 	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
@@ -179,7 +182,7 @@ if	(textDRIV	|	graphDRIV)	{
 	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
 
 	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
-	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
+	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = levsLOC)
 }
 #	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
 #		aggregate(list(Hello = data, groups, function)) will label the column Hello
