@@ -142,7 +142,7 @@ if	(testAPI)	{
 }
 
 levsLOC	=	listLOC
-if	(useSHORT)	levsLOC	=	shortLOC
+if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
 
 if	(textFRAM	|	graphFRAM)	{
 	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))

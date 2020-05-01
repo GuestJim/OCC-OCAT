@@ -188,6 +188,50 @@ gameGAQF	=	paste0(gameGAQF, " - ", qua)
 source("@Combined - Output.r")
 
 
+INDIV	=	function(TYPE, LIST, useSHORT = useSHORT, gWIDTH = gWIDTH, gHEIGH = gHEIGH)	{
+	if	(TYPE != "GPU")	dir.create(paste0("@", TYPE))
+
+	for	(ITEM in LIST)	{
+		# TYPE	<<-	TYPE
+		# LIST	<<-	LIST
+		# ITEM	<<-	ITEM
+		#	helpful for troubleshooting
+		
+		message(paste0("\n", ITEM))
+		results	=	resultsFull[resultsFull[, TYPE] == ITEM, ]
+		if (nrow(results)	==	0)	next
+		
+		if	(TYPE != "GPU")	{
+			FOLD	=	paste0("@", TYPE, "/", ITEM)
+			dir.create(FOLD)
+		}
+
+		if (useSHORT	&	!is.null(shortLOC))		levels(results$Location)	=	shortLOC
+		if (useSHORT	&	!is.null(shortAPI))		levels(results$API)			=	shortAPI
+
+		gameQ		=	paste0(game, " - ", QUA, " - ", ITEM)
+		gameGAQ		=	game
+		gameGAQF	=	gameF
+
+		if	(!multiGPU)	{
+			gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
+			gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
+		}
+		if	(!testAPI	&	!is.null(listAPI))	{
+			gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
+			gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
+		}
+		gameGAQ		=	paste0(gameGAQ, " - ", QUA, " - ", ITEM)
+		if (TYPE == "GPU")	{
+			gameGAQF	=	paste0(ITEM, "/", gameGAQF, " - ", qua, " - ", ITEM)
+		}	else	{
+			gameGAQF	=	paste0(FOLD, "/", gameGAQF, " - ", qua, " - ", ITEM)
+		}
+		
+		source("@Combined - Output.r", local = TRUE)
+	}
+}
+
 if	(graphs_all)	{
 textFRAM	=	FALSE
 textDISP	=	FALSE
@@ -196,28 +240,9 @@ textDRIV	=	FALSE
 HTMLOUT		=	FALSE
 textDiff	=	FALSE
 #	because the statistics for the individual runs are not needed; just the graphs
+#	also, these files are generated as part of the normal execution of the file
 
-for	(loc in listLOC)	{
-
-	message(paste0("\n", loc))
-	results	=	resultsFull[resultsFull$Location == loc, ]
-#	would want to change this to be for the GPU when dealing with the multi-GPU data. Location would be for the single-GPU results and is the normal use for this
-#		with a GPU version, having it change the work directory may not be a bad idea, so it sticks the files in the appropriate places
-
-	gameQ		=	paste0(game, " - ", QUA, " - ", loc)
-	gameGAQ		=	game
-	gameGAQF	=	gameF
-
-	if	(!multiGPU)	{
-		gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
-		gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
-	}
-	if	(!testAPI	&	!is.null(listAPI))	{
-		gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
-		gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
-	}
-	gameGAQ		=	paste0(gameGAQ, " - ", QUA, " - ", loc)
-	gameGAQF	=	paste0(gameGAQF, " - ", qua, " - ", loc)
-
-	source("@Combined - Output.r")
-}	}
+# INDIV("GPU",		listGPU,	useSHORT = TRUE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 2)
+# INDIV("Location",	listLOC,	useSHORT = FALSE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 1)
+# INDIV("API",		listAPI,	useSHORT = TRUE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 1)
+}
