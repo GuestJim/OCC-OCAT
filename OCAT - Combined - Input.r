@@ -69,6 +69,9 @@ listFPS		=	NULL
 #	for adding to the FPS Percentile list
 #		default list is 60, 50, 30, 20, 15
 #		NULL will have none added
+diffLim		=	NULL
+#	for creating a version of the Consecutive Difference graph with an extended Y (difference) scale
+#		it wants a frame time
 QUAN		=	c(0.01, 0.99)
 #	controls the quantiles used for the QQ line in the QQ plots
 FtimeLimit	=	1000/15
