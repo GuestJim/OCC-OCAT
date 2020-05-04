@@ -757,10 +757,16 @@ if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphQQ)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphQQ)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphQQ)
 
-#Differnce
+#Difference
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF)
-#if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = 1000/50)
-#	example of using extended Y-axis
 if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF)
+
+#Difference - Extended
+if (!is.null(diffLim))	{
+	if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = diffLim)
+	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim)
+	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim)
+	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
+} 

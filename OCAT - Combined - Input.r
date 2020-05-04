@@ -41,6 +41,7 @@ graphDiff	=	FALSE
 testAPI		=	FALSE
 listFPS		=	NULL
 #	for adding to the FPS Percentile list
+diffLim		=	NULL
 QUAN		=	c(0.01, 0.99)
 FtimeLimit	=	1000/15
 
