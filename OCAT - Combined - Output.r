@@ -1,4 +1,4 @@
-yrates	=	c(120, 60, 30, 20, 15, 12, 10)
+yrates	=	c(c(120, 60, 30, 20, 15, 12, 10), yratesEXT)
 yrates	=	sort(c(yrates,-yrates))
 ytimes	=	sort(1000/yrates)
 ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
@@ -327,6 +327,41 @@ if	(multiGPU)	{
 
 #	spacing between facet panels can be set with  theme(panel.spacing.x = unit(1, "lines"))
 
+boxLABS		=	function(datatype)	{
+	if	(datatype == "MsBetweenPresents")		STATS	=	graphSTATS
+	if	(datatype == "MsBetweenDisplayChange")	STATS	=	dispgSTATS
+	if	(datatype == "MsUntilRenderComplete")	STATS	=	rendgSTATS
+	if	(datatype == "MsEstimatedDriverLag")	STATS	=	drivgSTATS
+
+	ALPHA	=	0.65
+
+	nudOUT	=	0.50
+	nudIN	=	0.40
+	nudMED	=	0.55
+
+	out	=	list(
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99.9"],	label = round(STATS[, "99.9"], 2)),		alpha = ALPHA,
+											vjust = 0,	nudge_y = nudOUT),
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "0.1"],	label = round(STATS[, "0.1"], 2)),		alpha = ALPHA,
+											vjust = 1,	nudge_y = -nudOUT),
+		#	0.1% and 99.9%
+		
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99"],		label = round(STATS[, "99"], 2)),		alpha = ALPHA,
+			hjust = 1,	nudge_x = nudIN,	vjust = 0),
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "1"],		label = round(STATS[, "1"], 2)),		alpha = ALPHA,
+			hjust = 1,	nudge_x = nudIN,	vjust = 1),
+		#	1% and 99%
+		
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "Median"],	label = round(STATS[, "Median"], 2)),	alpha = ALPHA,
+			hjust = 1,	nudge_x = nudMED),
+		geom_text(data = STATS,	aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
+			hjust = 0,	nudge_x = -0.55,	vjust = 0)
+		#	median and mean
+		)
+
+	return(out)
+}
+
 graphMEANS	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
@@ -385,6 +420,7 @@ graphMEANS	=	function(datatype)	{
 	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
+	# boxLABS(datatype) +
 	FACET +
 	scale_x_discrete(labels = labelBreakF) +
 	scale_Y +

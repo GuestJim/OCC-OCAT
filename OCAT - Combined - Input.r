@@ -44,6 +44,7 @@ listFPS		=	NULL
 diffLim		=	NULL
 QUAN		=	c(0.01, 0.99)
 FtimeLimit	=	1000/15
+yratesEXT	=	NULL
 
 gWIDTH	=	8
 gHEIGH	=	9
