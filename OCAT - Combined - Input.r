@@ -26,6 +26,34 @@ ggdevice	=	"png"
 #		can also use PDF, but typically PNGs are desired
 
 #	below are a series of switches for various things
+useSHORT	=	TRUE
+#	controls if the shortened versions of the location and API names should be used
+testAPI		=	FALSE
+#	provides an override for if multiple APIs were involved in the test
+#	when FALSE it does the usual behavior of checking if multiple APIs are involved
+#	when TRUE it will not check the number of APIs and will act as though there are multiple regardless
+listFPS		=	NULL
+#	for adding to the FPS Percentile list
+#		default list is 60, 50, 30, 20, 15
+#		NULL will have none added
+diffLim		=	NULL
+#	for creating a version of the Consecutive Difference graph with an extended Y (difference) scale
+#		it wants a frame time
+QUAN		=	c(0.01, 0.99)
+#	controls the quantiles used for the QQ line in the QQ plots
+FtimeLimit	=	1000/15
+#	upper frame time limit for graphs
+yratesEXT	=	NULL
+#	for adding more frame rates to the list used for scale breaks
+#		the rates are converted to times for the scales; rates are just a bit easier to work with
+
+gWIDTH	=	8
+gHEIGH	=	9
+#	graph width and height
+app.BREAK	=	FALSE
+#	switch for if line breaks should be used in the scale labels (including secondary axes)
+#		can be changed prior to graphs being created for selective application
+
 textOUT		=	TRUE
 #	controls if any of the text output is produced
 HTMLOUT		=	TRUE
@@ -34,8 +62,6 @@ graphs		=	TRUE
 #	controls if the faceted graphs are created
 graphs_all	=	FALSE
 #	controls if the individual graphs are created
-useSHORT	=	TRUE
-#	controls if the shortened versions of the location and API names should be used
 
 textFRAM	=	TRUE
 graphFRAM	=	TRUE
@@ -61,36 +87,16 @@ graphDiff	=	FALSE
 #	controls if the display consecutive difference-based outputs should be created
 #	cannot be DIFF because of naming conflict in Output
 
-testAPI		=	FALSE
-#	provides an override for if multiple APIs were involved in the test
-#	when FALSE it does the usual behavior of checking if multiple APIs are involved
-#	when TRUE it will not check the number of APIs and will act as though there are multiple regardless
-listFPS		=	NULL
-#	for adding to the FPS Percentile list
-#		default list is 60, 50, 30, 20, 15
-#		NULL will have none added
-diffLim		=	NULL
-#	for creating a version of the Consecutive Difference graph with an extended Y (difference) scale
-#		it wants a frame time
-QUAN		=	c(0.01, 0.99)
-#	controls the quantiles used for the QQ line in the QQ plots
-FtimeLimit	=	1000/15
-#	upper frame time limit for graphs
-
-gWIDTH	=	8
-gHEIGH	=	9
-#	graph width and height
-
 if (!textOUT)	{
 	textFRAM	=	FALSE
 	textDISP	=	FALSE
 	textREND	=	FALSE
 	HTMLOUT		=	FALSE
-	textDIFF	=	FALSE
+	textDiff	=	FALSE
 }
 #	turns off all of the text outputs, if it is not desired
 
-if (!graphs){
+if (!graphs)	{
 	graphFRAM	=	FALSE
 	graphDISP	=	FALSE
 	graphREND	=	FALSE
@@ -147,52 +153,13 @@ shortAPI	=	c(
 )
 #	list of the shortened API names for the data
 
-if	(textDiff	|	graphDiff)	{
-#	the the consecutive difference data is needed for its own graphs, this will generate the necessary data
-	DIFF	=	as.data.frame(NULL)
-#		creates an empty data frame for the difference data
-	colIN	=	c("MsBetweenPresents",		"MsBetweenDisplayChange")
-	colOUT	=	c("MsDifferencePresents",	"MsDifferenceDisplayChange")
-#		column names for the data, similar to those used by PresentMon and derivatives
-
-	for (gpu in unique(resultsFull$GPU))		{
-	for (qua in unique(resultsFull$Quality))	{
-	for (loc in unique(resultsFull$Location))	{
-	for (api in unique(resultsFull$API))		{
-#		series of for loops to work through the combinations of GPU, Quality, Location, and API
-#			instead of using the lists provided above, it creates them from the data, getting just the unique values from the data
-		if (paste0(unique(resultsFull$API)[1]) == "NA")	{
-#			check to ignore API if there were no changes
-			temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc, colIN]
-#				creates a temporary data frame containing just the data from the current combination
-		}	else	{
-			temp	=	resultsFull[resultsFull$GPU == gpu & resultsFull$Quality == qua & resultsFull$Location == loc & resultsFull$API == api, colIN]
-#				creates a temporary data frame containing just the data from the current combination
-#					this one includes the API
-		}
-		tempD	=	rbind(as.data.frame(sapply(temp, diff)), 0)
-#			uses sapply to use diff on each column in temp, then attaches a 0 on the end of the columns to have the correct length
-
-		if (nrow(tempD) > 1)	{
-#			makes sure the temporary data frame with difference data actually holds any data
-			DIFF	=	rbind(DIFF, tempD)
-#				collects the difference data columns together
-		}
-	}	}	}	}
-	colnames(DIFF)	=	colOUT
-#		applies the column names to the difference data
-	resultsFull	=	cbind(resultsFull, DIFF)
-#		sticks the difference data on the resultsFull frame
-}
-
-
 resultsFull$GPU		=	ordered(resultsFull$GPU, levels = listGPU)
-results$Quality	=	factor(resultsFull$Quality, levels = listQUA)
+resultsFull$Quality	=	ordered(resultsFull$Quality, levels = listQUA)
 if (length(listLOC[1]) != 0) {
 	resultsFull$Location = ordered(resultsFull$Location, levels = listLOC)
 }
 resultsFull$API		=	ordered(resultsFull$API, levels = listAPI)
-#	for proper ordering, values should be made factors and then have their levels ordered
+#	for desired ordering, values should be made factors and then have their levels ordered
 #	the ordered function implies the factors should be ordered, and thus the ordered = TRUE argument is not needed
 #		in case list of locations is empty, it will not make the values factors
 
@@ -200,126 +167,142 @@ results = resultsFull
 #	with the factor levels set, a copy of resultsFull is saved to results
 #		this way a complete and formatted copy of the data is protected and results can be a subset of it
 
-reLoc	=	function(DATA, shortLOC = NULL)	{
-#	creates a custom function for replacing the levels for the Location column of the provided DATA
-#		to protect against a shortened list not being provided, the argument has a default value of NULL
-	if (!is.null(shortLOC)	&	length(unique(DATA$Location)) > 1)	{
-#		checks if the shortLOC argument is NULL or not and if there are multiple locations in the data
-#			if graphs_all is TRUE, there will be just one location and applying the fixed shortLOC list creates unnecessary facets
-		for (i in length(shortLOC):1)	{
-#			this loop goes from the length of shortLOC down to 1, instead of counting up to protect against partial pattern matches replacing things that should not be replaced yet
-			DATA$Location	=	gsub(listLOC[i], shortLOC[i], DATA$Location)
-#				searches for and replaces patterns in strings, which is a bit more reliable for what I am doing
-		}
-		DATA$Location	=	ordered(DATA$Location, levels = shortLOC)
-#			sets the column to be factors and the order for these factors
-	}
-	return(DATA)
-}
-
-reAPI	=	function(DATA, shortAPI = NULL)	{
-	if (!is.null(shortAPI)	&	testAPI)	{
-#		if testAPI is false, there is no API to test
-		for (i in length(shortAPI):1)	{
-			DATA$API	=	gsub(listAPI[i], shortAPI[i], DATA$API, fixed=TRUE)
-		}
-		DATA$API	=	ordered(DATA$API, levels = shortAPI)
-	}
-	return(DATA)
-}
-#	refer to comments for reLoc above, as these two functions are equivalent, but for either the API or Location column
-#		reversed the order for going through the lists to address an issue with names being changed because they are a common substring
-
-
 multiGPU	=	is.null(cGPU)
 #	checks if the current GPU variable is NULL, and then stores the result of that check to the multiGPU variable
+labsGPU		=	labs(caption = cGPU)
+if (multiGPU)	labsGPU	=	labs()
+#	in single-GPU situations, a caption is added to the graphs to identify it
+#		a default value is set to apply this caption and then removed in multiGPU situations
+
+levsLOC	=	listLOC
+if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
+levsAPI	=	listAPI
+if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
+#	lists of levels for Location and API are made for use when applying shortened names
+#		by default, these level lists are the original lists, so they can always be applied
 
 overAPI	=	TRUE
 #	overAPI is a variable that stores if testAPI has been overriden
-#	it needs a value, so it is set to TRUE here, but is changed to FALSE if the override was not used
+#		it needs a value, so it is set to TRUE here, but is changed to FALSE if the override was not used
 if	(!testAPI)	{
 #	if testAPI is FALSE, then the following test for number of APIs is done
 #	if testAPI is true TRUE, then the script continues with testAPI being TRUE
 	testAPI		=	(length(unique(results$API)) >= 2)
 #		checks if there are multiple APIs in the data, and therefore if they should be tested
 	overAPI		=	FALSE
-#		if testAPI was not overridden will, overAPI will be made FALSE
+#		if testAPI was not overridden, overAPI will be made FALSE
+
+GROUPS	=	list(GPU = results$GPU, Location = results$Location)
+if	(testAPI)	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+#	creates the groups for use with the by and aggregate functions here and in Output.r
+#		by using an actual list, not just a vector, the column names for the groups can be set here
+#		as GROUPS will always be used, a value is set and then changed if appropriate
+
+diff.CONS	=	function(DATA, DIR = "Forward")	{
+	if	(DIR == "Forward")	return(c(diff(DATA), 0))
+	if	(DIR == "Backward")	return(c(0, diff(DATA)))
 }
+#	modification to the diff function, adding a 0 to the beginning or end to match the input data length
+#		I prefer Forward, so the sum point to the next value, whereas Backward points to the previous
 
-if (levels(results$Quality)[1] != "Review")	{
-#	checks if the quality is set to be the string Review
-	QUA	=	paste0(levels(results$Quality)[1], " Quality")
-	qua	=	paste0(levels(results$Quality)[1])
-#		pair of strings with and without " Quality" on them used for labelling purposes
-}	else	{
-	QUA	=	"Review"
-	qua	=	"Review"
-#		sets the values of the QUA and qua variables for when the situation is a review
+if (textDiff	|	graphDiff)	{
+	results$MsDifferencePresents		=	unlist(by(results$MsBetweenPresents, GROUPS, diff.CONS))
+	results$MsDifferenceDisplayChange	=	unlist(by(results$MsBetweenDisplayChange, GROUPS, diff.CONS))
 }
+#	the by function will apply a function to the contents of a data frame in groups, set by the GROUPS variable
+#	it is very similar to the aggregate function, but returns a by class value, so unlist is needed to make it usable
+#		this method is much faster and more efficient than using loops
 
-gameQ		=	paste0(game, " - ", QUA)
-#	variable combining the game name and quality
-gameGAQ		=	game
-gameGAQF	=	gameF
-#	creates a couple variables for holding the game name, GPU, API, and Quality, with and without file name formatting
+DESC	=	function(ITEM = NULL)	{
+	QUA		=	"Review"
+	gameQ	=	paste0(game, " - Review")
+	if (levels(results$Quality)[1] != "Review")	{
+		QUA		=	paste0(levels(results$Quality)[1])
+		gameQ	=	paste0(game,	" - ",	QUA, " Quality")
+	}
 
-if	(!multiGPU)	{
-#		checks if this is not a multi-GPU situation
-	gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
-	gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
+	desc	=	""
+	if	(!multiGPU)											desc	=	paste0(desc,	" - ",	cGPU)
+	if	((!testAPI	&	all(listAPI != ""))	|	overAPI)	desc	=	paste0(desc,	" - ",	unique(results$API))
+
+	gameGAQF	=	paste0(gameF,	desc,	" - ",	QUA)
+	gameGAQ		=	paste0(game,	desc,	" - ",	QUA,	" Quality")
+
+	if	(!is.null(ITEM))	{
+		gameGAQF	=	paste0(gameGAQF,	" - ",	ITEM)
+		gameGAQ		=	paste0(gameGAQ,		" - ",	ITEM)
+	}
+	return(c(gameGAQF,	gameGAQ, gameQ))
 }
-#	applies the current GPU to the name variables
-if	(!testAPI	&	listAPI != ""	|	overAPI)	{
-#	checks that API is being tested and that there are multiple APIs in the data
-#	if testAPI was overridden, as overAPI stores, then the API will be added to the names
-	gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
-	gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
+#	custom function for creating the gameGAQF, gameQAG, and gameQ values
+#		these are all strings for identifying the configuration
+#	making it a custom function helps when subsetting the data
+#		the ITEM argument for the subsetting item
+gameGAQF	=	DESC()[1]	;	gameGAQ		=	DESC()[2]	;	gameQ	=	DESC()[3]
+#	sets the values
+#		this does call the function multiple times, but the solution would be an intermediate variable
+
+INDIV	=	function(TYPE, LIST, useSHORT = useSHORT, gWIDTH = gWIDTH, gHEIGH = gHEIGH)	{
+#	arguments are present for applying specific height and width values for output graphs, and if shortened names should be used
+	if	(TYPE != "GPU")	dir.create(paste0("@", TYPE))
+#		when not subsetting by GPU, a folder will be made to hold the outputs
+#			@ is placed at the front of the folder name to place it at the top of the directory view
+	for	(ITEM in LIST)	{
+		# TYPE	<<-	TYPE
+		# LIST	<<-	LIST
+		# ITEM	<<-	ITEM
+		#	helpful for troubleshooting as values are available outside the function
+		
+		
+		message(paste0("\n", ITEM))
+#			displays a message to identify the current item being used for subsetting
+		results	=	resultsFull[resultsFull[, TYPE] == ITEM, ]
+#			creates a subset of the complete results based on the TYPE (column name) and the current value
+#			Output.r accepts 'results' which is why that variable should be used
+		if (nrow(results)	==	0)	next
+#			makes sure there are data in the subset
+		if (TYPE == "GPU" & length(unique(results$API)) == 1)	next
+#			prevents single-GPU, single-API subsets from being used, as those would be the same result as working with more specific configurations
+
+		if	(TYPE != "GPU")	{
+			FOLD	=	paste0("@", TYPE, "/", ITEM)
+			dir.create(FOLD)
+		}
+#			creates a folder for the specific ITEM of the current subset
+#			will not do this for GPUs as there are already folders for them
+
+		gameGAQF	=	DESC()[1]	;	gameGAQ		=	DESC()[2]	;	gameQ	=	DESC()[3]
+#			assigns new values to these naming variables based on the current subset
+		if (TYPE == "GPU")	{
+			gameGAQF	=	paste0(ITEM, "/", gameGAQF)
+		}	else	{
+			gameGAQF	=	paste0(FOLD, "/", gameGAQF)
+		}
+#			gameGAQF is for file names, so this adds the appropriate folder information at the front, so the files are placed correctly
+
+		perGPU	=	FALSE
+#			to disable the generation of stats files for GPU subsets
+#				the Output.r script does this and will throw errors in some situations
+		source("@Combined - Output.r",	local = TRUE)
+#			runs the Output.r script
+#			local = TRUE is necessary so the script will be given the variable values set within the INDIV function
+#			local = FALSE, the default, uses values from the global environment
+	}
 }
-#	applies the API to to the name variables
+#	custom function to work through subsets of the results based on supplied lists
+#		this will create both graph and text outputs for each subset
 
-gameGAQ		=	paste0(gameGAQ, " - ", QUA)
-gameGAQF	=	paste0(gameGAQF, " - ", qua)
-#	sticks the quality at the end of the name variables
-
+perGPU	=	TRUE
+#	to disable the generation of stats files for GPU subsets
+#		the Output.r script does this and will throw errors in some situations
+if (!multiGPU)	perGPU	=	FALSE
+#	turns off perGPU for single-GPU situations
 source("@Combined - Output.r")
-#	reads the Output script and executes it
-
+#	calls the Output.r script
 
 if	(graphs_all)	{
-#	checks if the graphs_all switch is TRUE
-textFRAM	=	FALSE
-textDISP	=	FALSE
-textREND	=	FALSE
-textDRIV	=	FALSE
-HTMLOUT		=	FALSE
-textDiff	=	FALSE
-#	because the statistics for the individual runs are not needed; just the graphs
-
-for	(loc in listLOC)	{
-#	loop to go through the list of locations
-
-	message(paste0("\n", loc))
-#		to identify the location being worked on
-	results	=	resultsFull[resultsFull$Location == loc, ]
-#		filters the data to just that for the current location
-#			would be possible to adapt this for filtering by GPU, but that is not the usual scenario
-#			with a GPU version, would need to change the working directory, to place the graphs in the correct folders
-
-	gameQ		=	paste0(game, " - ", QUA, " - ", loc)
-	gameGAQ		=	game
-	gameGAQF	=	gameF
-
-	if	(!multiGPU)	{
-		gameGAQ		=	paste0(gameGAQ, " - ", cGPU)
-		gameGAQF	=	paste0(gameGAQF, " - ", cGPU)
-	}
-	if	(!testAPI	&	listAPI != "")	{
-		gameGAQ		=	paste0(gameGAQ, " - ", unique(results$API))
-		gameGAQF	=	paste0(gameGAQF, " - ", unique(results$API))
-	}
-#		resets the name variables for the different locations, exactly as was done before
-
-	source("@Combined - Output.r")
-#		reads and executes the Output script
+# INDIV("GPU",		listGPU,	useSHORT = TRUE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 2)
+# INDIV("Location",	listLOC,	useSHORT = FALSE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 1)
+# INDIV("API",		listAPI,	useSHORT = TRUE,	gWIDTH = gWIDTH * 1.25,	gHEIGH = gHEIGH * 1)
 }
-}
+#	examples of INDIV for subsetting by the list of GPUs, Locations, and API

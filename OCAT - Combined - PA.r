@@ -47,23 +47,23 @@ READ	=	function(fold="", Quality = "", API="")	{
 	len	=	min(length(listLOC), length(CSV))	
 #	the shortest length between either the number of Locations or the number of CSVs
 	for (place in 1:len)	{
-	#	a for loop that will create the place variable and then iterate it through a list of numbers, starting at 1 and going to the len variable set above
+#		a for loop that will create the place variable and then iterate it through a list of numbers, starting at 1 and going to the len variable set above
 		if (CSV[place] != ".csv")	{
-		#	checks if the entry in the CSV list is just the extension or if it includes a filename
-		#		the else statement below will trigger the for loop to go to the next place
-			if (grepl(GPU, getwd()))	{
-			#	checks if the GPU name is in the working directory
-				OCATtemp	=	read_csv(paste0(CSV[place]))[,1:20]
-			#	read_csv comes from readr and is what will read in a CSV (from a string identifying path and file name) as a data frame. It has many useful functions
-			#	[,1:20] selects columns 1 through 20
-			#		the CSVs include additional columns that are not necessary
-			}	else	{
-				OCATtemp	=	read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:20]
-			#	if the GPU was not in the working directory, then it will use this command to look some directories down from the working directory
-			#		the folder structure is OCAT Data/GPU/API/Quality/CSV, with API not always present
-			#	reading from folders is necessary for the multi-GPU graphs
-			}
+#			checks if the entry in the CSV list is just the extension or if it includes a filename
+#				the else statement below will trigger the for loop to go to the next place
+			fileLOC	=	paste0(fold, GPU, "/" , API, Quality, "/", CSV[place])
+#				temporary variable that can hold a default file location string
+#				default value is appropriate if searching down GPU, API, and Quality folder
+
+			if	(grepl(GPU, getwd()) & grepl(Quality, getwd()))		fileLOC	=	paste0(CSV[place])
+#				if the GPU and Quality are in the current path string, just the file name is needed
+			if	(grepl(GPU, getwd()) & !grepl(Quality, getwd()))	fileLOC	=	paste0(fold, API, Quality, "/",CSV[place])
+#				if GPU is in current path string but quality is not, API, Quality and file name are combined for the file location string
+#				this is for looking in a single GPU fold (single-GPU, multi-API situation)
 		}	else {next}
+		OCATtemp	=	read_csv(fileLOC)[, 1:20]
+#			reads in the csv fileLOC points to, but only grabs the first 20 columns
+
 		OCATtemp[,21]	=	GPU
 		OCATtemp[,22]	=	Quality
 		OCATtemp[,23]	=	listLOC[place]

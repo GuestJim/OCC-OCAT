@@ -1,36 +1,56 @@
 #	the script for processing the data and producing the text, HTML, and graph outputs
-yrates	=	c(120, 60, 30, 20, 15, 12, 10)
+yrates	=	c(c(120, 60, 30, 20, 15, 12, 10), yratesEXT)
 #	a list of frame rates desired for scale breaks
+#		yratesEXT is set in the Input.r script and allows additional breaks to be added if desired
 yrates	=	sort(c(yrates,-yrates))
 #	combines the above list with its opposite and sorts the larger list
-ytimes	=	1000/yrates
+ytimes	=	sort(1000/yrates)
 #	converts the frame rates to frame times
+ybreals	=	sort(c(round(ytimes, 2), 0))
+#	frame times for use as scale breaks in the graphs
 ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
 #	function to convert times to rates for use with secondary axes using FPS instead of ms
+
+#function to add breaks to alternating scale labels, allowing them to be horizontally closer
+labelBreak	=	function(breaks, SEC = FALSE)	{
+#	breaks is the list of breaks for the scale
+#	SEC is to identify if this is for a secondary axis, as then the breaks need to be reversed, added in front of the break instead of the back
+	if (!app.BREAK)	return(breaks)
+#		check so this can be disabled from Input.r
+	BREAK	=	c("", "\n")
+#		the line break pattern
+	if	(is.numeric(breaks)	&	0 %in% breaks)	if	((which(breaks %in% 0) %% 2) == 0)	BREAK	=	rev(BREAK)
+#		this finds the 0 in the breaks and determines if it is in an odd or even position
+#			first it must confirm the breaks are numbers, not strings, and then that 0 is in the list
+#			next it checks if the position of 0 in breaks is odd or even
+#			depending on the result, the order of the break pattern is reversed, so the 0 will not be impacted
+	if	(!SEC)	return(	paste0(rep(BREAK, length.out = length(breaks)),	breaks)	)
+#		if this is not for a secondary axis, the BREAK pattern is repeated as needed and pasted on front of the label
+	if	(SEC)	return(	paste0(breaks, rep(BREAK, length.out = length(breaks)))	)
+#		if this is for a secondary axis, the BREAK pattern is repeated and pasted after the label
+}
 
 # labelRound	=	function(x)	sprintf("%.1f", x)
 #	function to round values to one decimal place, and will have zero padding
 labelRound	=	function(x)			round(x, 1)
 #	function to found values to one decimal place, without zero padding
-labelBreakF	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), breaks)
-labelBreakN	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
-#	functions to place line breaks on alternating labels on graphs
-#		labelBreakF is for factors when we do not want sorting done
-#		labelBreakN is for numbers when we do want sorting
-labelBreakQQ=	function(breaks)	paste0(rep(c("", "\n"),	length.out = length(breaks)),	pnorm(breaks) * 100, "%")
-#	function to add line breaks and convert Z scores to percentiles, and attach a % simple after the value, for the QQ plots
+labelRoundB	=	function(breaks)	labelBreak(labelRound(breaks))
+#	applies labelBreak to the labelRound function
+ms2FPS.lab	=	function(breaks)	labelBreak(ms2FPS(breaks), SEC = TRUE)
+#	applies both the ms2FPS conversion and labelBreak to the breaks provided
+#		as ms2FPS will only be for secondary axes, SEC = TRUE
+labelBreakS	=	function(breaks)	labelBreak(sort(breaks))
+#	breaks are sorted before labelBreak is called
+labelBreakQQ=	function(breaks)	labelBreak(paste0(pnorm(breaks) * 100, "%"))
+#	version of labelBreak for the QQ plot that converts the breaks to percentiles and attaches "%" to them
 #		this will make it easier to use different percentile values, if desired
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
-#	function to convert frame times to display cycles, assuming 60 Hz rate, and rounds to one decimal place
+#	function for creating the labels for Display Time axes, as I use 60Hz Refresh Cycles Later
+labelDispB	=	function(breaks)	labelBreak(round(breaks * 60/1000, 1))
+#	applies labelBreak to labelDisp
 
-BoxPerc	=	function (DATA)	{
-	out			=	quantile(DATA, c(0.001, 0.01, 0.5, 0.99, 0.999))
-	names(out)	=	c("ymin", "lower", "middle", "upper", "ymax")
-	return(out)
-}
-#	custom function that finds specific quantile values for use with a custom boxplot
-#		the quantiles correspond to 0.1%, 1%, 50%, 99%, and 99.9%
 
+# custom mean and median function with labels for use with aggregate
 meanMS	=	function(DATA)	{
 	out			=	c(mean(DATA), median(DATA))
 	names(out)	=	c("Mean", "Median")
@@ -38,6 +58,7 @@ meanMS	=	function(DATA)	{
 }
 #	custom function to return both the arithmetic mean and the median of the data
 
+# geometric mean function
 meanGEO	=	function(DATA)	{
 	out			=	exp(mean(log(DATA)))
 	names(out)	=	"ms"
@@ -45,6 +66,7 @@ meanGEO	=	function(DATA)	{
 }
 #	custom function for finding the geometric mean of the provided data
 
+# normalized geometric means
 normGEO	=	function(DATA)	{
 	out			=	DATA / max(DATA) * 100
 	names(out)	=	"Normalized (%)"
@@ -55,60 +77,135 @@ normGEO	=	function(DATA)	{
 #	normGEO is for normalizing the performance based on the maximum/longest frame time
 #		should be used on the AGGREGATE, not within it, and will require passing the specific column to the function
 
+# custom funtion for finding percentiles for the data and applying clear names to them
 percMS	=	function(DATA, listPERC = c(0.1, 1, 99, 99.9))	{
 	if	(max(listPERC) > 1)	listPERC = listPERC/100
 	out			=	quantile(DATA, listPERC)
 	names(out)	=	paste0(listPERC * 100, "%")
 	return(out)
 }
-#	custom funtion for finding percentiles for the data and applying clear names to them
 
+# custom function for using ECDF on the data for a list of values
 ecdfFPS	=	function(DATA, listFPS = NULL, r = 2)	{
 	default		=	c(60, 50, 30, 20, 15)
+#		the default list of FPS values to check on
 	listFPS		=	unique(sort(c(default, listFPS), decreasing = TRUE))
+#		listFPS can be set in Input.r and here its values are combined with the default
 	out			=	100 * (1 - ecdf(DATA)(1000 / listFPS))
 	names(out)	=	paste0(listFPS, " FPS")
 
 	return(round(out, r))
 }
-#	custom function for using ECDF on the data for a list of values
 #		it is configured with an internal list that the listFPS argument can add to
 
+# produces a list of statistical values, all labeled, but not necessarily used
 statMS	=	function(DATA, r = 2)	{
 	out			=	c(mean(DATA), sd(DATA), sd(DATA)/mean(DATA) * 100, skewness(DATA), kurtosis(DATA))
 	names(out)	=	c("Mean (ms)", "StDev (ms)", "CoV (%)", "Skew", "Kurtosis")
 	return(round(out, r))
 }
-#	produces a list of statistical values, all labeled, but not necessarily used in articles
 
+# custom function that finds specific quantile values for use with a custom boxplot
+BoxPerc	=	function (DATA)	{
+	out			=	quantile(DATA, c(0.001, 0.01, 0.5, 0.99, 0.999))
+	names(out)	=	c("ymin", "lower", "middle", "upper", "ymax")
+	return(out)
+}
+#	the quantiles correspond to 0.1%, 1%, 50%, 99%, and 99.9%
+
+# finds the slope of a line between two quantiles for the provided data
 qqslope	=	function (DATA, r = 2, quan = QUAN)	{
 	y		=	quantile(DATA, quan)
-	x		=	qnorm(quan)
+	#x		=	qnorm(quan)
 	x		=	100 * quan
-	#	to make this be in percentile instead of Z-score
-	#		percentile better aligns with the graph
+#		to make this be in percentile instead of Z-score
+#			percentile better aligns with the graph
 	slope	=	diff(y)/diff(x)
 	return(round(slope, r))
 }
-#	finds the slope of a line between two quantiles for the provided data
 
-statGRAPH	=	function(DATA, r = 2, quan = QUAN)	{
-	out	=	c(mean(DATA), median(DATA), qqslope(DATA, quan = quan), quantile(DATA, c(0.1, 1, 99, 99.9)/100))
-	names(out)	=	c("Mean", "Median", "Slope", "0.1", "1", "99", "99.9")
+# produces a list of values that are desired for use in graphs
+statGRAPH	=	function(DATA, ...)	{
+	out			=	c(mean(DATA), median(DATA), median(diff(DATA)), qqslope(DATA, ...), quantile(DATA, c(0.1, 1, 99, 99.9)/100))
+	names(out)	=	c("Mean", "Median", "DiffMedian", "Slope", "0.1", "1", "99", "99.9")
 	return(out)
 }
-#	produces a list of values that are desired for use in graphs
+#	DiffMedian can be used in graphDIFF to apply a Median-Median cross on the plots
+#	not using it but does not hurt to keep it
 
+
+# the aggregate function produces a two-level table and this function makes the lower table separate columns
 sepCOL	=	function(tab)	{
 	out	=	as.data.frame(as.matrix(tab))
+#		makes the input first a matrix then a data frame as this is necessary for appropriate behavior
 	for (i in grep("x", names(out)))	{
 		out[, i]	=	as.numeric(as.character(out[, i]))
 	}
+#		finds every column with "x" in its name and makes its class numeric
 	colnames(out)	=	sub("x.", "", colnames(out))
+#		removes the "x." aggregates places from the column names
 	return(out)
 }
-#	the aggregate function produces a two-level table and this function will make it one level to make working with it easier
 
+GROUPS	=	list(GPU = results$GPU, Location = results$Location)
+if	(testAPI)	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+#	already in Input script, but keeping here for easy finding
+#	creates the groups for use with the aggregate functions below
+#		by using an actual list, not just a vector, the column names for the groups can be set here
+#		as GROUPS will always be used, a value is set and then changed if appropriate
+
+if	(textFRAM	|	graphFRAM)	{
+	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
+	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
+	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
+	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
+	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
+#		aggregate functions will find described groups in data and apply a function to the groups
+#			sepCOL fixes that the returns will be two-level tables
+	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
+	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
+	if	(testAPI)	graphSTATS$API		=	ordered(graphSTATS$API,	levels = listAPI)
+#		makes the GPU, Location, and API columns ordered factors so the graph facets are in the right order
+}
+#	below are equivalent to above but for other data columns in results
+if	(textDISP	|	graphDISP)	{
+	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
+	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
+	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
+	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
+	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
+
+	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
+	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
+	if	(testAPI)	dispgSTATS$API		=	ordered(dispgSTATS$API,	levels = listAPI)
+}
+if	(textREND	|	graphREND)	{
+	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
+	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
+	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
+	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
+	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
+
+	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
+	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
+	if	(testAPI)	rendgSTATS$API		=	ordered(rendgSTATS$API,	levels = listAPI)
+}
+if	(textDRIV	|	graphDRIV)	{
+	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
+	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
+	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
+	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
+	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
+
+	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
+	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
+	if	(testAPI)	drivgSTATS$API		=	ordered(drivgSTATS$API,	levels = listAPI)
+}
+#	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
+#		aggregate(list(Hello = data, groups, function)) will label the column Hello
+#	it is also possible to run the function on more columns by placing them all in a list (not a vector, but a list like GROUPS)
+
+# function to take tables in milliseconds and create a version in FPS bound on top
 addFPS	=	function(DATA, r = 2)	{
 	lab	=	DATA[1:grep("Location", colnames(DATA))]
 	val	=	DATA[-(1:grep("Location", colnames(DATA)))]
@@ -121,16 +218,18 @@ addFPS	=	function(DATA, r = 2)	{
 	out	=	rbind(tFPS, tMS)
 	return(out)
 }
-#	custom function for taking tables that are in milliseconds and adding FPS to them
 
+# produces a compact table from the other tables
 compTAB	=	function(MEAN, PERC, ECDF)	{
 	if	(is.null(listFPS))	{
 		listECDF	=	grep("60 FPS", colnames(ECDF))
+#			if listFPS is NULL in Input.r, only the 60 FPS ECDF value will be shown
 	}	else	{
 		begECDF		=	grep(paste0(max(c(listFPS, 60)), " FPS"), colnames(ECDF))
 		endECDF		=	grep(paste0(min(c(listFPS, 60)), " FPS"), colnames(ECDF))
-
+#			if listFPS is not NULL, its max and min values, combined with 60, will be searched for in ECDF column names
 		listECDF	=	begECDF:endECDF
+#			the column indices for the min and max of listFPS are used as the beginning and end of the columns to include
 	}
 
 	out	=	cbind(
@@ -138,99 +237,26 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 		addFPS(PERC)[-(1:grep("0.1%", colnames(addFPS(PERC))) - 1)],
 		ECDF[listECDF]
 	)
+#		combines the MEAN (mean and median) and PERC (percentile) columns after they have FPS versions added with the ECDF columns
 
 	return(out)
 }
-#	produces the compact table from other tables
-#		normally the ECDF data stops at the 60 FPS value, but endECDF allows the function to go farther in the list
 
-customSave	=	function(type="", plot = last_plot(), device=ggdevice, width=gWIDTH, height=gHEIGH, dpi=DPI)	{
-	if	(device	==	"png")	{
-		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device=device, width=width, height=height, dpi=dpi)
-	}
-	if	(device	==	"pdf")	{
-		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device=device, width=width, height=height)
-	}
-}
-#	function to simplify calling ggsave by already configuring most of its arguments
-#		it will work for producing PNG or PDF outputs and with a recording variable no longer used
-#	it is possible to directly save a plot without having to render it first by using the plot argument
-#		customSave("@Means - Frame Time", plot = graphMEANS("MsBetweenPresents"))
-
-if	(testAPI)	{
-	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
-}	else	{
-	GROUPS	=	list(GPU = results$GPU, Location = results$Location)
-}
-#	creates the groups for use with the aggregate functions below
-#	by using an actual list, not just a vector, the column names for the groups can be set here
-
-levsLOC	=	listLOC
-if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
-#	sets a list of levels for Location so the below better works with shortened names
-
-if	(textFRAM	|	graphFRAM)	{
-	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
-	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
-	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
-	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
-	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
-#		aggregte functions are fun, with sepCOL run on the output and that result saved to a variable
-	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
-	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = levsLOC)
-#		makes the GPU and Location columns ordered factors so the graph facets are in the right order
-}
-#	below are equivalent to above but for other data columns in results
-if	(textDISP	|	graphDISP)	{
-	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
-	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
-	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
-	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
-	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
-
-	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
-	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = levsLOC)
-}
-if	(textREND	|	graphREND)	{
-	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
-	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
-	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
-	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
-	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
-
-	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
-	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = levsLOC)
-}
-if	(textDRIV	|	graphDRIV)	{
-	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
-	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
-	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
-	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
-	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
-
-	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
-	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = levsLOC)
-}
-
-#	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
-#		aggregate(list(Hello = data, groups, function)) will label the column Hello
-#	it is also possible to run the function on more columns by placing them all in a list (not a vector, but a list like GROUPS)
-
+# returns a subset of the data determined by the COL value and its value when evaluated as a variable
 subOUT	=	function(DATA, COL = "")	{
 	if	(COL == "")	{
 		out	=	DATA
+#			if no COL column name is provided, the input data is returned
 	}	else	{
 		SUB	=	eval(parse(text = COL))
+#			reads the string value of COL as a variable name and stores that value in SUB
 		out	=	DATA[DATA[, COL] == SUB, ]
+#			filters the DATA to only those where the values in the COL column match the SUB value
 	}
 	return(out)
 }
-#	takes a DATA input and the name of the column to used for filtering
-#	it is very important with for loops that the variable name matches the column name
-#		if COL is an empty string, then the DATA is just returned as is
-#		if COL is not an empty string, then DATA will be filtered by that column
-#		DATA[DATA[, COL] == SUB, ] will filter to just those rows where the value in the column is the same as the value of the SUB variable provided
 
+# function to create generical named variables for holding the aggregate data above
 dataSEL	=	function(datatype, COL = "")	{
 	if	(datatype == "MsBetweenPresents"		|	datatype == "Frame Time")	{
 		type		<<-	"Frame Time"
@@ -265,19 +291,17 @@ dataSEL	=	function(datatype, COL = "")	{
 		STAT		<<-	subOUT(rendSTAT, COL)
 	}
 }
-#	this function creates generically named variables for holding the AGGEGRATE data for frame, display, and render time, depending on what is desired
 #	by giving it a column name, the data can be filtered, provided the variable for the FOR loop has the same name as the column
 #		by using <<- the variables are accessible outside of the function
 
+# function that describes how the statistics should be saved to a TXT file
 sinkTXT	=	function(datatype, COL = "")	{
-#	instead of having multiple similar blocks of code for creating TXT files with data in them, this function handles it
-#		its arguments are the datatype and the name of the column the filtering is based on
 #		the name of the variable for the FOR loop must match the name of the column for this to work
 	options(width = 1000)
 #		sets the line width with the TXT files, as R will apply its own line breaks when reaching the width
 
 	dataSEL(datatype, COL)
-#		sets the generic variables to the desired values
+#		sets the generic variables to the correct datatype values
 
 	subSTR	=	""
 #		creates the subSTR string to hold the name of the filter
@@ -336,6 +360,7 @@ OCCHTML	=	function(DATA)	{
 #			\\d indicates to include a single digit so by using two it will also cover when there are more than nine columns in the table
 }
 
+# custom function for actually writing the HTML file with the data in it
 writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = FOLD)	{
 	if	(fold != "")	{
 		write_tableHTML(OCCHTML(DATA), file = paste0(fold, "\\", name, " - ", dataNAME,".html"))
@@ -343,14 +368,13 @@ writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = FOLD)	{
 		write_tableHTML(OCCHTML(DATA), file = paste0(name, " - ", dataNAME,".html"))
 	}
 }
-#	custom function for actually writing the HTML file with the data in it
 
+# function that describes how the statistics should be written to HTML files, similar to sinkTXT
 sinkHTML	=	function(datatype, COL = "")	{
-#	similar to sinkTXT this is a custom function for creating the HTML files
 #		by supplying a column name, and using a FOR loop where its variable name is the column name, it can filter the output
 
 	dataSEL(datatype, COL)
-#		sets the generic variables to the desired values
+#		sets the generic variables to the desired datatype values
 	
 	SUB		=	""
 	if	(COL	!=	"")		SUB		=	paste0(eval(parse(text = COL)), " - ")
@@ -367,143 +391,205 @@ sinkHTML	=	function(datatype, COL = "")	{
 	writeOCC(compTAB(MEAN, PERC, ECDF),	dataNAME = paste0(SUB, typeSHORT, "COMP"),	fold = FOLD)
 }
 
+# calls both sinkTXT and sinkHTML, though checks if their respective outputs are desired
 sinkOUT	=	function(datatype)	{
-#	calls both sinkTXT and sinkHTML when their output is desired, simplifying the output code significantly
-#	can be passed any of the data types the script has be prepared for
-#		MsBetweenPresents, MsBetweenDisplayChange, MsUntilRenderComplete
-#	more can be added via additional aggregate functions and additions to dataSEL
+
 if	(textOUT)	sinkTXT(datatype)
 if	(HTMLOUT)	sinkHTML(datatype)
 #	first checks if this specific output is desired
 
-for (GPU in listGPU)	{	if	(file.exists(GPU))	{	GPU	<<-	GPU
+for (GPU in listGPU)	{	if	(file.exists(GPU) & perGPU)	{	GPU	<<-	GPU
+#	goes through the GPU list
+#	checks if GPU folder exists and if the separate GPU files are desired
+#		to address an issue with the GPU variable not alway being accessing, <<- is used for global access
 	if	(textOUT)	sinkTXT(datatype, "GPU")
 	if	(HTMLOUT)	sinkHTML(datatype, "GPU")
 }	}
-#	goes through the GPU list, checks if the folder for it exists, and creates the outputs
-#		to address an issue with the GPU variable not alway being accessing, <<- is used for global access
 
 if	(textAPI)			{	for (API in listAPI)	{	API	<<-	API
+#	goes through the list of APIs, if textAPI is true
+#		<<- is not necessary here, but it does not hurt to have, so for symmetry, it is present
 	if	(textOUT)	sinkTXT(datatype, "API")
 	if	(HTMLOUT)	sinkHTML(datatype, "API")
 }	}
-#	goes through the list of APIs, if textAPI is true
-#		<<- is not necessary here, but it does not hurt to have, so for symmetry, it is present
 }
 
-if	(textFRAM)	sinkOUT("MsBetweenPresents")
-if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
-if	(textREND)	sinkOUT("MsUntilRenderComplete")
-if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
-#	calls for the creation of the desired TXT and HTML files for the data types
-message("")
-#	the print commands above will show their outputs in the console window, so this places an empty line between that and what comes next
-
-
-if	(multiGPU)	{
-	labsGPU	=	labs()
-}	else	{
-	labsGPU	=	labs(caption = cGPU)
+# function to simplify calling ggsave by providing most of its arguments
+customSave	=	function(type="", plot = last_plot(), device=ggdevice, width=gWIDTH, height=gHEIGH, dpi=DPI)	{
+#	the plot argument allows a specific plot to be saved without having to be rendered first in the GUI
+	if	(device	==	"png"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device=device, width=width, height=height, dpi=dpi)
+	}
+	if	(device	==	"pdf"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device=device, width=width, height=height)
+	}
+#	 can be set to have PNG, PDF, or both PNG and PDF outputs
 }
-#	creates a variable to add a caption to the graphs for what the current GPU is, for the single-GPU situation
-#		for multi-GPU, there will be no such caption
 
-#To create graphs, I have changed to a modular function-based solution, as this makes it easier to ensure consistency across data types, is cleaner, and lets me mess with the order of things later, which is important
+# function that handles all of the graph saving configuration
+graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL, ...)	{
+	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
+	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
+	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
+	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
+
+	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
+	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
+	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
+	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
+	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
+	
+	if	(substitute(graphtype) == "graphMEANSbox")		graphNAME	=	"Means Labeled"
+#		modified version of graphMEANS that adds labels for the custom boxplots
+
+	PLOT	=	graphtype(datatype)
+#	by default, the PLOT will be whatever the graph type is with the data type
+	if	(graphNAME == "Diff" & !is.null(diffLim))	{
+#		because the graphDIFF function can accept the diffLim argument, it needs to be checked for and applied
+		PLOT	=	graphtype(datatype, diffLim)
+		graphNAME	=	paste0(graphNAME, " EXT")
+	}
+#	to identify whether the diffLim argument has been changed, the graphNAME variable is changed
+#	this also makes it possible to have the script automtically create two versions of the graph; one normal and one extended
+	
+	message(paste0(graphNAME, " - ", dataNAME))
+#	the message will indicate what graph is currently being worked on
+
+	if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
+#	saves the selected graph to a file if OUT = TRUE
+	if	(SHOW)	PLOT
+#	shows the selected graph if SHOW = TRUE
+}
+
+# function to reverse the order of levels for a column
+levels.rev		=	function(DATA, COL)	{
+	DATA	=	as.data.frame(DATA)
+#	results is a tibble which does not work when trying to order levels in it, but making it a data frame fixes this
+	ordered(DATA[, COL],	levels = rev(levels(DATA[, COL])))
+#	returns the specified column with its levels reversed
+}
+
+# function to changes levels to use the shortened names
+levels.short	=	function(DATA, COL, LIST, LEVS)	{
+#	arguments are the input data, the column to work on, the original list of levels, the list of levels with shortend names
+	DATA	=	as.data.frame(DATA)
+#	results is a tibble which does not work when trying to order levels in it, but making it a data frame fixes this
+	DATA[, COL]	=	ordered(DATA[, COL],	levels	=	LIST)
+#	applies the original list of levels to the specified data column
+	levels(DATA[, COL])	=	LEVS
+#	changes the levels to use the shortened names
+	return(DATA[, COL])
+}
+
+# function to apply levels.short to the appropriate columns
+data.short	=	function(DATA)	{
+	if	(!is.null(shortLOC))				DATA[, "Location"]	=	levels.short(DATA,	"Location",	listLOC,	levsLOC)
+#	checks if a list of shortened location names have been provided then applies levels.short to the correct column
+	if	(!is.null(shortAPI)	&	testAPI)	DATA[, "API"]		=	levels.short(DATA,	"API",		listAPI,	levsAPI)
+#	checks if a list of shortened API names is present, and if APIs are being compared, then applies levels.short
+	return(DATA)
+}
+
+# function to reverse the orders of levels
+graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
+#	arguments are the input data and switches for if the Location and/or API columns should be reversed
+	if (rev.LOC)				DATA$Location	=	levels.rev(DATA, "Location")
+#	checks if Location levels should be reversed, then applies levels.rev
+	if (rev.API	&	testAPI)	DATA$API		=	levels.rev(DATA, "API")
+#	checks if API levels should be reversed and if APIs are being compared, then applies levels.rev.
+	return(DATA)
+}
+#	levels.rev, levels.short, data.short, and graph.rev exist so they can be called within the graph functions
+#	by using them within the graph functions, the original data (results and various STATS) will not be altered
+#		this makes keeping level names and orders between the original data much easier
+
+# by using custom graph functions, it is easier to ensure consistent design across data types
 #	the main difference between datatypes are the scales and what data is called for, and it is possible to control these with variables
 #		get(datatype) is a way to effectively get the desired datatype in the ggplot2 aesthetics
 #	spacing between facet panels can be set with  theme(panel.spacing.x = unit(1, "lines"))
+
+# creates a function for the MEANS graph
 graphMEANS	=	function(datatype)	{
-#	creates a function for the MEANS graph
-#		graph of the arithmetic means, median, 0.1%, 1%, 99%, and 99.9% valuesfor the data, by GPU
+#	graph of the arithmetic means, median, 0.1%, 1%, 99%, and 99.9% valuesfor the data, by GPU
+
+#	below set the Y scales
+#		it shows time and therefore is continuous
 	if	(datatype == "MsBetweenPresents")	{
 #		checks if the datatype is "MsBetweenPresents" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+#				MsBetweenPresents is the frame time with units of milliseconds
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
 		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Frame time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	c(0, round(ytimes, 2)),
+#				for MsBetweenDisplayChange, the display time, I prefer to use the number of refresh cycles for the scale
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
 			labels		=	labelDisp,
-			limits		=	c(0, FtimeLimit),
+#				ybreaks will be converted as per labelDisp set earlier
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis()
+#				a duplicate of the scale is applied to the opposite side of the graph
 		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Display time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#			labels will be the values shown at the breaks and here will be converted to something more reasonable for display time
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+#				MsUntilRenderComplete is the render time
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
 		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Render time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
+#		checks if the datatype is "MsEstimatedDriverLag" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+#				MsEstimatedDriverLag is the estimated driver lag
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis()
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Estimate Driver Lag
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#				a duplicate of the scale is applied to the opposite side of the graph
 	}
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(cols = vars(Location), switch = "y")
-	}
-#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the API value
-#			the facet columns follow the Location value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET	=	facet_grid(cols = vars(Location), switch = "y")
+	if	(testAPI)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
+#	sets a default FACET design with the columns being for each location
+#	if there are multiple APIs to compare, then the FACET design will change to adds rows for each API
+#		switch = "y" is so the facet labels or on the left side, instead of the right
+
+	# if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+#	though not appropriate for all graphs (hence the commenting) these lines apply levels.rev and levels.short as desired
+#		rev.LOC and rev.API must be set prior to the graphs being called
 
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 #		initiates the creation of a plot using ggplot2
@@ -526,114 +612,160 @@ graphMEANS	=	function(datatype)	{
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	#	standard boxplot with reduced opacity, but is not used
 	FACET +
-	scale_x_discrete(labels = labelBreakF) +
+	scale_x_discrete(labels = labelBreak) +
 #		the X axis is the GPUs, a discrete scale, and labelBreakF will add line breaks to every other label, to avoid overlap
-	scale_Y +
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 #		applies the Y scale set earlier in the function
+#		the limits for the Y-axis are set with coord_cartesian, which effectively crops the graph
+#			coord_cartsian can be better than limits set inside the scale, as those will remove values outside those limits
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
 #		sets the guide to be based on the fill scale (GPU), to have one row, and to be on the bottom of the graph
 }
 
+# function to create labels for the values in graphMEANS
+boxLABS		=	function(datatype)	{
+	if	(datatype == "MsBetweenPresents")		STATS	=	graphSTATS
+	if	(datatype == "MsBetweenDisplayChange")	STATS	=	dispgSTATS
+	if	(datatype == "MsUntilRenderComplete")	STATS	=	rendgSTATS
+	if	(datatype == "MsEstimatedDriverLag")	STATS	=	drivgSTATS
+#	checks the datatype and sets the appropriate statistics to STATS
 
+	ALPHA	=	0.65
+#	controls the opacity for the label box fills
+
+	nudOUT	=	0.50
+	nudIN	=	0.40
+	nudMED	=	0.55
+#	amount of nudging for the outer values (0.1% and 99.9%), inner values (1% and 99%), and median value
+
+	list(
+#	opens a list for holding each geom_label layer
+#		later layers in this list will appear on top of earlier ones, so the more significant values are last
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99.9"],	label = round(STATS[, "99.9"], 2)),		alpha = ALPHA,
+											vjust = 0,	nudge_y = nudOUT),
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "0.1"],	label = round(STATS[, "0.1"], 2)),		alpha = ALPHA,
+											vjust = 1,	nudge_y = -nudOUT),
+		#	0.1% and 99.9%
+#		with STATS as the data, it uses the appropriate columns for the Y values
+#			quotes are necessary as the column names are numbers
+#			vjust and nudge_y are used together so the labels will, hopefully, not overlap
+
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99"],		label = round(STATS[, "99"], 2)),		alpha = ALPHA,
+			hjust = 1,	nudge_x = nudIN,	vjust = 0),
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "1"],		label = round(STATS[, "1"], 2)),		alpha = ALPHA,
+			hjust = 1,	nudge_x = nudIN,	vjust = 1),
+		#	1% and 99%
+#		with STATS as the data, it uses the appropriate columns for the Y values
+#			quotes are necessary as the column names are numbers
+#			hjust, nudge_x, vjust and nudge_y are used together so the labels will, hopefully, not overlap
+
+		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "Median"],	label = round(STATS[, "Median"], 2)),	alpha = ALPHA,
+			hjust = 1,	nudge_x = nudMED),
+		geom_text(data = STATS,		aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
+			hjust = 0,	nudge_x = -0.55,	vjust = 0)
+		#	median and mean
+#		with STATS as the data, it uses the appropriate columns for the Y values
+#			hjust, nudge_x, vjust and nudge_y are used together so the labels will, hopefully, not overlap
+		)
+}
+
+# adds the custom box plot labels to graphMEANS
+graphMEANSbox	=	function(datatype)	graphMEANS(datatype) + boxLABS(datatype)
+#		ggplot2 allows elements to be added together with the + symbol
+
+
+# creates a function for the COURSE graph
 graphCOURSE	=	function(datatype)	{
-#	creates a function for the COURSE graph
 #		graph of measurements over the length of the test
+
+#	below set the Y scales
+#		it shows time and therefore is continuous
 	if	(datatype == "MsBetweenPresents")	{
 #		checks if the datatype is "MsBetweenPresents" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+#				MsBetweenPresents is the frame time with units of milliseconds
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
 		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Frame Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
+#		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	c(0, round(ytimes, 2)),
+#				for MsBetweenDisplayChange, the display time, I prefer to use the number of refresh cycles for the scale
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
 			labels		=	labelDisp,
-			limits		=	c(0, FtimeLimit),
+#				ybreaks will be converted as per labelDisp set earlier
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis()
+#				a duplicate of the scale is applied to the opposite side of the graph
 		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Refresh Cycles Later
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#			labels will be the values shown at the breaks and here will be converted to something more reasonable for display time
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
+#		checks if the datatype is "MsUntilRenderComplete" and will set the Y scale
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+#				MsUntilRenderComplete is the render time
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
 			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
 		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Render time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
-	scale_Y	=	scale_y_continuous(
-		name		=	"Estimated Driver Lag (ms)",
-		breaks		=	c(0, round(ytimes, 2)),
-		limits		=	c(0, FtimeLimit),
-		expand		=	c(0.02, 0),
-		sec.axis	=	dup_axis()
-	)
-#			for this data type the appropriate name is Estimated Driver Lag
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second, duplicate axis is made and placed on the opposite side of the graph
+#		checks if the datatype is "MsEstimatedDriverLag" and will set the Y scale
+		scale_Y	=	scale_y_continuous(
+			name		=	"Estimated Driver Lag (ms)",
+#				MsEstimatedDriverLag is the estimated driver lag
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+			sec.axis	=	dup_axis()
+#				a duplicate of the scale is applied to the opposite side of the graph
+		)
+	}
 
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
-#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the API value
-#			the facet columns follow the Location value
-#			switches the Y labels for the facets to be on the left side, instead of the right
-	
-	if	(length(unique(results$Location)) == 1)	{
-		ALPHA	=	1
-	}	else	{
-		ALPHA	=	0.05
-	}
-#		checks if there are multiple locations in results and will alter the transparency accordingly
-#			for the single-location graphs, the points are fully opaque
-#			for the multi-location graphs, the graphs are mostly transparent, to suggest density
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+#	sets a default FACET design with the rows being for each location and columns for the GPUs
+#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
+#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
+#		switch = "y" is so the facet labels or on the left side, instead of the right
+
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+#	though not appropriate for all graphs (hence the commenting) these lines apply levels.rev and levels.short as desired
+#		rev.LOC and rev.API must be set prior to the graphs being called
+
+	ALPHA	=	0.05
+	if	(length(unique(results$Location)) == 1)	ALPHA	=	1
+#	sets a default transparency value for the points
+#		being mostly transparent allows data density to be interpreted by the darkness of the plot
+#	if there are multiple locations in the data though, the points will be opaque
 
 	ggplot(data = results, aes(x = TimeInSeconds, y = get(datatype))) +
 #		initiates the creation of the graph
@@ -656,200 +788,41 @@ graphCOURSE	=	function(datatype)	{
 #			breaks are from 0 to the greatest integer from the TimeInSeconds measurement
 #			labelBreakN is used to prevent overlap
 #			the padding along the scale is set
-	scale_Y +
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
 #		applies the Y scale set earlier
-	guides(color = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
-#		sets the guide to be based on the color scale, to have one row, and to be on the bottom of the graph
-#			no color scale is set, so this does nothing
+#		the limits for the Y-axis are set with coord_cartesian, which effectively crops the graph
+#			coord_cartsian can be better than limits set inside the scale, as those will remove values outside those limits
 }
 
-
-graphDIFF	=	function(datatype, diffLim = 1000/50)	{
-#	creates a function for the Consecutive DIFFerence graph
-#		graph of the frame times and the consecutive frame time difference
-#	the limits for the difference scale can be set when calling the function
-	if	(datatype == "MsBetweenPresents")	{
-#		checks if the datatype is "MsBetweenPresents" and will set the X and Y scales
-		scale_X	=	scale_x_continuous(
-			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Frame Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Frame Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Consecutive Frame Time Difference
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are from -1000/50 (-20) to 1000/50 (20)
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#				the paddng is disabled
-
-	if	(datatype == "MsBetweenDisplayChange")	{
-#		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
-		scale_X	=	scale_x_continuous(
-			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Refresh Cycles Later
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Display Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Consecutive Display Time Difference
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are from -1000/50 (-20) to 1000/50 (20)
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#				the paddng is disabled
-
-	if	(datatype == "MsUntilRenderComplete")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Render Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Render Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Consecutive Render Time Difference
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are from -1000/50 (-20) to 1000/50 (20)
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#				the paddng is disabled
-
-	if	(datatype == "MsEstimatedDriverLag")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Lag Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Estimated Driver Lag
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks are inherited from the breaks, unless specified
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
-#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the API value
-#			the facet columns follow the Location value
-#			switches the Y labels for the facets to be on the left side, instead of the right
-
-	temp	=	eval(parse(text = paste0("results$", datatype)))
-#		to get the difference data, it is necessary to work around some issues with getting columns from results
-#			this creates the code to call the desired column from results as a string
-#			the string is then parsed and evaluated as code, saving the column to the temp variable
-	#	the [1,] is needed because it otherwise just gets the list of row names
-
-	ggplot(data = results, aes(x = get(datatype), y = rbind(c(diff(temp), 0))[1,]) ) +
-#		initiates the graph with the data being results but the aesthetics coming from the temp variable
-#			for the differences to match the length of temp, a value must be added to the list
-#			placing 0 at the end means the Y value for the point will indicate where the next point will be (X+Y)
-#			to address an issue with the row names being grabbed, [1,] is used to grab just the data
-	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
-#		sets the title and subtitle of the graph, and applies the labsGPU variable
-	geom_point(alpha = 0.1) +
-#		places points at the X and Y coordinates set by the aesthetics earlier
-#		the alpha/transparency value is set to 0.1 so the darkness indicates density
-	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
-#		adds a density plot with the geometry of a polygon
-#			the color of the polygon will be based on the density level
-#			a legend will not be shown
-#			the viridis scale is used to set the fill colors
-	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
-	#	identical to the above, but the alpha value is also based on the density level
-	FACET + 
-	scale_X +
-	scale_Y
-#		applies the X and Y scales set earlier
-}
-
+# creates a function for the FREQuency graph
 graphFREQ	=	function(datatype)	{
-#	creates a function for the FREQuency graph
-#		graph of the frequency of certain measurements to appear in the data
+#	graph of the frequency of certain measurements to appear in the data
+#		this is effectively showing the distribution of the data
+
+#	below set the X scales
+#		it shows time and therefore is continuous
 	if	(datatype == "MsBetweenPresents")	{
 #		checks if the datatype is "MsBetweenPresents" and will set the X scale and the STATS used for parts of the graph
 		STATS	=	graphSTATS
 #			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
+#				MsBetweenPresents is the frame time with units of milliseconds
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelRoundB,
+#				ybreaks will be rounded for the labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 			expand	=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
-				labels	=	ms2FPS
+				labels	=	ms2FPS.lab
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Frame Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks will be rounded according to the labelRound function
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 	
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the X scale and the STATS used for parts of the graph
@@ -857,25 +830,21 @@ graphFREQ	=	function(datatype)	{
 #			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
+#				MsBetweenDisplayChange is the disply time and I prefer units of Refresh Cycles Later
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelDispB,
+#				ybreaks converted as labelDisp describes
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 			expand	=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Display Time (ms)",
-				labels	=	c(0, round(ytimes, 2))
+				labels	=	ybreaks
 			)
+#				creates a second, duplicate axis that shows display time in milliseconds and not refresh cycles
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Refresh Cycles Later
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#			labels will be the values shown at the breaks and here will be converted to something more reasonable for display time
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses time as the unit instead, and while cycles later I feel is appropriate, some viewers may appreciate this
 
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the X scale and the STATS used for parts of the graph
@@ -883,57 +852,52 @@ graphFREQ	=	function(datatype)	{
 #			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
+#				MsUntilRenderComplete is the render time with units of milliseconds
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelRoundB,
+#				ybreaks will be rounded for the labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 			expand	=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
-				labels	=	ms2FPS
+				labels	=	ms2FPS.lab
 			)
+#				creates a second, duplicate axis that shows render rate with ms2FPS converting the ms breaks to FPS labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Render Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks will be rounded according to the labelRound function
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 
 	if	(datatype == "MsEstimatedDriverLag")	{
 		STATS	=	drivgSTATS
 #			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
-			expand	=	c(0.02, 0)
+#				MsEstimatedDriverLag is the estimated driver lag with units of milliseconds
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelRoundB,
+#				ybreaks will be rounded for the labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			expand	=	c(0.02, 0),
+#				the amount of expansion along the axis
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Estimated Driver Lag
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#			labels will be the values shown at the breaks and here will be converted to something more reasonable for display time
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
 	
-	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
-#		applies the desired order to the GPU factors in the table
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
-#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the API value
-#			the facet columns follow the Location value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+#	sets a default FACET design with the rows being for each location and columns for the GPUs
+#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
+#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
+#		switch = "y" is so the facet labels or on the left side, instead of the right
+
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+#	though not appropriate for all graphs these lines apply levels.rev and levels.short as desired
+#		rev.LOC and rev.API must be set prior to the graphs being called
 
 	ggplot(data = results, aes(get(datatype))) +
 #		initiates the graph	with the data being results and the aesthetics to be the datatype
@@ -947,14 +911,16 @@ graphFREQ	=	function(datatype)	{
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotted") +
 #			using the STATS provided, vertical lines are added for the Mean and Median, with different colors and line types
 	FACET + 
-	scale_X +
+	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 #		applies the X scale set earlier
+#		the limits for the X-axis are set with coord_cartesian, which effectively crops the graph
+#			coord_cartsian can be better than limits set inside the scale, as those will remove values outside those limits
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 #		sets the Y scale to have the name Count and the padding for this scale
 }
 
-graphQQ	=	function(datatype, PERCS, PERCS = c(.001, .01, .5, .99, .999))	{
-#	creates a function for the Quantile graph
+# creates a function for the Quantile graph
+graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 #		graph of the frame times against their quantile distribution
 #		the PERCS argument allows one to change the percentiles wanted on the X axis
 #			the default values are for 0.1%, 1%, 50%, 99%, and 99.9%
@@ -963,92 +929,91 @@ graphQQ	=	function(datatype, PERCS, PERCS = c(.001, .01, .5, .99, .999))	{
 		STATS	=	graphSTATS
 #			creates a generic STATS variable for holding the graph stats
 		scale_Y	=	scale_y_continuous(
-			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			expand	=	c(0.02, 0),
+			name		=	"Frame Time (ms)",
+#				MsBetweenPresents is the frame time with units of milliseconds
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Frame Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks will be rounded according to the labelRound function
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
 		STATS	=	dispgSTATS
 #			creates a generic STATS variable for holding the graph stats
 		scale_Y	=	scale_y_continuous(
-			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			expand	=	c(0.02, 0),
-			sec.axis	=	dup_axis(
-				name	=	"Display Time (FPS)",
-				labels	=	c(0, round(ytimes, 2))
-			)
+			name		=	"Refresh Cycles Later (1/60 s)",
+#				for MsBetweenDisplayChange, the display time, I prefer to use the number of refresh cycles for the scale
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelDisp,
+#				ybreaks will be converted as per labelDisp set earlier
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+			sec.axis	=	dup_axis()
+#				a duplicate of the scale is applied to the opposite side of the graph
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Refresh Cycles Later
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#			labels will be the values shown at the breaks and here will be converted to something more reasonable for display time
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses time as the unit instead, and while cycles later I feel is appropriate, some viewers may appreciate this
 	
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the Y scale
 		STATS	=	rendgSTATS
 #			creates a generic STATS variable for holding the graph stats
 		scale_Y	=	scale_y_continuous(
-			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			expand	=	c(0.02, 0),
+			name		=	"Render Time (ms)",
+#				MsUntilRenderComplete is the render time
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS
 			)
+#				creates a second, duplicate axis that shows frame rate with ms2FPS converting the ms breaks to FPS labels
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Render Time
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks will be rounded according to the labelRound function
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
-#			a second axis is made and placed on the opposite side of the graph
-#				this second axis uses FPS as the unit instead, so both units are presented to the viewer
 
 	if	(datatype == "MsEstimatedDriverLag")	{
 		STATS	=	drivgSTATS
 		scale_Y	=	scale_y_continuous(
-			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			name		=	"Estimated Driver Lag (ms)",
+#				MsEstimatedDriverLag is the estimated driver lag
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+			sec.axis	=	dup_axis()
+#				a duplicate of the scale is applied to the opposite side of the graph
 		)
 	}
-#			a continuous scale is used because the measured times are on a continuous range, and not discrete values
-#			for this data type the appropriate name is Estimated Driver Lag
-#			breaks, where major guide lines are drawn, will be on the list of common times set at the beginning of the file
-#				labels for the breaks will be rounded according to the labelRound function
-#			the limits for the scale are 0 to the FtimeLimit set in the Input script
-#			how the graph pads out from the scale
-#				the first value is a coefficient and the second is additive
+	
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+#	sets a default FACET design with the rows being for each location and columns for the GPUs
+#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
+#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
+#		switch = "y" is so the facet labels or on the left side, instead of the right
+
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+#	though not appropriate for all graphs these lines apply levels.rev and levels.short as desired
+#		rev.LOC and rev.API must be set prior to the graphs being called
+
 #	sec.axis	=	sec_axis(~.,
 #		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
 #		labels	=	paste0(round(STATS[c("0.1", "1", "Median", "99", "99.9")], 2), c(" (0.1%)", " (1%)", " (50%)", " (99%)", " (99.9%)"))
@@ -1056,19 +1021,7 @@ graphQQ	=	function(datatype, PERCS, PERCS = c(.001, .01, .5, .99, .999))	{
 #		this can be used to add a secondary axis that shows the values for the percentiles
 #			it needs to be put in place after STATS is assigned, else it throws an error
 	
-	STATS$GPU	=	factor(STATS$GPU, levels = listGPU, ordered = TRUE)
-#		makes the GPU column of STATS ordered factors based on listGPU
-#			this is necessary for the faceting to work correctly
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
-#		check to change the facet grouping to avoiding adding API group when there are no APIs to test
-#		tells ggplot2 to create a faceted graph
-#			the facet rows follow the API value
-#			the facet columns follow the Location value
-#			switches the Y labels for the facets to be on the left side, instead of the right
+
 
 	ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
 #		initiates the graph and sets certain things for the rectangles below
@@ -1110,44 +1063,154 @@ graphQQ	=	function(datatype, PERCS, PERCS = c(.001, .01, .5, .99, .999))	{
 #			the graphs padding of the scale is set
 }
 
+# creates a function for the Consecutive DIFFerence graph
+graphDIFF	=	function(datatype, diffLim = 1000/50)	{
+#	graph of the frame times and the consecutive frame time difference
+#		the limits for the difference scale can be set when calling the function
 
-graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
-	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
-	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
-	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
-	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
-
-	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
-	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
-	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
-	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
-	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
-
-	#ARGS	=	list(...)
-	#	how to get the miscellaneous arguments into a variable
-
-	message(paste0(graphNAME, " - ", dataNAME))
-
-	if	(graphNAME == "Diff" & !is.null(diffLim))	{
-	#	because the graphDIFF function can accept the diffLim argument, it needs to be checked for and applied
-		PLOT	=	graphtype(datatype, diffLim)
-		dataNAME	=	paste0(dataNAME, " EXT")
-		#	to identify whether the diffLim argument has been changed, the dataNAME variable is changed
-		#	this also makes it possible to have the script automtically create two versions of the graph; one normal and one extended
-	}	else	{
-		PLOT	=	graphtype(datatype)
+#	the X axis is the measured time
+#	the Y axis is the consecutive difference
+#		both must be continuous scales
+	if	(datatype == "MsBetweenPresents")	{
+#		checks if the datatype is "MsBetweenPresents" and will set the X and Y scales
+		scale_X	=	scale_x_continuous(
+			name	=	"Frame Time (ms)",
+#				MsBetweenPresents is the frame time with units of milliseconds
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelRoundB,
+#				ybreaks will be rounded for the labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			expand	=	c(0.02, 0)
+#				the amount of expansion along the axis
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Frame Time Difference (ms)",
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+		)
 	}
 
-	if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
-	PLOT	#shows the current graph, but must be after customSave
-}
-#	can be given the data type and graph function to have it create the graph
-#		by setting OUT to false, it will not save the graph, but will still render it in the R GUI
-#		it does check for and will apply the diffLim argument for the graphDIFF function
-#	a message will be shown to identify the current graph being worked on
+	if	(datatype == "MsBetweenDisplayChange")	{
+#		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
+		scale_X	=	scale_x_continuous(
+			name	=	"Refresh Cycles Later (1/60 s)",
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelDispB,
+#				ybreaks converted as labelDisp describes
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			expand	=	c(0.02, 0)
+#				the amount of expansion along the axis
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Display Time Difference (ms)",
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+		)
+	}
 
-results$API	=	factor(results$API, levels = rev(listAPI))
-#	my desired order for the APIs differs from R, so I reverse the order
+	if	(datatype == "MsUntilRenderComplete")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Render Time (ms)",
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelRoundB,
+#				ybreaks will be rounded for the labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			expand	=	c(0.02, 0)
+#				the amount of expansion along the axis
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Render Time Difference (ms)",
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+		)
+	}
+
+	if	(datatype == "MsEstimatedDriverLag")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Estimated Driver Lag (ms)",
+			breaks	=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels	=	labelRoundB,
+#				ybreaks will be rounded for the labels
+#				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			expand	=	c(0.02, 0)
+#				the amount of expansion along the axis
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Lag Difference (ms)",
+			breaks		=	ybreaks,
+#				ybreaks was set earlier and will be common across time-based scales
+			labels		=	labelRound,
+#				ybreaks will be rounded for the labels
+			expand		=	c(0.02, 0),
+#				the amount of expansion along the axis
+		)
+	}
+
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+#	sets a default FACET design with the rows being for each location and columns for the GPUs
+#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
+#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
+#		switch = "y" is so the facet labels or on the left side, instead of the right
+
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+#	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+#	though not appropriate for all graphs these lines apply levels.rev and levels.short as desired
+#		rev.LOC and rev.API must be set prior to the graphs being called
+
+	ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
+#		initiates the graph with the data being results
+#			we can provide as the Y value the datatype with the diff.CONS function applied to it
+#			by default the direction will be Forward
+	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
+#		sets the title and subtitle of the graph, and applies the labsGPU variable
+	geom_point(alpha = 0.1) +
+#		places points at the X and Y coordinates set by the aesthetics earlier
+#		the alpha/transparency value is set to 0.1 so the darkness indicates density
+	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+#		adds a density plot with the geometry of a polygon
+#			the color of the polygon will be based on the density level
+#			a legend will not be shown
+#			the viridis scale is used to set the fill colors
+	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
+	#	identical to the above, but the alpha value is also based on the density level
+	FACET + 
+	scale_X + coord_cartesian(xlim = c(0, FtimeLimit), ylim = c(-diffLim, diffLim)) +
+	scale_Y
+#		applies the X and Y scales set earlier
+#		coord_cartesian can crop the plots to specific values
+#			just setting limits sometimes causes issues, as values beyond the limits are dropped, while this just does not show them
+}
+
+#	text outputs
+if	(textFRAM)	sinkOUT("MsBetweenPresents")
+if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
+if	(textREND)	sinkOUT("MsUntilRenderComplete")
+if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
+#	checks if the statistics for these data types are desired
+message("")
+#	the print commands above will show their outputs in the console window, so this places an empty line between that and what comes next
+
+rev.LOC	=	FALSE	;	rev.API	=	TRUE
+#	sets that the location and API factor levels should or should not be reversed
 
 #Means
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS)
@@ -1156,25 +1219,14 @@ if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphMEANS)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
 #	checks if the data type should have a graph made, then does so
 
+#Means with Boxplot Lables
+#				graphOUT("MsBetweenPresents",		graphMEANSbox)
+#	will save graphMEANS with the custom boxplot labels
+#	here as example but commented out as I do not need it
+#		there is no switch to control it but I indented so it aligns with other graphOUT calls
 
-if	(useSHORT)	{
-results							=	reLoc(results, shortLOC);		results		=	reAPI(results, shortAPI)
-
-if	(graphFRAM)	{	graphSTATS	=	reLoc(graphSTATS, shortLOC);	graphSTATS	=	reAPI(graphSTATS, shortAPI)	}
-if	(graphDISP)	{	dispgSTATS	=	reLoc(dispgSTATS, shortLOC);	dispgSTATS	=	reAPI(dispgSTATS, shortAPI)	}
-if	(graphREND)	{	rendgSTATS	=	reLoc(rendgSTATS, shortLOC);	rendgSTATS	=	reAPI(rendgSTATS, shortAPI)	}
-if	(graphDRIV)	{	drivgSTATS	=	reLoc(drivgSTATS, shortLOC);	drivgSTATS	=	reAPI(drivgSTATS, shortAPI)	}
-#	the semi-colon allows these commands to occupy a single line, but {} are necessary for the if statements to work as desired
-}
-#	checks if the shortened versions of the Location and API names should be applied
-#		typically the MEANS graph has enough room to use the longer names, hence this happening after that
-
-results$Location						=	factor(results$Location,	levels = rev(levels(results$Location)))
-if	(graphFRAM)		graphSTATS$Location	=	factor(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
-if	(graphDISP)		dispgSTATS$Location	=	factor(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
-if	(graphREND)		rendgSTATS$Location	=	factor(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))
-if	(graphDRIV)		drivgSTATS$Location	=	factor(drivgSTATS$Location, levels = rev(levels(drivgSTATS$Location)))
-#	reverses the levels so they go in the order I want
+rev.LOC	=	TRUE	;	rev.API	=	TRUE
+#	sets that the location and API factor levels should or should not be reversed
 
 #Course
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphCOURSE)
@@ -1205,10 +1257,10 @@ if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF)
 #	checks if the data type should have a graph made, then does so
 
 #Difference - Extended
-#	formalized extended DIFF graphs
 if (!is.null(diffLim))	{
 	if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = diffLim)
 	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim)
 	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim)
 	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
-} 
+}
+#	checks if a custom diffLim value was set and then calls graphOUT to make the DIFF EXT graphs

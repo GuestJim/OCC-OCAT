@@ -10,19 +10,20 @@ scriptPath	=	sys.argv[0].rsplit("\\", 1)[0] + "\\"
 #	rsplit is a command to split a string at the designated pattern, optionally into a specified number of pieces
 #		it is used here to remove the file names, getting just their paths (and the slashes are added back for droppedPath, as they are needed later)
 
-if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3] and "Review" not in droppedPath.rsplit("\\", 3)[1]:
+if "OCAT Data" in droppedPath.rsplit("\\", 4)[2:4] and "Review" not in droppedPath.rsplit("\\", 3)[1]:
 	TYPE	=	"HIGH"
 else:
 	TYPE	=	"GPU"
-#	this switch is to determine if I am trying to work on multi-GPU, High Quality data, or single GPU data
+#	this switch is to determine if I am trying to work on multi-GPU, High Quality data, single GPU data, or single-GPU, multi-API (High Quality) data
 #	instead of requiring a different path for the file that is dragged onto the script, this also checks if Review is in the appropriate folder name
 #		this way the same folder structure can be used for Reviews and Performance Analyses and the same behavior for activating this script
+#	by checking more folders in the structure, this can work with the single-GPU, multi-API scenario
 
-def	listclean (list):
+def	listclean	(list):
 	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");
 #	creates a function that will take a Python list, make it a string, and then remove and convert the appropriate substrings to make it what I want in R
 
-def	CSVlistR (GPU, API, QUA, CSVlist):
+def	CSVlistR	(GPU, API, QUA, CSVlist):
 	if API	==	"NA":
 		API	=	""
 	return str("\
@@ -88,6 +89,7 @@ for line in listsplit:
 #	if no API change is made, the element will be blank
 
 GPUs, APIs, QUAs	=	[], [], []
+GPUsread	=	[]
 #	create empty lists for storing the lists of relevant values
 
 for item in listmap:
@@ -96,6 +98,9 @@ for item in listmap:
 	QUAs.append(item[2])
 #	goes through the listmap variable above and builds the lists from its items
 
+GPUsread	=	list(set(GPUs))
+#	makes and saves a list of the GPUs read from the folder names
+#		this is for use when collecting the data on one GPU and multiple APIs
 if 		TYPE	==	"HIGH":
 #	checks if the type is multi-GPU for High Quality results
 	GPUs	=	[\
@@ -188,12 +193,13 @@ else:
 #	checks for an APIs Short.txt file, in case the names of the APIs are too long
 #	if the file does not exist, the string will be NULL and do nothing in the R scripts
 
-if		TYPE	==	"HIGH":
+if		TYPE	==	"HIGH" and len(GPUsread) != 1:
 	cGPU	=	"NULL"
-elif	TYPE	==	"GPU":
-	cGPU	=	"\"" + GPUs[0] + "\""
+elif	TYPE	==	"GPU" or len(GPUsread) == 1:
+	cGPU	=	"\"" + str(GPUsread[0]) + "\""
 #	sets the cGPU, current GPU, variable based on if this is a single or multi-GPU situation
 #		quotes are added to the string here, which is why \" is present
+#	GPUsread is a list of the read GPUs from the folder names and useful for single-GPU, multi-API situations
 
 scriptFull	=	scriptPath + "OCAT - Combined - PA.r"
 #	sets the name and path of the reference R script to be loaded in
