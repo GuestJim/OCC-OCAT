@@ -1,21 +1,29 @@
 yrates	=	c(c(120, 60, 30, 20, 15, 12, 10), yratesEXT)
 yrates	=	sort(c(yrates,-yrates))
 ytimes	=	sort(1000/yrates)
+ybreaks	=	sort(c(round(ytimes, 2), 0))
 ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
+
+labelBreak	=	function(breaks, SEC = FALSE)	{
+	if (!app.BREAK)	return(breaks)
+	BREAK	=	c("", "\n")
+	if	(is.numeric(breaks)	&	0 %in% breaks)	if	((which(breaks %in% 0) %% 2) == 0)	BREAK	=	rev(BREAK)
+	if	(!SEC)	return(	paste0(rep(BREAK, length.out = length(breaks)),	breaks)	)
+	if	(SEC)	return(	paste0(breaks, rep(BREAK, length.out = length(breaks)))	)
+}
+#	adds a line break on alternating labels
+#		can be disabled by setting app.BREAK to FALSE
+#	checks to make sure the 0 will not be so broken
 
 # labelRound	=	function(breaks)	sprintf("%.1f", breaks)
 labelRound	=	function(breaks)	round(breaks, 1)
-labelBreakF	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), breaks)
-labelBreakN	=	function(breaks)	paste0(rep(c("", "\n"), length.out = length(breaks)), sort(breaks))
-labelBreakQQ=	function(breaks)	paste0(rep(c("", "\n"),	length.out = length(breaks)),	pnorm(breaks) * 100, "%")
+labelRoundB	=	function(breaks)	labelBreak(labelRound(breaks))
+ms2FPS.lab	=	function(breaks)	labelBreak(ms2FPS(breaks), SEC = TRUE)
+labelBreakS	=	function(breaks)	labelBreak(sort(breaks))
+labelBreakQQ=	function(breaks)	labelBreak(paste0(pnorm(breaks) * 100, "%"))
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
+labelDispB	=	function(breaks)	labelBreak(round(breaks * 60/1000, 1))
 
-BoxPerc	=	function (DATA)	{
-	out			=	quantile(DATA, c(0.001, 0.01, 0.5, 0.99, 0.999))
-	names(out)	=	c("ymin", "lower", "middle", "upper", "ymax")
-	return(out)
-}
-#	by using this with stat_summary I can have custom quantiles for the boxplot
 
 meanMS	=	function(DATA)	{
 	out			=	c(mean(DATA), median(DATA))
@@ -63,6 +71,13 @@ statMS	=	function(DATA, r = 2)	{
 	return(round(out, r))
 }
 
+BoxPerc	=	function (DATA)	{
+	out			=	quantile(DATA, c(0.001, 0.01, 0.5, 0.99, 0.999))
+	names(out)	=	c("ymin", "lower", "middle", "upper", "ymax")
+	return(out)
+}
+#	by using this with stat_summary I can have custom quantiles for the boxplot
+
 qqslope	=	function (DATA, r = 2, quan = QUAN)	{
 	y		=	quantile(DATA, quan)
 	x		=	qnorm(quan)
@@ -77,9 +92,8 @@ statGRAPH	=	function(DATA, ...)	{
 	names(out)	=	c("Mean", "Median", "DiffMedian", "Slope", "0.1", "1", "99", "99.9")
 	return(out)
 }
-#	with DiffMedian it would be possible to add the Median-Median cross on the Diff plots, but I do not think this is necessary
-#		the Median time is reported as a value and on Freq, and the DiffMedian is always near 0
-#	keeping this just the same, as it does not hurt anything to keep
+#	DiffMedian can be used in graphDIFF to apply a Median-Median cross on the plots
+
 
 sepCOL	=	function(tab)	{
 	out	=	as.data.frame(as.matrix(tab))
@@ -89,6 +103,58 @@ sepCOL	=	function(tab)	{
 	colnames(out)	=	gsub("x.", "", colnames(out))
 	return(out)
 }
+
+GROUPS	=	list(GPU = results$GPU, Location = results$Location)
+if	(testAPI)	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+#	already in Input script, but keeping here for easy finding
+
+if	(textFRAM	|	graphFRAM)	{
+	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
+	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
+	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
+	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
+	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
+
+	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
+	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
+	if	(testAPI)	graphSTATS$API		=	ordered(graphSTATS$API,	levels = listAPI)
+}
+if	(textDISP	|	graphDISP)	{
+	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
+	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
+	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
+	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
+	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
+
+	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
+	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
+	if	(testAPI)	dispgSTATS$API		=	ordered(dispgSTATS$API,	levels = listAPI)
+}
+if	(textREND	|	graphREND)	{
+	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
+	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
+	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
+	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
+	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
+
+	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
+	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
+	if	(testAPI)	rendgSTATS$API		=	ordered(rendgSTATS$API,	levels = listAPI)
+}
+if	(textDRIV	|	graphDRIV)	{
+	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
+	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
+	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
+	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
+	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
+
+	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
+	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
+	if	(testAPI)	drivgSTATS$API		=	ordered(drivgSTATS$API,	levels = listAPI)
+}
+#	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
+#		aggregate(list(Hello = data, groups, function)) will label the column Hello
+#	it is also possible to run the function on more columns by placing them all in a list (not a vector, but a list like GROUPS)
 
 addFPS	=	function(DATA, r = 2)	{
 	lab		=	DATA[1:grep("Location", colnames(DATA))]
@@ -123,70 +189,6 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 
 	return(out)
 }
-
-customSave	=	function(type="", device=ggdevice, plot = last_plot(), width=gWIDTH, height=gHEIGH, dpi=DPI)	{
-	if	(device	==	"png"	|	device == "both")	{
-		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device="png", width=width, height=height, dpi=dpi)
-	}
-	if	(device	==	"pdf"	|	device == "both")	{
-		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device="pdf", width=width, height=height)
-	}
-}
-#	it is possible to directly save a plot without having to render it first by using the plot argument
-#		customSave("@Means - Frame Time", plot = graphMEANS("MsBetweenPresents"))
-
-if	(testAPI)	{
-	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
-}	else	{
-	GROUPS	=	list(GPU = results$GPU, Location = results$Location)
-}
-
-levsLOC	=	listLOC
-if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
-
-if	(textFRAM	|	graphFRAM)	{
-	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
-	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
-	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
-	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
-	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
-	
-	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
-	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = levsLOC)
-}
-if	(textDISP	|	graphDISP)	{
-	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
-	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
-	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
-	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
-	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
-	
-	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
-	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = levsLOC)
-}
-if	(textREND	|	graphREND)	{
-	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
-	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
-	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
-	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
-	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
-	
-	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
-	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = levsLOC)
-}
-if	(textDRIV	|	graphDRIV)	{
-	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
-	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
-	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
-	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
-	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
-
-	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
-	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = levsLOC)
-}
-#	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
-#		aggregate(list(Hello = data, groups, function)) will label the column Hello
-#	it is also possible to run the function on more columns by placing them all in a list (not a vector, but a list like GROUPS)
 
 subOUT	=	function(DATA, COL = "")	{
 	if	(COL == "")	{
@@ -301,7 +303,7 @@ sinkOUT	=	function(datatype)	{
 if	(textOUT)	sinkTXT(datatype)
 if	(HTMLOUT)	sinkHTML(datatype)
 
-for (GPU in listGPU)	{	if	(file.exists(GPU))	{	GPU	<<-	GPU
+for (GPU in listGPU)	{	if	(file.exists(GPU) & perGPU)	{	GPU	<<-	GPU
 	if	(textOUT)	sinkTXT(datatype, "GPU")
 	if	(HTMLOUT)	sinkHTML(datatype, "GPU")
 }	}
@@ -312,20 +314,131 @@ if	(textAPI)			{	for (API in listAPI)	{	API	<<-	API
 }	}
 }
 
-if	(textFRAM)	sinkOUT("MsBetweenPresents")
-if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
-if	(textREND)	sinkOUT("MsUntilRenderComplete")
-if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
-message("")
 
+customSave	=	function(type="", device=ggdevice, plot = last_plot(), width=gWIDTH, height=gHEIGH, dpi=DPI)	{
+	if	(device	==	"png"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device="png", width=width, height=height, dpi=dpi)
+	}
+	if	(device	==	"pdf"	|	device == "both")	{
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device="pdf", width=width, height=height)
+	}
+}
 
-if	(multiGPU)	{
-	labsGPU	=	labs()
-}	else	{
-	labsGPU	=	labs(caption = cGPU)
+graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL, ...)	{
+	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
+	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
+	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
+	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
+
+	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
+	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
+	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
+	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
+	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
+
+	if	(substitute(graphtype) == "graphMEANSbox")		graphNAME	=	"Means Labeled"
+
+	PLOT	=	graphtype(datatype)
+	if	(graphNAME == "Diff" & !is.null(diffLim))	{
+		PLOT	=	graphtype(datatype, diffLim)
+		graphNAME	=	paste0(graphNAME, " EXT")
+	}
+
+	message(paste0(graphNAME, " - ", dataNAME))
+
+	if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
+	if	(SHOW)	PLOT
+}
+
+levels.rev		=	function(DATA, COL)	{
+	DATA	=	as.data.frame(DATA)
+	ordered(DATA[, COL],	levels = rev(levels(DATA[, COL])))
+}
+
+levels.short	=	function(DATA, COL, LIST, LEVS)	{
+	DATA	=	as.data.frame(DATA)
+	DATA[, COL]	=	ordered(DATA[, COL],	levels	=	LIST)
+	levels(DATA[, COL])	=	LEVS
+	return(DATA[, COL])
+}
+
+data.short	=	function(DATA)	{
+	if	(!is.null(shortLOC))				DATA[, "Location"]	=	levels.short(DATA,	"Location",	listLOC,	levsLOC)
+	if	(!is.null(shortAPI)	&	testAPI)	DATA[, "API"]		=	levels.short(DATA,	"API",		listAPI,	levsAPI)
+	return(DATA)
+}
+
+graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
+	if (rev.LOC)				DATA$Location	=	levels.rev(DATA, "Location")
+	if (rev.API	&	testAPI)	DATA$API		=	levels.rev(DATA, "API")
+	return(DATA)
 }
 
 #	spacing between facet panels can be set with  theme(panel.spacing.x = unit(1, "lines"))
+
+graphMEANS	=	function(datatype)	{
+	if	(datatype == "MsBetweenPresents")	{
+		scale_Y	=	scale_y_continuous(
+			name		=	"Frame Time (ms)",
+			breaks		=	ybreaks,
+			labels		=	labelRound,
+			expand		=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Frame Rate (FPS)",
+				labels	=	ms2FPS
+			)
+		)
+	}
+	if	(datatype == "MsBetweenDisplayChange")	{
+		scale_Y	=	scale_y_continuous(
+			name		=	"Refresh Cycles Later (1/60 s)",
+			breaks		=	ybreaks,
+			labels		=	labelDisp,
+			expand		=	c(0.02, 0),
+			sec.axis	=	dup_axis()
+		)
+	}
+	if	(datatype == "MsUntilRenderComplete")	{
+		scale_Y	=	scale_y_continuous(
+			name		=	"Render Time (ms)",
+			breaks		=	ybreaks,
+			labels		=	labelRound,
+			expand		=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Render Rate (FPS)",
+				labels	=	ms2FPS
+			)
+		)
+	}
+	if	(datatype == "MsEstimatedDriverLag")	{
+		scale_Y	=	scale_y_continuous(
+			name		=	"Estimated Driver Lag (ms)",
+			breaks		=	ybreaks,
+			labels		=	labelRound,
+			expand		=	c(0.02, 0),
+			sec.axis	=	dup_axis()
+		)
+	}
+	FACET	=	facet_grid(cols = vars(Location), switch = "y")
+	if	(testAPI)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
+	
+	# if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
+
+	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
+	ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
+	geom_hline(yintercept = 1000/60, color = "red") +
+	# geom_boxplot(outlier.alpha = 0) +
+	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
+	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
+	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
+	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
+	FACET +
+	scale_x_discrete(labels = labelBreak) +
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
+	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
+}
 
 boxLABS		=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")		STATS	=	graphSTATS
@@ -339,100 +452,36 @@ boxLABS		=	function(datatype)	{
 	nudIN	=	0.40
 	nudMED	=	0.55
 
-	out	=	list(
+	# out	=	list(
+	list(
 		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99.9"],	label = round(STATS[, "99.9"], 2)),		alpha = ALPHA,
 											vjust = 0,	nudge_y = nudOUT),
 		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "0.1"],	label = round(STATS[, "0.1"], 2)),		alpha = ALPHA,
 											vjust = 1,	nudge_y = -nudOUT),
 		#	0.1% and 99.9%
-		
+
 		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99"],		label = round(STATS[, "99"], 2)),		alpha = ALPHA,
 			hjust = 1,	nudge_x = nudIN,	vjust = 0),
 		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "1"],		label = round(STATS[, "1"], 2)),		alpha = ALPHA,
 			hjust = 1,	nudge_x = nudIN,	vjust = 1),
 		#	1% and 99%
-		
-		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "Median"],	label = round(STATS[, "Median"], 2)),	alpha = ALPHA,
+
+		geom_label(data = STATS,	aes(x = GPU, y = Median,	label = round(Median, 2)),	alpha = ALPHA,
 			hjust = 1,	nudge_x = nudMED),
-		geom_text(data = STATS,	aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
+		geom_text(data = STATS,		aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
 			hjust = 0,	nudge_x = -0.55,	vjust = 0)
 		#	median and mean
 		)
-
-	return(out)
 }
 
-graphMEANS	=	function(datatype)	{
-	if	(datatype == "MsBetweenPresents")	{
-		scale_Y	=	scale_y_continuous(
-			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis(
-				name	=	"Frame Rate (FPS)",
-				labels	=	ms2FPS
-			)
-		)
-	}
-	if	(datatype == "MsBetweenDisplayChange")	{
-		scale_Y	=	scale_y_continuous(
-			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	c(0, round(ytimes, 2)),
-			labels		=	labelDisp,
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
-		)
-	}
-	if	(datatype == "MsUntilRenderComplete")	{
-		scale_Y	=	scale_y_continuous(
-			name		=	"Render Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis(
-				name	=	"Render Rate (FPS)",
-				labels	=	ms2FPS
-			)
-		)
-	}
-	if	(datatype == "MsEstimatedDriverLag")	{
-		scale_Y	=	scale_y_continuous(
-			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
-		)
-	}
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(cols = vars(Location), switch = "y")
-	}
-
-	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
-	ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
-	geom_hline(yintercept = 1000/60, color = "red") +
-	# geom_boxplot(outlier.alpha = 0) +
-	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
-	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
-	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-	# boxLABS(datatype) +
-	FACET +
-	scale_x_discrete(labels = labelBreakF) +
-	scale_Y +
-	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
-}
+graphMEANSbox	=	function(datatype)	graphMEANS(datatype) + boxLABS(datatype)
 
 graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+			breaks		=	ybreaks,
+			labels		=	labelRound,
 			expand		=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
@@ -443,9 +492,8 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	c(0, round(ytimes, 2)),
+			breaks		=	ybreaks,
 			labels		=	labelDisp,
-			limits		=	c(0, FtimeLimit),
 			expand		=	c(0.02, 0),
 			sec.axis	=	dup_axis()
 		)
@@ -453,8 +501,8 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsUntilRenderComplete")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+			breaks		=	ybreaks,
+			labels		=	labelRound,
 			expand		=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
@@ -465,17 +513,19 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	c(0, round(ytimes, 2)),
-			limits		=	c(0, FtimeLimit),
+			breaks		=	ybreaks,
+			labels		=	labelRound,
 			expand		=	c(0.02, 0),
 			sec.axis	=	dup_axis()
 		)
 	}
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 	ALPHA	=	0.05
 	if	(length(unique(results$Location)) == 1)	ALPHA	=	1
@@ -486,102 +536,22 @@ graphCOURSE	=	function(datatype)	{
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
 	FACET +
-	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakN, expand=c(0.02, 0)) +
-	scale_Y
+	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakS, expand=c(0.02, 0)) +
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
 }
 
-graphDIFF	=	function(datatype, diffLim = 1000/50)	{
-	if	(datatype == "MsBetweenPresents")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Frame Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(datatype == "MsBetweenDisplayChange")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Display Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(datatype == "MsUntilRenderComplete")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Render Time Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(datatype == "MsEstimatedDriverLag")	{
-		scale_X	=	scale_x_continuous(
-			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(0, FtimeLimit),
-			expand	=	c(0.02, 0)
-		)
-		scale_Y	=	scale_y_continuous(
-			name	=	"Consecutive Lag Difference (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			limits	=	c(-diffLim, diffLim),
-			expand	=	c(0, 0)
-		)
-	}
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
-	
-
-	temp	=	eval(parse(text = paste0("results$", datatype)))
-	#	this is to grab the desired column from the data frame
-	#	the [1,] is needed because it otherwise just gets the list of row names
-	#		cannot use the subsetting method because it has the wrong data type
-
-	ggplot(data = results, aes(x = get(datatype), y = rbind(c(diff(temp), 0))[1,]) ) +
-	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
-	geom_point(alpha = 0.1) +
-	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
-	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
-	FACET +
-	scale_X +
-	scale_Y
-}
 
 graphFREQ	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		STATS	=	graphSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
+			breaks	=	ybreaks,
+			labels	=	labelRoundB,
 			expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
-				labels	=	ms2FPS
+				labels	=	ms2FPS.lab
 			)
 		)
 	}
@@ -589,13 +559,12 @@ graphFREQ	=	function(datatype)	{
 		STATS	=	dispgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
+			breaks	=	ybreaks,
+			labels	=	labelDispB,
 			expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Display Time (ms)",
-				labels	=	c(0, round(ytimes, 2))
+				labels	=	ybreaks
 			)
 		)
 	}
@@ -603,13 +572,12 @@ graphFREQ	=	function(datatype)	{
 		STATS	=	rendgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
+			breaks	=	ybreaks,
+			labels	=	labelRoundB,
 			expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
-				labels	=	ms2FPS
+				labels	=	ms2FPS.lab
 			)
 		)
 	}
@@ -617,18 +585,19 @@ graphFREQ	=	function(datatype)	{
 		STATS	=	drivgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
-			labels	=	labelRound,
-			limits	=	c(0,  FtimeLimit),
+			breaks	=	ybreaks,
+			labels	=	labelRoundB,
 			expand	=	c(0.02, 0)
 		)
 	}
 
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 	ggplot(results, aes(get(datatype))) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
@@ -637,7 +606,7 @@ graphFREQ	=	function(datatype)	{
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
 	FACET +
-	scale_X +
+	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 }
 
@@ -646,7 +615,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		STATS	=	graphSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
+			breaks	=	ybreaks,
 			labels	=	labelRound,
 			expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
@@ -659,12 +628,12 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		STATS	=	dispgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	c(0, round(ytimes, 2)),
+			breaks	=	ybreaks,
 			labels	=	labelDisp,
 			expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Display Time (FPS)",
-				labels	=	c(0, round(ytimes, 2))
+				labels	=	ybreaks
 			)
 		)
 	}
@@ -672,7 +641,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		STATS	=	rendgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
+			breaks	=	ybreaks,
 			labels	=	labelRound,
 			expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
@@ -685,24 +654,26 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		STATS	=	drivgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	c(0, round(ytimes, 2)),
+			breaks	=	ybreaks,
 			labels	=	labelRound,
 			expand	=	c(0.02, 0)
 		)
 	}
 
-	if	(testAPI)	{
-		FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	}	else	{
-		FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	}
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 #	sec.axis	=	sec_axis(~.,
 #		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
 #		labels	=	paste0(round(STATS[c("0.1", "1", "Median", "99", "99.9")], 2), c(" (0.1%)", " (1%)", " (50%)", " (99%)", " (99.9%)"))
 #	)
 #		this can be used to add a secondary axis that shows the values for the percentiles
-#			it needs to be put in place after STATS is assigned, else it throws an error
+#			code remains for reference as now Rates are shown for the second axis
 
 	ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - QQ Distribution")) + labsGPU +
@@ -721,36 +692,89 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
 }
 
-
-graphOUT	=	function(datatype, graphtype, OUT = TRUE, diffLim = NULL, ...)	{
-	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
-	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
-	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
-	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
-
-	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
-	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
-	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
-	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
-	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
-
-	#ARGS	=	list(...)
-	#	how to get the miscellaneous arguments into a variable
-
-	message(paste0(graphNAME, " - ", dataNAME))
-
-	if	(graphNAME == "Diff" & !is.null(diffLim))	{
-		PLOT	=	graphtype(datatype, diffLim)
-		dataNAME	=	paste0(dataNAME, " EXT")
-	}	else	{
-		PLOT	=	graphtype(datatype)
+graphDIFF	=	function(datatype, diffLim = 1000/50)	{
+	if	(datatype == "MsBetweenPresents")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Frame Time (ms)",
+			breaks	=	ybreaks,
+			labels	=	labelRoundB,
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Frame Time Difference (ms)",
+			breaks	=	ybreaks,
+			labels	=	labelRound,
+			expand	=	c(0, 0)
+		)
 	}
+	if	(datatype == "MsBetweenDisplayChange")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Refresh Cycles Later (1/60 s)",
+			breaks	=	ybreaks,
+			labels	=	labelDisp,
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Display Time Difference (ms)",
+			breaks	=	ybreaks,
+			expand	=	c(0, 0)
+		)
+	}
+	if	(datatype == "MsUntilRenderComplete")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Render Time (ms)",
+			breaks	=	ybreaks,
+			labels	=	labelRoundB,
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Render Time Difference (ms)",
+			breaks	=	ybreaks,
+			labels	=	labelRound,
+			expand	=	c(0, 0)
+		)
+	}
+	if	(datatype == "MsEstimatedDriverLag")	{
+		scale_X	=	scale_x_continuous(
+			name	=	"Estimated Driver Lag (ms)",
+			breaks	=	ybreaks,
+			labels	=	labelRoundB,
+			expand	=	c(0.02, 0)
+		)
+		scale_Y	=	scale_y_continuous(
+			name	=	"Consecutive Lag Difference (ms)",
+			breaks	=	ybreaks,
+			labels	=	labelRound,
+			expand	=	c(0, 0)
+		)
+	}
+	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
+	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
+	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
+	
+	if (useSHORT)	results	=	data.short(results)
+	results	=	graph.rev(results,	rev.LOC,	rev.API)
+	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
-	if	(OUT)	customSave(paste0("@", graphNAME, " - ", dataNAME), plot = PLOT, ...)
-	PLOT	#shows the current graph, but must be after customSave
+	# ggplot(data = results, aes(x = get(datatype), y = c(diff(as.data.frame(results)[, datatype]), 0)) ) +
+	ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
+	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
+	geom_point(alpha = 0.1) +
+	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
+	FACET +
+	scale_X + coord_cartesian(xlim = c(0, FtimeLimit), ylim = c(-diffLim, diffLim)) +
+	scale_Y
 }
 
-results$API	=	ordered(results$API, levels = rev(listAPI))
+#	text outputs
+if	(textFRAM)	sinkOUT("MsBetweenPresents")
+if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
+if	(textREND)	sinkOUT("MsUntilRenderComplete")
+if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
+message("")
+
+rev.LOC	=	FALSE	;	rev.API	=	TRUE
 
 #Means
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS)
@@ -758,22 +782,10 @@ if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphMEANS)
 if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphMEANS)
 if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
 
+#Means with Boxplot Lables
+#				graphOUT("MsBetweenPresents",		graphMEANSbox)
 
-if	(useSHORT)	{
-results							=	reLoc(results, shortLOC);		results		=	reAPI(results, shortAPI)
-
-if	(graphFRAM)	{	graphSTATS	=	reLoc(graphSTATS, shortLOC);	graphSTATS	=	reAPI(graphSTATS, shortAPI)	}
-if	(graphDISP)	{	dispgSTATS	=	reLoc(dispgSTATS, shortLOC);	dispgSTATS	=	reAPI(dispgSTATS, shortAPI)	}
-if	(graphREND)	{	rendgSTATS	=	reLoc(rendgSTATS, shortLOC);	rendgSTATS	=	reAPI(rendgSTATS, shortAPI)	}
-if	(graphDRIV)	{	drivgSTATS	=	reLoc(drivgSTATS, shortLOC);	drivgSTATS	=	reAPI(drivgSTATS, shortAPI)	}
-}
-
-results$Location						=	ordered(results$Location,	levels = rev(levels(results$Location)))
-if	(graphFRAM)		graphSTATS$Location	=	ordered(graphSTATS$Location, levels = rev(levels(graphSTATS$Location)))
-if	(graphDISP)		dispgSTATS$Location	=	ordered(dispgSTATS$Location, levels = rev(levels(dispgSTATS$Location)))
-if	(graphREND)		rendgSTATS$Location	=	ordered(rendgSTATS$Location, levels = rev(levels(rendgSTATS$Location)))
-if	(graphDRIV)		drivgSTATS$Location	=	ordered(drivgSTATS$Location, levels = rev(levels(drivgSTATS$Location)))
-#	reverses the levels so they go in the order I want
+rev.LOC	=	TRUE	;	rev.API	=	TRUE
 
 #Course
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphCOURSE)
@@ -805,4 +817,4 @@ if (!is.null(diffLim))	{
 	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim)
 	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim)
 	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
-} 
+}

@@ -4,7 +4,7 @@ droppedPath	=	sys.argv[1].rsplit("\\", 1)[0] + "\\"
 
 scriptPath	=	sys.argv[0].rsplit("\\", 1)[0] + "\\"
 
-if "OCAT Data" in droppedPath.rsplit("\\", 3)[2:3] and "Review" not in droppedPath.rsplit("\\", 3)[1]:
+if "OCAT Data" in droppedPath.rsplit("\\", 4)[2:4] and "Review" not in droppedPath.rsplit("\\", 3)[1]:
 	TYPE	=	"HIGH"
 else:
 	TYPE	=	"GPU"
@@ -47,12 +47,14 @@ for line in listsplit:
 #	if no API change is made, the element will be blank
 
 GPUs, APIs, QUAs	=	[], [], []
+GPUsread	=	[]
 
 for item in listmap:
 	GPUs.append(item[0])
 	APIs.append(item[1])
 	QUAs.append(item[2])
 
+GPUsread	=	list(set(GPUs))
 if		TYPE	==	"HIGH":
 	GPUs	=	[\
 	'RX 580',\
@@ -118,10 +120,10 @@ if	"APIs Short.txt" in os.listdir(RelPath):
 else:
 	APIshoStr	=	"NULL"
 
-if		TYPE	==	"HIGH":
+if		TYPE	==	"HIGH" and len(GPUsread) != 1:
 	cGPU	=	"NULL"
-elif	TYPE	==	"GPU":
-	cGPU	=	"\"" + GPUs[0] + "\""
+elif	TYPE	==	"GPU" or len(GPUsread) == 1:
+	cGPU	=	"\"" + str(GPUsread[0]) + "\""
 
 
 scriptFull	=	scriptPath + "OCAT - Combined - PA.r"
@@ -164,7 +166,7 @@ if not os.path.exists(outputFull):
 			)
 		fout.close()
 
-if not os.path.exists(droppedPath + "OCAT - Combined - Output.r"):
+if not os.path.exists(droppedPath + "@Combined - Output.r"):
 	shutil.copyfile(scriptPath + "OCAT - Combined - Output.r", droppedPath + "@Combined - Output.r")
 
 # os.system("pause")

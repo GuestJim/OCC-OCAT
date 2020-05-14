@@ -22,12 +22,14 @@ READ	=	function(fold="", Quality = "", API="")	{
 	len	=	min(length(listLOC), length(CSV))
 	for (place in 1:len)	{
 		if (CSV[place] != ".csv")	{
-			if (grepl(GPU, getwd()))	{
-				OCATtemp	=	read_csv(paste0(CSV[place]))[,1:20]
-			}	else	{
-				OCATtemp	=	read_csv(paste0(fold, GPU, "/" , API, Quality, "/", CSV[place]))[,1:20]
-			}
+			fileLOC	=	paste0(fold, GPU, "/" , API, Quality, "/", CSV[place])
+			
+			if	(grepl(GPU, getwd()) & grepl(Quality, getwd()))		fileLOC	=	paste0(CSV[place])
+			if	(grepl(GPU, getwd()) & !grepl(Quality, getwd()))	fileLOC	=	paste0(fold, API, Quality, "/",CSV[place])
 		}	else {next}
+		fileLOC		=	gsub("//", ".", fileLOC)
+		OCATtemp	=	read_csv(fileLOC)[, 1:20]
+		
 		OCATtemp[,21]	=	GPU
 		OCATtemp[,22]	=	Quality
 		OCATtemp[,23]	=	listLOC[place]
