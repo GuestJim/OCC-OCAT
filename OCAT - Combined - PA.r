@@ -27,7 +27,6 @@ READ	=	function(fold="", Quality = "", API="")	{
 			if	(grepl(GPU, getwd()) & grepl(Quality, getwd()))		fileLOC	=	paste0(CSV[place])
 			if	(grepl(GPU, getwd()) & !grepl(Quality, getwd()))	fileLOC	=	paste0(fold, API, Quality, "/",CSV[place])
 		}	else {next}
-		fileLOC		=	gsub("//", ".", fileLOC)
 		OCATtemp	=	read_csv(fileLOC)[, 1:20]
 		
 		OCATtemp[,21]	=	GPU
