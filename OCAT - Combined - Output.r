@@ -228,10 +228,10 @@ dataSEL	=	function(datatype, COL = "")	{
 	if	(datatype == "MsEstimatedDriverLag"		|	datatype == "Driver Lag")	{
 		type		<<-	"Driver Lag"
 		typeSHORT	<<-	"driv"
-		MEAN		<<-	subOUT(rendMEAN, COL)
-		PERC		<<-	subOUT(rendPERC, COL)
-		ECDF		<<-	subOUT(rendECDF, COL)
-		STAT		<<-	subOUT(rendSTAT, COL)
+		MEAN		<<-	subOUT(drivMEAN, COL)
+		PERC		<<-	subOUT(drivPERC, COL)
+		ECDF		<<-	subOUT(drivECDF, COL)
+		STAT		<<-	subOUT(drivSTAT, COL)
 	}
 }
 
