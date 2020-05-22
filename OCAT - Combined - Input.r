@@ -14,6 +14,7 @@ ggdevice	=	"png"
 
 useSHORT	=	TRUE
 testAPI		=	FALSE
+overAPI		=	FALSE
 listFPS		=	NULL
 #	for adding to the FPS Percentile list
 diffLim		=	NULL
@@ -130,7 +131,6 @@ if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
 levsAPI	=	listAPI
 if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
-overAPI	=	TRUE
 if	(!testAPI)	{
 	testAPI		=	(length(unique(results$API)) >= 2)
 	overAPI		=	FALSE

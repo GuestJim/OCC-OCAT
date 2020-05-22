@@ -698,12 +698,14 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			name	=	"Frame Time (ms)",
 			breaks	=	ybreaks,
 			labels	=	labelRoundB,
+			limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Frame Time Difference (ms)",
 			breaks	=	ybreaks,
 			labels	=	labelRound,
+			limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
@@ -712,11 +714,13 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			name	=	"Refresh Cycles Later (1/60 s)",
 			breaks	=	ybreaks,
 			labels	=	labelDisp,
+			limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Display Time Difference (ms)",
 			breaks	=	ybreaks,
+			limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
@@ -725,12 +729,14 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			name	=	"Render Time (ms)",
 			breaks	=	ybreaks,
 			labels	=	labelRoundB,
+			limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Render Time Difference (ms)",
 			breaks	=	ybreaks,
 			labels	=	labelRound,
+			limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
@@ -739,12 +745,14 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			name	=	"Estimated Driver Lag (ms)",
 			breaks	=	ybreaks,
 			labels	=	labelRoundB,
+			limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Lag Difference (ms)",
 			breaks	=	ybreaks,
 			labels	=	labelRound,
+			limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
@@ -763,9 +771,10 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	FACET +
-	scale_X + coord_cartesian(xlim = c(0, FtimeLimit), ylim = c(-diffLim, diffLim)) +
+	scale_X +
 	scale_Y
 }
+#	using coord_cartesian to apply limits breaks the heatmap for some reason
 
 #	text outputs
 if	(textFRAM)	sinkOUT("MsBetweenPresents")
