@@ -285,10 +285,10 @@ dataSEL	=	function(datatype, COL = "")	{
 	if	(datatype == "MsEstimatedDriverLag"		|	datatype == "Driver Lag")	{
 		type		<<-	"Driver Lag"
 		typeSHORT	<<-	"driv"
-		MEAN		<<-	subOUT(rendMEAN, COL)
-		PERC		<<-	subOUT(rendPERC, COL)
-		ECDF		<<-	subOUT(rendECDF, COL)
-		STAT		<<-	subOUT(rendSTAT, COL)
+		MEAN		<<-	subOUT(drivMEAN, COL)
+		PERC		<<-	subOUT(drivPERC, COL)
+		ECDF		<<-	subOUT(drivECDF, COL)
+		STAT		<<-	subOUT(drivSTAT, COL)
 	}
 }
 #	by giving it a column name, the data can be filtered, provided the variable for the FOR loop has the same name as the column
