@@ -1081,6 +1081,8 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			labels	=	labelRoundB,
 #				ybreaks will be rounded for the labels
 #				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			limits	=	c(0, FtimeLimit),
+#				sets the same limit to the time scale used by other maps
 			expand	=	c(0.02, 0)
 #				the amount of expansion along the axis
 		)
@@ -1090,7 +1092,9 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks was set earlier and will be common across time-based scales
 			labels		=	labelRound,
 #				ybreaks will be rounded for the labels
-			expand		=	c(0.02, 0),
+			limits	=	c(-diffLim, diffLim),
+#				applies symmetric limits to the difference scale
+			expand		=	c(0, 0),
 #				the amount of expansion along the axis
 		)
 	}
@@ -1104,6 +1108,8 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			labels	=	labelDispB,
 #				ybreaks converted as labelDisp describes
 #				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			limits	=	c(0, FtimeLimit),
+#				sets the same limit to the time scale used by other maps
 			expand	=	c(0.02, 0)
 #				the amount of expansion along the axis
 		)
@@ -1113,7 +1119,9 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks was set earlier and will be common across time-based scales
 			labels		=	labelRound,
 #				ybreaks will be rounded for the labels
-			expand		=	c(0.02, 0),
+			limits	=	c(-diffLim, diffLim),
+#				applies symmetric limits to the difference scale
+			expand		=	c(0, 0),
 #				the amount of expansion along the axis
 		)
 	}
@@ -1126,6 +1134,8 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			labels	=	labelRoundB,
 #				ybreaks will be rounded for the labels
 #				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			limits	=	c(0, FtimeLimit),
+#				sets the same limit to the time scale used by other maps
 			expand	=	c(0.02, 0)
 #				the amount of expansion along the axis
 		)
@@ -1135,7 +1145,9 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks was set earlier and will be common across time-based scales
 			labels		=	labelRound,
 #				ybreaks will be rounded for the labels
-			expand		=	c(0.02, 0),
+			limits	=	c(-diffLim, diffLim),
+#				applies symmetric limits to the difference scale
+			expand		=	c(0, 0),
 #				the amount of expansion along the axis
 		)
 	}
@@ -1148,6 +1160,8 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			labels	=	labelRoundB,
 #				ybreaks will be rounded for the labels
 #				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
+			limits	=	c(0, FtimeLimit),
+#				sets the same limit to the time scale used by other maps
 			expand	=	c(0.02, 0)
 #				the amount of expansion along the axis
 		)
@@ -1157,7 +1171,9 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks was set earlier and will be common across time-based scales
 			labels		=	labelRound,
 #				ybreaks will be rounded for the labels
-			expand		=	c(0.02, 0),
+			limits	=	c(-diffLim, diffLim),
+#				applies symmetric limits to the difference scale
+			expand		=	c(0, 0),
 #				the amount of expansion along the axis
 		)
 	}
@@ -1193,11 +1209,10 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	#	identical to the above, but the alpha value is also based on the density level
 	FACET + 
-	scale_X + coord_cartesian(xlim = c(0, FtimeLimit), ylim = c(-diffLim, diffLim)) +
+	scale_X + 
 	scale_Y
 #		applies the X and Y scales set earlier
-#		coord_cartesian can crop the plots to specific values
-#			just setting limits sometimes causes issues, as values beyond the limits are dropped, while this just does not show them
+#		coord_cartesian cannot be used as it breaks the heat maps in some situations
 }
 
 #	text outputs

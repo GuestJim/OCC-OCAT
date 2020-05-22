@@ -32,6 +32,10 @@ testAPI		=	FALSE
 #	provides an override for if multiple APIs were involved in the test
 #	when FALSE it does the usual behavior of checking if multiple APIs are involved
 #	when TRUE it will not check the number of APIs and will act as though there are multiple regardless
+overAPI		=	FALSE
+#	this is to keep track of overriding testAPI
+#		one would want to override testAPI when there is a single API in the sample, but multiple in the population
+#	should be FALSE unless needed to keep names correct
 listFPS		=	NULL
 #	for adding to the FPS Percentile list
 #		default list is 60, 50, 30, 20, 15
@@ -181,9 +185,6 @@ if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 #	lists of levels for Location and API are made for use when applying shortened names
 #		by default, these level lists are the original lists, so they can always be applied
 
-overAPI	=	TRUE
-#	overAPI is a variable that stores if testAPI has been overriden
-#		it needs a value, so it is set to TRUE here, but is changed to FALSE if the override was not used
 if	(!testAPI)	{
 #	if testAPI is FALSE, then the following test for number of APIs is done
 #	if testAPI is true TRUE, then the script continues with testAPI being TRUE
