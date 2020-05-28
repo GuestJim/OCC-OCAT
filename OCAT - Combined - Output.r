@@ -11,7 +11,7 @@ ybreals	=	sort(c(round(ytimes, 2), 0))
 ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
 #	function to convert times to rates for use with secondary axes using FPS instead of ms
 
-#function to add breaks to alternating scale labels, allowing them to be horizontally closer
+# function to add breaks to alternating scale labels, allowing them to be horizontally closer
 labelBreak	=	function(breaks, SEC = FALSE)	{
 #	breaks is the list of breaks for the scale
 #	SEC is to identify if this is for a secondary axis, as then the breaks need to be reversed, added in front of the break instead of the back
@@ -56,7 +56,6 @@ meanMS	=	function(DATA)	{
 	names(out)	=	c("Mean", "Median")
 	return(out)
 }
-#	custom function to return both the arithmetic mean and the median of the data
 
 # geometric mean function
 meanGEO	=	function(DATA)	{
@@ -64,7 +63,6 @@ meanGEO	=	function(DATA)	{
 	names(out)	=	"ms"
 	return(out)
 }
-#	custom function for finding the geometric mean of the provided data
 
 # normalized geometric means
 normGEO	=	function(DATA)	{
@@ -131,7 +129,7 @@ statGRAPH	=	function(DATA, ...)	{
 	return(out)
 }
 #	DiffMedian can be used in graphDIFF to apply a Median-Median cross on the plots
-#	not using it but does not hurt to keep it
+#		not using it but does not hurt to keep it
 
 
 # the aggregate function produces a two-level table and this function makes the lower table separate columns
@@ -147,12 +145,12 @@ sepCOL	=	function(tab)	{
 	return(out)
 }
 
-GROUPS	=	list(GPU = results$GPU, Location = results$Location)
-if	(testAPI)	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
+if	(!testAPI)	GROUPS$API		=	NULL
+if	(!testQUA)	GROUPS$Quality	=	NULL
 #	already in Input script, but keeping here for easy finding
-#	creates the groups for use with the aggregate functions below
-#		by using an actual list, not just a vector, the column names for the groups can be set here
-#		as GROUPS will always be used, a value is set and then changed if appropriate
+#	creates a complete list of possible groups for the data
+#		depending on the switches set in Input, unused groups are removed
 
 if	(textFRAM	|	graphFRAM)	{
 	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
@@ -209,13 +207,20 @@ if	(textDRIV	|	graphDRIV)	{
 addFPS	=	function(DATA, r = 2)	{
 	lab	=	DATA[1:grep("Location", colnames(DATA))]
 	val	=	DATA[-(1:grep("Location", colnames(DATA)))]
+#		it is necessary to separate the label columns and value columns
 
 	tFPS	=	cbind(lab, rep("FPS", nrow(DATA)), round(1000/val, r))
+#		creates the FPS values and binds them to the labels
 	names(tFPS)[ncol(lab) + 1]	=	""
+#		removes the column name for the column that identifies the unit
 	tMS		=	cbind(lab, rep("ms", nrow(DATA)), round(val, r))
+#		recreates the input that uses milliseconds as the unit, and adds a column identifying the unit
 	names(tMS)[ncol(lab) + 1]	=	""
+#		removes the column name for the column that identifies the unit
 
 	out	=	rbind(tFPS, tMS)
+#		row binds the FPS and millisecond data together
+#			FPS is on top as it is more likely the unit people will want to read
 	return(out)
 }
 
@@ -439,7 +444,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL
 	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
 	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
 	
-	if	(substitute(graphtype) == "graphMEANSbox")		graphNAME	=	"Means Labeled"
+	if	(substitute(graphtype) == "graphMEANSbox")	graphNAME	=	"Means Labeled"
 #		modified version of graphMEANS that adds labels for the custom boxplots
 
 	PLOT	=	graphtype(datatype)
@@ -502,6 +507,39 @@ graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
 #	levels.rev, levels.short, data.short, and graph.rev exist so they can be called within the graph functions
 #	by using them within the graph functions, the original data (results and various STATS) will not be altered
 #		this makes keeping level names and orders between the original data much easier
+
+# FACET will return the appropriate faceting design for each graph
+#	different configurations will be selected based on graph type and the switch statuses (testAPI and testQUA)
+#		unfortunately I have not found a way to manipulate to the appropriate vars list, so multiple facet_grid defintions are required
+FACET = function(graphtype)	{
+	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
+		if	(testAPI	&	!testQUA)	return(facet_grid(vars(API),			cols = vars(Location), switch = "y"))		
+		if	(!testAPI	&	testQUA)	return(facet_grid(vars(Quality),		cols = vars(Location), switch = "y"))
+		if	(testAPI	&	testQUA)	return(facet_grid(vars(API, Quality),	cols = vars(Location), switch = "y"))
+		
+		return(facet_grid(cols = vars(Location), switch = "y"))
+	}
+#	the MEANS graph has different design requirements than the other graphs
+#	if additional graphs are added with the same requirement, they can be added to the lsit
+
+	if	(any(substitute(graphtype)	==	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF")))	{
+		if	(multiGPU)	{
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y"))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, Quality),		cols = vars(GPU), switch = "y"))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, API, Quality),	cols = vars(GPU), switch = "y"))
+		}	else	{
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location, GPU), switch = "y"))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y"))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"))
+		}
+		
+		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
+	}
+}
+#	functions end when they reach return, so there is no issue with using multiple
+#		in fact, this provides an advantage by allowing a final facet design to be placed last, without needing an additional if checks
+#		switch = "y" is so the facet labels or on the left side, instead of the right
+
 
 # by using custom graph functions, it is easier to ensure consistent design across data types
 #	the main difference between datatypes are the scales and what data is called for, and it is possible to control these with variables
@@ -579,11 +617,6 @@ graphMEANS	=	function(datatype)	{
 			sec.axis	=	dup_axis()
 #				a duplicate of the scale is applied to the opposite side of the graph
 	}
-	FACET	=	facet_grid(cols = vars(Location), switch = "y")
-	if	(testAPI)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
-#	sets a default FACET design with the columns being for each location
-#	if there are multiple APIs to compare, then the FACET design will change to adds rows for each API
-#		switch = "y" is so the facet labels or on the left side, instead of the right
 
 	# if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -611,7 +644,7 @@ graphMEANS	=	function(datatype)	{
 #		identical to the layer before, but this time with reduced opacity so the bar plot can be seen underneath
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	#	standard boxplot with reduced opacity, but is not used
-	FACET +
+	FACET(graphMEANS) +
 	scale_x_discrete(labels = labelBreak) +
 #		the X axis is the GPUs, a discrete scale, and labelBreakF will add line breaks to every other label, to avoid overlap
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
@@ -747,14 +780,6 @@ graphCOURSE	=	function(datatype)	{
 		)
 	}
 
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-#	sets a default FACET design with the rows being for each location and columns for the GPUs
-#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
-#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
-#		switch = "y" is so the facet labels or on the left side, instead of the right
-
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -781,7 +806,7 @@ graphCOURSE	=	function(datatype)	{
 #		adds a smooth line to indicate the trend of the performance
 #			the method used is the generalized additive module
 #			the formula shown is the default for gam, but helps protect against certain issues
-	FACET + 
+	FACET(graphCOURSE) + 
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakN, expand=c(0.02, 0)) +
 #		sets the X scale
 #			name is given
@@ -884,14 +909,6 @@ graphFREQ	=	function(datatype)	{
 #				the amount of expansion along the axis
 		)
 	}
-	
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-#	sets a default FACET design with the rows being for each location and columns for the GPUs
-#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
-#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
-#		switch = "y" is so the facet labels or on the left side, instead of the right
 
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -910,7 +927,7 @@ graphFREQ	=	function(datatype)	{
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotted") +
 #			using the STATS provided, vertical lines are added for the Mean and Median, with different colors and line types
-	FACET + 
+	FACET(graphFREQ) + 
 	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 #		applies the X scale set earlier
 #		the limits for the X-axis are set with coord_cartesian, which effectively crops the graph
@@ -999,14 +1016,6 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 #				a duplicate of the scale is applied to the opposite side of the graph
 		)
 	}
-	
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-#	sets a default FACET design with the rows being for each location and columns for the GPUs
-#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
-#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
-#		switch = "y" is so the facet labels or on the left side, instead of the right
 
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -1050,7 +1059,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
 #		adds a label to the plot to show the Slope of the qq line
 #			the label is placed in the lower-right using Inf, but right and bottom aligned so it does not go outside the graph
-	FACET + 
+	FACET(graphQQ) + 
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 #		applies the Y scale set earlier
 #		coord_cartesian can crop the plots to specific values
@@ -1178,14 +1187,6 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 		)
 	}
 
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-#	sets a default FACET design with the rows being for each location and columns for the GPUs
-#	if there are multiple APIs to test but one GPU, then the rows will be APIs and columns location (with GPU labels)
-#	if there are multiple APIs to test and multiple GPUs, rows will be locations and APIs with GPUs as columns
-#		switch = "y" is so the facet labels or on the left side, instead of the right
-
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 #	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -1208,7 +1209,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #			the viridis scale is used to set the fill colors
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	#	identical to the above, but the alpha value is also based on the density level
-	FACET + 
+	FACET(graphDIFF) + 
 	scale_X + 
 	scale_Y
 #		applies the X and Y scales set earlier

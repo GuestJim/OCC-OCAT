@@ -58,7 +58,8 @@ GPUs	=	[\
 DATAs	=	[\
 'Frame',\
 'Display',\
-'Rend']
+'Render',\
+'Driver']
 #	list of data types
 
 TYPEs	=	[\
@@ -66,13 +67,14 @@ TYPEs	=	[\
 'Course',\
 'Freq',\
 'QQ',\
-'Diff']
+'Diff',\
+'Diff EXT']
 #	list of graph types
 
 def numFind	(filename, list):
 	if list == [""]:
 		return(0)
-	for i in range(len(list)):
+	for i in reversed(range(len(list))):
 		if list[i] in filename:
 			return(i+1)
 	return(0)
@@ -108,14 +110,14 @@ def numGen (filename, GPU = droppedGPU):
 	return(code)
 #	generates the code number for the graph based on the file name
 
-if not os.path.exists("Graphs"):
-	os.mkdir("Graphs")
+if not os.path.exists("@Graphs"):
+	os.mkdir("@Graphs")
 #	if a Graphs folder does not already exists, it makes it
 
 for file in os.listdir(droppedPath):
 	if file.endswith(".png"):
 #		loop going through droppedPath, checking just for the PNG files
-		shutil.copyfile(file, "Graphs\\" + numGen(file) + ".png")
+		shutil.copyfile(file, "@Graphs\\" + numGen(file) + ".png")
 #			copies the PNG file found to the Graphs folder with the code name
 
 # os.system("pause")

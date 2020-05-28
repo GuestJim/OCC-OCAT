@@ -20,6 +20,8 @@ else:
 #	by checking more folders in the structure, this can work with the single-GPU, multi-API scenario
 
 def	listclean	(list):
+	if list == ['']:
+		return "NULL"
 	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");
 #	creates a function that will take a Python list, make it a string, and then remove and convert the appropriate substrings to make it what I want in R
 
