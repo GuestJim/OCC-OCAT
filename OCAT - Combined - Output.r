@@ -11,9 +11,7 @@ labelBreak	=	function(breaks, SEC = FALSE)	{
 	if	(!SEC)	return(	paste0(rep(BREAK, length.out = length(breaks)),	breaks)	)
 	if	(SEC)	return(	paste0(breaks, rep(BREAK, length.out = length(breaks)))	)
 }
-#	adds a line break on alternating labels
-#		can be disabled by setting app.BREAK to FALSE
-#	checks to make sure the 0 will not be so broken
+#	can be disabled by setting app.BREAK to FALSE
 
 # labelRound	=	function(breaks)	sprintf("%.1f", breaks)
 labelRound	=	function(breaks)	round(breaks, 1)
@@ -30,7 +28,6 @@ meanMS	=	function(DATA)	{
 	names(out)	=	c("Mean", "Median")
 	return(out)
 }
-#	custom function to return both the arithmetic mean and the median of the data
 
 meanGEO	=	function(DATA)	{
 	out			=	exp(mean(log(DATA)))
@@ -104,8 +101,9 @@ sepCOL	=	function(tab)	{
 	return(out)
 }
 
-GROUPS	=	list(GPU = results$GPU, Location = results$Location)
-if	(testAPI)	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
+if	(!testAPI)	GROUPS$API		=	NULL
+if	(!testQUA)	GROUPS$Quality	=	NULL
 #	already in Input script, but keeping here for easy finding
 
 if	(textFRAM	|	graphFRAM)	{
@@ -336,7 +334,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL
 	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
 	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
 
-	if	(substitute(graphtype) == "graphMEANSbox")		graphNAME	=	"Means Labeled"
+	if	(substitute(graphtype) == "graphMEANSbox")	graphNAME	=	"Means Labeled"
 
 	PLOT	=	graphtype(datatype)
 	if	(graphNAME == "Diff" & !is.null(diffLim))	{
@@ -375,6 +373,30 @@ graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
 }
 
 #	spacing between facet panels can be set with  theme(panel.spacing.x = unit(1, "lines"))
+
+FACET = function(graphtype)	{
+	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
+		if	(testAPI	&	!testQUA)	return(facet_grid(vars(API),			cols = vars(Location), switch = "y"))		
+		if	(!testAPI	&	testQUA)	return(facet_grid(vars(Quality),		cols = vars(Location), switch = "y"))
+		if	(testAPI	&	testQUA)	return(facet_grid(vars(API, Quality),	cols = vars(Location), switch = "y"))
+		
+		return(facet_grid(cols = vars(Location), switch = "y"))
+	}
+	
+	if	(any(substitute(graphtype)	==	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF")))	{
+		if	(multiGPU)	{
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y"))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, Quality),		cols = vars(GPU), switch = "y"))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, API, Quality),	cols = vars(GPU), switch = "y"))
+		}	else	{
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location, GPU), switch = "y"))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y"))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"))
+		}
+		
+		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
+	}
+}
 
 graphMEANS	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
@@ -419,8 +441,6 @@ graphMEANS	=	function(datatype)	{
 			sec.axis	=	dup_axis()
 		)
 	}
-	FACET	=	facet_grid(cols = vars(Location), switch = "y")
-	if	(testAPI)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location), switch = "y")
 	
 	# if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -434,7 +454,7 @@ graphMEANS	=	function(datatype)	{
 	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-	FACET +
+	FACET(graphMEANS) +
 	scale_x_discrete(labels = labelBreak) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
@@ -519,9 +539,6 @@ graphCOURSE	=	function(datatype)	{
 			sec.axis	=	dup_axis()
 		)
 	}
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
 	
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -535,7 +552,7 @@ graphCOURSE	=	function(datatype)	{
 	geom_hline(yintercept = 1000/60, color = "red") +
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
-	FACET +
+	FACET(graphCOURSE) +
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakS, expand=c(0.02, 0)) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
 }
@@ -591,10 +608,6 @@ graphFREQ	=	function(datatype)	{
 		)
 	}
 
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
-	
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -605,7 +618,7 @@ graphFREQ	=	function(datatype)	{
 	geom_freqpoly(binwidth=0.03, size=0) +
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
-	FACET +
+	FACET(graphFREQ) +
 	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 	scale_y_continuous(name="Count", expand=c(0.02, 0))
 }
@@ -659,10 +672,6 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 			expand	=	c(0.02, 0)
 		)
 	}
-
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
 	
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -687,7 +696,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	stat_qq(data = results, aes(sample=get(datatype))) +
 	stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "green", alpha = 0.5, size = 1.1, linetype = "dotted") +
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
-	FACET +
+	FACET(graphQQ) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
 }
@@ -756,9 +765,6 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 			expand	=	c(0, 0)
 		)
 	}
-	FACET	=	facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")
-	if	(testAPI & !multiGPU)	FACET	=	facet_grid(rows = vars(API), cols = vars(Location, GPU), switch = "y")
-	if	(testAPI & multiGPU)	FACET	=	facet_grid(rows = vars(Location, API), cols = vars(GPU), switch = "y")
 	
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
@@ -770,7 +776,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	geom_point(alpha = 0.1) +
 	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
-	FACET +
+	FACET(graphDIFF) +
 	scale_X +
 	scale_Y
 }

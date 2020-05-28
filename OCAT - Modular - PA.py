@@ -10,6 +10,8 @@ else:
 	TYPE	=	"GPU"
 
 def	listclean	(list):
+	if list == ['']:
+		return "NULL"
 	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");
 
 def	CSVlistR	(GPU, API, QUA, CSVlist):
@@ -21,7 +23,7 @@ CSV	=	c(\n"\
 	+ listclean(CSVlist) + \
 "\n)\n\
 CSV	=	paste0(CSV, \".csv\")\n\
-OCATcomb	=	READ(\"\", \"" + QUA + "\", \"" + API + "\")\n"
+OCATcomb	=	READ(\"\", CSV, GPU, \"" + QUA + "\", \"" + API + "\")\n"
 );
 
 RelPath	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"

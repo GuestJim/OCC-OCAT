@@ -27,6 +27,7 @@ gHEIGH	=	9
 app.BREAK	=	FALSE
 #	switch for if line breaks should be used in the labels
 #		can be changed prior to graphs being created for selective application
+testQUA		=	FALSE
 
 textOUT		=	TRUE
 HTMLOUT		=	TRUE
@@ -77,7 +78,13 @@ if (interactive())	{
 #	checks if the script is being run in the GUI or not
 #		prevents rplots.pdf from being generated
 
-resultsFull	=	read_csv("@Combined - !QUA!.csv")
+relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
+
+txtFIND	=	function(TXT, rel.Path = relPath)	{
+	locFILE	=	paste0(rel.Path, "/", TXT)
+	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	return(NULL)
+}
 
 listGPU		=	c(
 "RX 580",
@@ -90,25 +97,20 @@ listGPU		=	c(
 "RTX 2080"
 )
 
-listQUA		=	c(
-"!QUA!"
-)
+listQUA		=	txtFIND("Qualities.txt")
 
-listLOC		=	c(
-!LOC!
-)
+listLOC		=	txtFIND("Locations.txt")
+shortLOC	=	txtFIND("Locations Short.txt")
+levsLOC		=	listLOC
+if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
 
-shortLOC	=	c(
-!LOCSHO!
-)
+listAPI		=	txtFIND("APIs.txt")
+shortAPI	=	txtFIND("APIs Short.txt")
+levsAPI		=	listAPI
+if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
-listAPI		=	c(
-!API!
-)
 
-shortAPI	=	c(
-!APISHO!
-)
+resultsFull	=	read_csv("@Combined - !QUA!.csv")
 
 resultsFull$GPU		=	ordered(resultsFull$GPU,		levels = listGPU)
 resultsFull$Quality	=	ordered(resultsFull$Quality,	levels = listQUA)
@@ -121,27 +123,24 @@ results = resultsFull
 #	protects the original data, after having been formatted
 #	not so necessary, as all edits to it occur within function environments
 
-
 multiGPU	=	is.null(cGPU)
 labsGPU		=	labs(caption = cGPU)
 if (multiGPU)	labsGPU	=	labs()
-
-levsLOC	=	listLOC
-if	(useSHORT	&	!is.null(shortLOC))	levsLOC	=	shortLOC
-levsAPI	=	listAPI
-if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
 if	(!testAPI)	{
 	testAPI		=	(length(unique(results$API)) >= 2)
 	overAPI		=	FALSE
 }
 
-GROUPS	=	list(GPU = results$GPU, Location = results$Location)
-if	(testAPI)	GROUPS	=	list(GPU = results$GPU, API = results$API, Location = results$Location)
+GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
+if	(!testAPI)	GROUPS$API		=	NULL
+if	(!testQUA)	GROUPS$Quality	=	NULL
+#	this way I can start with a full GROUPS and then remove the unnecesary components
+#		this is easier than trying to build it up
 
-diff.CONS	=	function(DATA, DIR = "Forward")	{
-	if	(DIR == "Forward")	return(c(diff(DATA), 0))
-	if	(DIR == "Backward")	return(c(0, diff(DATA)))
+diff.CONS	=	function(DATA, DIR = "Forward", lag = 1)	{
+	if	(DIR == "Forward")	return(c(diff(DATA, lag = lag), rep(0, lag)))
+	if	(DIR == "Backward")	return(c(rep(0, lag), diff(DATA, lag = lag)))
 }
 
 if (textDiff	|	graphDiff)	{
@@ -150,20 +149,19 @@ if (textDiff	|	graphDiff)	{
 }
 
 DESC	=	function(ITEM = NULL)	{
-	QUA		=	"Review"
-	gameQ	=	paste0(game, " - Review")
-	if (levels(results$Quality)[1] != "Review")	{
-		QUA		=	paste0(levels(results$Quality)[1])
-		gameQ	=	paste0(game,	" - ",	QUA, " Quality")
-	}
-
-	desc	=	""
-	if	(!multiGPU)											desc	=	paste0(desc,	" - ",	cGPU)
-	if	((!testAPI	&	all(listAPI != ""))	|	overAPI)	desc	=	paste0(desc,	" - ",	unique(results$API))
-
-	gameGAQF	=	paste0(gameF,	desc,	" - ",	QUA)
-	gameGAQ		=	paste0(game,	desc,	" - ",	QUA,	" Quality")
-
+	descs	=	list(GPU = unique(as.character(results$GPU)), API = unique(as.character(results$API)), Location = unique(as.character(results$Location)), Quality = unique(as.character(results$Quality)))
+	
+	if	(length(descs$GPU)		> 1)	descs$GPU		=	NULL
+	if	(length(descs$API)		> 1)	descs$API		=	NULL
+	if	(length(descs$Location)	> 1)	descs$Location	=	NULL
+	if	(length(descs$Quality)	> 1)	descs$Quality	=	NULL
+	
+	gameQ	=	game
+	if	(!is.null(descs$Quality))	gameQ	=	paste0(game,	" - ",	descs$Quality,	"Quality")
+	
+	gameGAQF	=	paste0(gameF,	" - ",	paste0(descs,	collapse = " - ")	)
+	gameGAQ		=	paste0(game,	" - ",	paste0(descs,	collapse = " - "),	" Quality")
+	
 	if	(!is.null(ITEM))	{
 		gameGAQF	=	paste0(gameGAQF,	" - ",	ITEM)
 		gameGAQ		=	paste0(gameGAQ,		" - ",	ITEM)
@@ -172,28 +170,28 @@ DESC	=	function(ITEM = NULL)	{
 }
 gameGAQF	=	DESC()[1]	;	gameGAQ		=	DESC()[2]	;	gameQ	=	DESC()[3]
 
-INDIV	=	function(TYPE, LIST, useSHORT = useSHORT, gWIDTH = gWIDTH, gHEIGH = gHEIGH)	{
-	if	(TYPE != "GPU")	dir.create(paste0("@", TYPE))
+INDIV	=	function(COL, SUBS, useSHORT = useSHORT, gWIDTH = gWIDTH, gHEIGH = gHEIGH)	{
+	if	(COL != "GPU")	dir.create(paste0("@", COL))
 
-	for	(ITEM in LIST)	{
-		# TYPE	<<-	TYPE
-		# LIST	<<-	LIST
+	for	(ITEM in SUBS)	{
+		# COL	<<-	COL
+		# SUBS	<<-	SUBS
 		# ITEM	<<-	ITEM
 		#	helpful for troubleshooting
 		
 		
 		message(paste0("\n", ITEM))
-		results	=	resultsFull[resultsFull[, TYPE] == ITEM, ]
+		results	=	resultsFull[resultsFull[, COL] == ITEM, ]
 		if (nrow(results)	==	0)	next
-		if (TYPE == "GPU" & length(unique(results$API)) == 1)	next
+		if (COL == "GPU" & length(unique(results$API)) == 1)	next
 
-		if	(TYPE != "GPU")	{
-			FOLD	=	paste0("@", TYPE, "/", ITEM)
+		if	(COL != "GPU")	{
+			FOLD	=	paste0("@", COL, "/", ITEM)
 			dir.create(FOLD)
 		}
 
-		gameGAQF	=	DESC()[1]	;	gameGAQ		=	DESC()[2]	;	gameQ	=	DESC()[3]
-		if (TYPE == "GPU")	{
+		gameGAQF	=	DESC(ITEM)[1]	;	gameGAQ		=	DESC(ITEM)[2]	;	gameQ	=	DESC(ITEM)[3]
+		if (COL == "GPU")	{
 			gameGAQF	=	paste0(ITEM, "/", gameGAQF)
 		}	else	{
 			gameGAQF	=	paste0(FOLD, "/", gameGAQF)
