@@ -27,34 +27,6 @@ else:
 mQUA	=	"High"
 #	the quality to filter by for multi-GPU situations
 
-def	listclean	(list):
-	if list == ['']:
-		return "NULL"
-	return str(list).replace("[", "").replace("]", "").replace("\'", "\"").replace(", ", ",\n").replace(".csv", "");
-#	creates a function that will take a Python list, make it a string, and then remove and convert the appropriate substrings to make it what I want in R
-
-def	CSVlistR	(GPU, API, QUA, CSVlist):
-	if API	==	"NA":
-		API	=	""
-	return str("\
-GPU = \"" + GPU + "\"\n\
-CSV = c(\n"\
-	+ listclean(CSVlist) + \
-"\n)\n\
-CSV = paste0(CSV, \".csv\")\n\
-OCATcomb	=	rbind(OCATcomb, READ(\"\", CSV, GPU, \"" + QUA + "\", \"" + API + "\"))\n"
-);
-#	creates a function that will generate the desired multi-line string that will be placed in the R script for creating the combined CSV
-#	it looks like this:
-#		GPU = "CURRENT GPU"
-#		CSV = c(
-#		"FILENAME1",
-#		"FILENAME2",
-#		"FILENAME3"
-#		)
-#		CSV = paste0(CSV, ".csv")
-#		OCATcomb	=	rbind(OCATcomb, READ("", CSV, GPU, Quality, API))
-
 RelPath	=	droppedPath.split("OCAT Data")[0] + "OCAT Data\\"
 #	splits the path at the OCAT Data folder, grabs the first portion, then adds the folder name back to the path
 
@@ -98,20 +70,18 @@ for line in listsplit:
 #		[GPU, API, Quality, File]
 #	if no API change is made, the element will be blank
 
-GPUs, APIs, QUAs	=	[], [], []
+
+GPUs, QUAs	=	[], []
 #	create empty lists for storing the lists of relevant values
 
 for item in listmap:
 	GPUs.append(item[0])
-	APIs.append(item[1])
 	QUAs.append(item[2])
 #	goes through the listmap variable above and builds the lists from its items
 
-GPUs		=	list(set(GPUs))
-APIs		=	list(set(APIs))
+GPUs	=	list(set(GPUs))
 #	for Python to return just the unique elements to a list, you make it a set
 #	as sets are different to work with, the unique elements are converted back to being a list and stored to these variables
-
 if 		TYPE	==	"MULTI":
 #	checks if the type is multi-GPU, or multi-API
 	QUAs	=	[mQUA]
@@ -121,32 +91,6 @@ elif	TYPE	==	"SINGLE":
 	QUAs	=	list(set(QUAs))
 #		create a list from the set of values in the GPU and Quality lists.
 
-grouped	=	[]
-#	creates empty list for holding the information when grouped by GPU, API, Quality configuration
-out		=	""
-#	creates an empty string for holding the R commands to place in the script
-
-for GPU in GPUs:
-	for API in APIs:
-		for QUA in QUAs:
-#			loops to go through the configurations of GPU, API, and Quality
-			filelist	=	[]
-#				first creates and then wipes a variable that will hold the list of files for the current configuration
-			for file in listmap:
-#				loop to go through the CSV files in the folders
-				if file[0] == GPU	and file[1] == API	and file[2] == QUA:
-#					checks to make sure the file is of the current configuration
-					filelist.append(file[3])
-#						places the file onto the current file list
-			if filelist != []:
-#				sometimes there are configurations without any files to them, and this checks for that situation
-				grouped.append([GPU, API, QUA, filelist])
-#					adds the configuration and its list of files to the grouped variable
-				countCSV	=	len(filelist)
-#					creates a variable to store the number of CSV files for each configuration, which is the number of locations tested
-				out	=	out + "\n" + CSVlistR(GPU, API, QUA, filelist)
-#					adds onto the out string the R code necessary for making the combined CSV
-#	technically grouped is not necessary, but I am keeping it as it may be a good object to check when troubleshooting
 
 droppedGame	=	RelPath.rsplit("\\", 3)[1]	\
 	.replace(" Performance Analysis", "")	\
@@ -155,29 +99,18 @@ droppedGame	=	RelPath.rsplit("\\", 3)[1]	\
 #	the replace functions then remove the article type from the name, if it is a performance analysis or review, getting just the game name
 #		for miscellaneous artiles though, the article's name is appropriate to use
 
-if	"Locations.txt" in os.listdir(RelPath):
-	loc	=	open(RelPath + "Locations.txt", 'r').readlines()
-	loc	=	[line.strip('\n') for line in loc]
-else:
-	loc	=	["Recording "] * countCSV
-	for i in range(countCSV):
-		loc[i]	=	loc[i] + str(i+1)
-#	checks for a Locations.txt file and either reads in its content or generates a generic "Recording #" if there is no file
-locStr	=	listclean(loc)
-#	makes a cleaned up string of the Locations to be inserted into the appropriate R files
-
-if		TYPE	==	"MULTI" and len(GPUsread) != 1:
+if		TYPE	==	"MULTI" and len(GPUs) != 1:
 	cGPU	=	"NULL"
-elif	TYPE	==	"SINGLE" or len(GPUsread) == 1:
-	cGPU	=	"\"" + str(GPUsread[0]) + "\""
+elif	TYPE	==	"SINGLE" or len(GPUs) == 1:
+	cGPU	=	"\"" + str(GPUs[0]) + "\""
 #	sets the cGPU, current GPU, variable based on if this is a single or multi-GPU situation
 #		quotes are added to the string here, which is why \" is present
 #	GPUsread is a list of the read GPUs from the folder names and useful for single-GPU, multi-API situations
 
-scriptFull	=	scriptPath + "OCAT - Combined - PA.r"
+scriptFull	=	scriptPath + "OCAT - Search - PA.r"
 #	sets the name and path of the reference R script to be loaded in
 
-outputName	=	"Combined - PA - " + droppedGame + ".r"
+outputName	=	"Search - PA - " + droppedGame + ".r"
 outputFull	=	droppedPath + "@" + outputName
 #	sets the name and path of the output file, derived from the reference R script
 
@@ -192,17 +125,14 @@ if not os.path.exists(outputFull):
 		for line in fref:
 #			loops through the lines in the reference file
 			fout.write(line	\
-				.replace("!PATH!",	RPath)			\
-				.replace("!GAME!",	droppedGame)	\
-				.replace("!LONG!",	out)			\
-				.replace("!QUA!",	QUAs[0])		\
-				.replace("!LOC!",	locStr)
+				.replace("!PATH!",		RPath)			\
+				.replace("!GAME!",		droppedGame)	\
+				.replace("!QUA!",		QUAs[0])
 			)
 #				writes each line from the reference file to the output file, but runs the replace function to change the appropriate things
 #					the \ are necessary to have the line breaks within the command list
 		fout.close()
 #			closes the output file
-
 
 scriptFull	=	scriptPath + "OCAT - Combined - Input.r"
 #	sets the name and path of the reference R script to be loaded in

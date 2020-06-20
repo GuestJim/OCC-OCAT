@@ -5,17 +5,18 @@ library(readr)
 game = "!GAME!"
 #	will be the name of the game
 #		!GAME! is replaced by the Python script
+COMPRESS	=	TRUE
+#	switch to control if the output CSV should be compressed in the end
+#	as this script is taking data from multiple files to place it in another, we are approximately doubling the data footprint, so the default is TRUE
 
 setwd("!PATH!")
 #	sets the working directory, allowing paths later to be relative from this directory
 #		!PATH! is replaced by the Python script
 
 OCATcomb	=	data.frame(matrix(ncol = 24, nrow = 0))
-OCATtemp	=	data.frame(matrix(ncol = 24, nrow = 0))
-#	create empty data frames with the desired number of columns
-#	these frames will then hold the data from the CSVs, allowing them to be bound together
+#	creates an empty data frames with the desired number of columns
+#	this frame will then hold the data from the CSVs, allowing them to be bound together
 #		OCATcomb is the OCAT combined frame
-#		OCATtemp is the OCAT temporary frame
 
 listLOC	=	c(
 !LOC!
@@ -34,12 +35,12 @@ READ	=	function(fold="",	CSV,	GPU,	Quality = "",	API="")	{
 #	API might not always be set, so it does have a default value
 	if (API != "")	API	=	paste0(API, "/")
 #		checks if an API was provided and then adds the "/" because it would be an additional folder layer to the CSV path
-	if (length(listLOC[1]) == 0)	{
-		listLOC	=	paste0("Recording ", 1:length(CSV))
-	}
+	if (length(listLOC[1]) == 0)	listLOC	=	paste0("Recording ", 1:length(CSV))
 #		if a list of locations was not provided, this will generate one simply numbering them
 	len	=	min(length(listLOC), length(CSV))
 #		the shortest length between either the number of Locations or the number of CSVs, but these should always be equal
+	out	=	data.frame(matrix(ncol = 24, nrow = 0))
+#		creates an empty data frame with the necessary number of columns so the contents of the CSVs looped through below can be combined
 	for (place in 1:len)	{
 #		a loop to work through the CSV list
 		if (CSV[place] != ".csv")	{
@@ -63,10 +64,10 @@ READ	=	function(fold="",	CSV,	GPU,	Quality = "",	API="")	{
 		OCATtemp$Location	=	listLOC[place]
 		OCATtemp$API		=	gsub("/", "", API)
 #			attaches the desired information to columns with appropriate names
-		OCATcomb	=	rbind(OCATcomb, OCATtemp)
+		out	=	rbind(out, OCATtemp)
 #			row-bind the temporary data frame to the combined data frame
 	}
-	return(OCATcomb)
+	return(out)
 #		with the loop finished, the combined data frame is returned
 }
 
@@ -74,18 +75,24 @@ READ	=	function(fold="",	CSV,	GPU,	Quality = "",	API="")	{
 #	!LONG! is replaced by the Python script with the list of CSVs, all properly formatted like what is seen in the example below
 
 #	example CSV list and pass to READ function
-#GPU = "RX Vega 64"
-#CSV = c(
+#GPU	=	"RX Vega 64"
+#CSV	=	c(
 #"OCAT-Sam2017.exe-2019-07-20T105950",
 #"OCAT-Sam2017.exe-2019-07-20T110524",
 #"OCAT-Sam2017.exe-2019-07-20T111116"
 #)
-#CSV = paste0(CSV, ".csv")
-#OCATcomb = READ("", "Max", "DirectX 11")
+#CSV	=	paste0(CSV, ".csv")
+#OCATcomb	=	rbind(OCATcomb, READ("", CSV, GPU, "Max", "DirectX 11"))
 #	it may be worth noting, the file name without the extension is what goes into the list, and then the extension is pasted on
 
-write_csv(OCATcomb, "@Combined - !QUA!.csv")
+if	(COMPRESS)	{
+	write_csv(OCATcomb, "@Combined - !QUA!.csv.bz2")
+}	else	{
+	write_csv(OCATcomb, "@Combined - !QUA!.csv")
+}
 #	write_csv is a readr function that will write a CSV for you
+#		the function supports producing a compressed output, which is controlled here with the COMPRESS switch set earlier
+#			bzip2 compression is used as this showed the best compression of the three methods: bzip2; gzip; and lzma
 #		OCATcomb is the data that will be written
 #		"@Combined - !QUA!.csv" is the name of the output CSV
 #			!QUA! is replaced by the Python script, to identify what the data is for

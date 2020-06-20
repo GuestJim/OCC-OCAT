@@ -6,7 +6,7 @@ yrates	=	sort(c(yrates,-yrates))
 #	combines the above list with its opposite and sorts the larger list
 ytimes	=	sort(1000/yrates)
 #	converts the frame rates to frame times
-ybreals	=	sort(c(round(ytimes, 2), 0))
+ybreaks	=	sort(c(round(ytimes, 2), 0))
 #	frame times for use as scale breaks in the graphs
 ms2FPS	=	function(DATA, r = 0)	round(1000/DATA, r)
 #	function to convert times to rates for use with secondary axes using FPS instead of ms
@@ -30,23 +30,21 @@ labelBreak	=	function(breaks, SEC = FALSE)	{
 #		if this is for a secondary axis, the BREAK pattern is repeated and pasted after the label
 }
 
-# labelRound	=	function(x)	sprintf("%.1f", x)
+# labelRound	=	function(breaks)	sprintf("%.1f", breaks)
 #	function to round values to one decimal place, and will have zero padding
-labelRound	=	function(x)			round(x, 1)
+labelRound	=	function(breaks)	round(breaks, 1)
 #	function to found values to one decimal place, without zero padding
 labelRoundB	=	function(breaks)	labelBreak(labelRound(breaks))
 #	applies labelBreak to the labelRound function
 ms2FPS.lab	=	function(breaks)	labelBreak(ms2FPS(breaks), SEC = TRUE)
 #	applies both the ms2FPS conversion and labelBreak to the breaks provided
 #		as ms2FPS will only be for secondary axes, SEC = TRUE
-labelBreakS	=	function(breaks)	labelBreak(sort(breaks))
-#	breaks are sorted before labelBreak is called
 labelBreakQQ=	function(breaks)	labelBreak(paste0(pnorm(breaks) * 100, "%"))
 #	version of labelBreak for the QQ plot that converts the breaks to percentiles and attaches "%" to them
 #		this will make it easier to use different percentile values, if desired
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
 #	function for creating the labels for Display Time axes, as I use 60Hz Refresh Cycles Later
-labelDispB	=	function(breaks)	labelBreak(round(breaks * 60/1000, 1))
+labelDispB	=	function(breaks)	labelBreak(labelDisp(breaks))
 #	applies labelBreak to labelDisp
 
 
@@ -77,7 +75,7 @@ normGEO	=	function(DATA)	{
 
 # custom funtion for finding percentiles for the data and applying clear names to them
 percMS	=	function(DATA, listPERC = c(0.1, 1, 99, 99.9))	{
-	if	(max(listPERC) > 1)	listPERC = listPERC/100
+	if	(max(listPERC) > 1)	listPERC	=	listPERC/100
 	out			=	quantile(DATA, listPERC)
 	names(out)	=	paste0(listPERC * 100, "%")
 	return(out)
@@ -133,94 +131,45 @@ statGRAPH	=	function(DATA, ...)	{
 
 
 # the aggregate function produces a two-level table and this function makes the lower table separate columns
-sepCOL	=	function(tab)	{
-	out	=	as.data.frame(as.matrix(tab))
-#		makes the input first a matrix then a data frame as this is necessary for appropriate behavior
-	for (i in grep("x", names(out)))	{
-		out[, i]	=	as.numeric(as.character(out[, i]))
-	}
-#		finds every column with "x" in its name and makes its class numeric
-	colnames(out)	=	sub("x.", "", colnames(out))
-#		removes the "x." aggregates places from the column names
+sepCOL	=	function(aggOUT)	{
+	matCOL	=	sapply(aggOUT, is.matrix)
+#		creates a vector of TRUE and FALSE for which columns are of type matrix
+	out	=	cbind(aggOUT[, !matCOL], as.data.frame(aggOUT[, matCOL]))
+#		column binds two data frames derived from the aggOUT argument
+#			the first is the subset that does not include the matrix columns
+#			the second is the subset that are the matrix columns, converting them to a data frame
 	return(out)
 }
 
-GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
-if	(!testAPI)	GROUPS$API		=	NULL
-if	(!testQUA)	GROUPS$Quality	=	NULL
-#	already in Input script, but keeping here for easy finding
-#	creates a complete list of possible groups for the data
-#		depending on the switches set in Input, unused groups are removed
+# custom call to aggregate that can handle subsetting and applies sepCOL
+AGG	=	function(datatype, FUN, ..., COL = NULL, ITEM = NULL, DATA = results)	{
+	if	(!is.null(COL) & !is.null(ITEM))	DATA	=	DATA[DATA[, COL] == ITEM, ]
+#		checks if there is a column and item to subset by and then assigns this subset to DATA
 
-if	(textFRAM	|	graphFRAM)	{
-	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
-	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
-	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
-	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
-	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
-#		aggregate functions will find described groups in data and apply a function to the groups
-#			sepCOL fixes that the returns will be two-level tables
-	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
-	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
-	if	(testAPI)	graphSTATS$API		=	ordered(graphSTATS$API,	levels = listAPI)
-#		makes the GPU, Location, and API columns ordered factors so the graph facets are in the right order
-}
-#	below are equivalent to above but for other data columns in results
-if	(textDISP	|	graphDISP)	{
-	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
-	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
-	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
-	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
-	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
+	GROUPS	=	list(GPU = DATA$GPU, API = DATA$API, Quality = DATA$Quality, Location = DATA$Location)
+	if	(!testAPI)	GROUPS$API		=	NULL
+	if	(!testQUA)	GROUPS$Quality	=	NULL
+#		aggregate requires the grouping elements be each the same length as data, so GROUPS must be remade with it
+#		the process of making GROUPS is identical to what is in Input.r, just with DATA instead of results
 
-	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
-	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
-	if	(testAPI)	dispgSTATS$API		=	ordered(dispgSTATS$API,	levels = listAPI)
+	return(sepCOL(aggregate(DATA[, datatype], GROUPS, FUN, ...)))
+#		the desired column of DATA is selected and the GROUPS, FUN(ction), and other arguments are all passed to aggregate
+#		before returning the output, sepCOL is applied sto give me the desired formating
 }
-if	(textREND	|	graphREND)	{
-	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
-	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
-	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
-	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
-	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
-
-	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
-	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
-	if	(testAPI)	rendgSTATS$API		=	ordered(rendgSTATS$API,	levels = listAPI)
-}
-if	(textDRIV	|	graphDRIV)	{
-	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
-	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
-	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
-	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
-	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
-
-	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
-	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
-	if	(testAPI)	drivgSTATS$API		=	ordered(drivgSTATS$API,	levels = listAPI)
-}
-#	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
-#		aggregate(list(Hello = data, groups, function)) will label the column Hello
-#	it is also possible to run the function on more columns by placing them all in a list (not a vector, but a list like GROUPS)
 
 # function to take tables in milliseconds and create a version in FPS bound on top
 addFPS	=	function(DATA, r = 2)	{
-	lab	=	DATA[1:grep("Location", colnames(DATA))]
-	val	=	DATA[-(1:grep("Location", colnames(DATA)))]
-#		it is necessary to separate the label columns and value columns
+	numCOL	=	sapply(DATA, is.numeric)
+#		finds the columns that are of class numeric
+	dataFPS		=	cbind(list("Unit" = "FPS"), round(1000/DATA[, numCOL], r))
+#		creates the FPS table with a UNIT column and all its values all FPS
+	dataMS		=	cbind(list("Unit" = "ms"),	round(DATA[, numCOL],		r))
+#		creates the ms table with a UNIT column and all its values all ms
 
-	tFPS	=	cbind(lab, rep("FPS", nrow(DATA)), round(1000/val, r))
-#		creates the FPS values and binds them to the labels
-	names(tFPS)[ncol(lab) + 1]	=	""
-#		removes the column name for the column that identifies the unit
-	tMS		=	cbind(lab, rep("ms", nrow(DATA)), round(val, r))
-#		recreates the input that uses milliseconds as the unit, and adds a column identifying the unit
-	names(tMS)[ncol(lab) + 1]	=	""
-#		removes the column name for the column that identifies the unit
-
-	out	=	rbind(tFPS, tMS)
-#		row binds the FPS and millisecond data together
-#			FPS is on top as it is more likely the unit people will want to read
+	out	=	cbind(DATA[, !numCOL], rbind(dataFPS, dataMS))
+#		combines the FPS and ms tables by row and then attaches the description columns, that are not of type numeric, to the front
+	colnames(out)[grep("Unit", colnames(out))]	=	""
+#		removes the Unit column name, as I prefer it empty
 	return(out)
 }
 
@@ -239,65 +188,42 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 
 	out	=	cbind(
 		addFPS(MEAN),
-		addFPS(PERC)[-(1:grep("0.1%", colnames(addFPS(PERC))) - 1)],
-		ECDF[listECDF]
+		addFPS(PERC)[, sapply(addFPS(PERC), is.numeric)],
+#			selects just the columns of type numeric
+		ECDF[, listECDF]
 	)
 #		combines the MEAN (mean and median) and PERC (percentile) columns after they have FPS versions added with the ECDF columns
 
+	colnames(out)[grep("Var.", colnames(out))]	=	""
+#		removes the "Var." column name placed in the column for the units
 	return(out)
 }
 
-# returns a subset of the data determined by the COL value and its value when evaluated as a variable
-subOUT	=	function(DATA, COL = "")	{
-	if	(COL == "")	{
-		out	=	DATA
-#			if no COL column name is provided, the input data is returned
-	}	else	{
-		SUB	=	eval(parse(text = COL))
-#			reads the string value of COL as a variable name and stores that value in SUB
-		out	=	DATA[DATA[, COL] == SUB, ]
-#			filters the DATA to only those where the values in the COL column match the SUB value
-	}
-	return(out)
+# function to create the objects holding the different names or data frames for the text output functions to use
+dataSEL	=	function(datatype, COL = NULL, ITEM = NULL)	{
+#	COL and ITEM are necessary for subseting the data AGG should work on
+	if	(datatype == "MsBetweenPresents")		descs	=	c("Frame Time",		"data")
+	if	(datatype == "MsBetweenDisplayChange")	descs	=	c("Display Time",	"disp")
+	if	(datatype == "MsUntilRenderComplete")	descs	=	c("Render Time",	"rend")
+	if	(datatype == "MsEstimatedDriverLag")	descs	=	c("Driver Lag",		"driv")
+#		this list will need to be updated to support additional columns in results
+
+	type	<<-	descs[1];	typeSHORT	<<-	descs[2]
+#		super-assignment is necessary so this and the following information can be accessed from outside this functions' environment
+
+	MEAN	<<-	AGG(datatype,	meanMS,					COL = COL,	ITEM = ITEM)
+	PERC	<<-	AGG(datatype,	percMS,					COL = COL,	ITEM = ITEM)
+#		notice, addFPS is not called for here. That will instead only be called just when needed by other functions
+	ECDF	<<-	AGG(datatype,	ecdfFPS,	listFPS,	COL = COL,	ITEM = ITEM)
+#		ecdfFPS needs the listFPS object supplied to it as an argument
+	STAT	<<-	AGG(datatype,	statMS,					COL = COL,	ITEM = ITEM)
 }
 
-# function to create generical named variables for holding the aggregate data above
-dataSEL	=	function(datatype, COL = "")	{
-	if	(datatype == "MsBetweenPresents"		|	datatype == "Frame Time")	{
-		type		<<-	"Frame Time"
-		typeSHORT	<<-	"data"
-		MEAN		<<-	subOUT(dataMEAN, COL)
-		PERC		<<-	subOUT(dataPERC, COL)
-		ECDF		<<-	subOUT(dataECDF, COL)
-		STAT		<<-	subOUT(dataSTAT, COL)
-	}
-	if	(datatype == "MsBetweenDisplayChange"	|	datatype == "Display Time")	{
-		type		<<-	"Display Time"
-		typeSHORT	<<-	"disp"
-		MEAN		<<-	subOUT(dispMEAN, COL)
-		PERC		<<-	subOUT(dispPERC, COL)
-		ECDF		<<-	subOUT(dispECDF, COL)
-		STAT		<<-	subOUT(dispSTAT, COL)
-	}
-	if	(datatype == "MsUntilRenderComplete"	|	datatype == "Render Time")	{
-		type		<<-	"Render Time"
-		typeSHORT	<<-	"rend"
-		MEAN		<<-	subOUT(rendMEAN, COL)
-		PERC		<<-	subOUT(rendPERC, COL)
-		ECDF		<<-	subOUT(rendECDF, COL)
-		STAT		<<-	subOUT(rendSTAT, COL)
-	}
-	if	(datatype == "MsEstimatedDriverLag"		|	datatype == "Driver Lag")	{
-		type		<<-	"Driver Lag"
-		typeSHORT	<<-	"driv"
-		MEAN		<<-	subOUT(drivMEAN, COL)
-		PERC		<<-	subOUT(drivPERC, COL)
-		ECDF		<<-	subOUT(drivECDF, COL)
-		STAT		<<-	subOUT(drivSTAT, COL)
-	}
+# removes the objects created by dataSEL from the global environment
+#	this is for troubleshooting purposes and is not called in the script
+dataSEL.rm	=	function()	{
+	rm(type, typeSHORT, MEAN, PERC, ECDF, STAT, envir = .GlobalEnv)
 }
-#	by giving it a column name, the data can be filtered, provided the variable for the FOR loop has the same name as the column
-#		by using <<- the variables are accessible outside of the function
 
 # function that describes how the statistics should be saved to a TXT file
 sinkTXT	=	function(datatype, COL = "")	{
@@ -305,44 +231,34 @@ sinkTXT	=	function(datatype, COL = "")	{
 	options(width = 1000)
 #		sets the line width with the TXT files, as R will apply its own line breaks when reaching the width
 
-	dataSEL(datatype, COL)
-#		sets the generic variables to the correct datatype values
-
 	subSTR	=	""
-#		creates the subSTR string to hold the name of the filter
-	if	(COL != "")	{
-		SUB		=	eval(parse(text = COL))
-#			finds the specific value of the filter and stores it to SUB
-		subSTR	=	paste0(" - ", SUB, " - ")
-#			creates a string from the filter to be applied to the file name
+#		creates subSTR as an empty string, which it will be except when there is subseting involved
+	if	(!is.null(ITEM))	subSTR	=	paste0(" - ", ITEM, " - ")
+#		if there is a value to ITEM, then subSTR is made into that value with hyphens on both sides
 
-	if	(COL	==	"GPU")	{
-		sink(paste0(SUB, "\\", gameGAQF, " ", subSTR, type, ".txt"), split = TRUE)
-#			if we are filtering by GPU, this will place the TXT file into the GPU folder
-#			creates the TXT file and has the currently selected filter in the file name
-	}	else	{
-		sink(paste0(gameGAQF, " ", subSTR, type, ".txt"), split = TRUE)
-#			creates the TXT file and has the currently selected filter in the file name
-	}
+	filePath	=	paste0(gameGAQF, " ", subSTR, type, ".txt")
+#		the default filePath for the output TXT is created
+	if	(!is.null(COL))	if	(COL	==	"GPU")	filePath	=	paste0(ITEM, "\\", filePath)
+#		if these is subseting by GPU, then the GPU name will be added to the front of filePath so the output is saved in the correct folder
 
 	writeLines(gameGAQ)
 #		writes the name of the game, GPU, API, and Quality into the file
 	writeLines(type)
 #		writes the data type into the file
 	writeLines("\nMean")
-	print(addFPS(MEAN), row.names = FALSE)
+	print(addFPS(MEAN),	row.names = FALSE)
 #		writes a line break and then the label Mean
 #		prints the MEAN data, with the addFPS function applied, to the file, without row names
 	writeLines("\nPercentiles")
-	print(addFPS(PERC), row.names = FALSE)
+	print(addFPS(PERC),	row.names = FALSE)
 #		writes a line break and then the label Percentiles
 #		prints the PERC data, with the addFPS function applied, to the file, without row names
 	writeLines("\nPercentile of FPS")
-	print(ECDF, row.names = FALSE)
+	print(ECDF,			row.names = FALSE)
 #		writes a line break and then the label Percentile of FPS
 #		prints the ECDF data to the file, without row names
 	writeLines("\nDistribution Stats")
-	print(STAT, row.names = FALSE)
+	print(STAT,			row.names = FALSE)
 #		writes a line break and then the label Distribution Stats
 #		prints the STAT data to the file, without row names
 sink()
@@ -366,56 +282,72 @@ OCCHTML	=	function(DATA)	{
 }
 
 # custom function for actually writing the HTML file with the data in it
-writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = FOLD)	{
-	if	(fold != "")	{
-		write_tableHTML(OCCHTML(DATA), file = paste0(fold, "\\", name, " - ", dataNAME,".html"))
-	}	else	{
-		write_tableHTML(OCCHTML(DATA), file = paste0(name, " - ", dataNAME,".html"))
-	}
+writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = "")	{
+	filePath	=	paste0(name, " - ", dataNAME,".html")
+	if	(fold != "")	filePath	=	paste0(fold, "\\", filePath)
+#		filePath for the HTML output is created
+#		if there is a sub-folder the output should be saved in, it is applied to filePath
+
+	write_tableHTML(OCCHTML(DATA), file = filePath)
 }
 
 # function that describes how the statistics should be written to HTML files, similar to sinkTXT
-sinkHTML	=	function(datatype, COL = "")	{
-#		by supplying a column name, and using a FOR loop where its variable name is the column name, it can filter the output
+sinkHTML	=	function(datatype, COL = NULL, ITEM = NULL)	{
+#		by supplying COL and ITEM, this function can properly label the outputs for data subsets
 
-	dataSEL(datatype, COL)
-#		sets the generic variables to the desired datatype values
-	
-	SUB		=	""
-	if	(COL	!=	"")		SUB		=	paste0(eval(parse(text = COL)), " - ")
-#		checks if the COL variable has been given a value and will read what the current value of the FOR variable is
-	
+	ITEM.f	=	""
+	if	(!is.null(COL) & !is.null(ITEM))		ITEM.f		=	paste0(ITEM, " - ")
+#		checks if the COL and ITEM arguments have been given a value and then makes ITEM.f, the ITEM value for the filename
+
 	FOLD	=	""
-	if	(COL	==	"GPU")	FOLD	=	eval(parse(text = COL))
+	if	(!is.null(COL)) if	(COL	==	"GPU")	FOLD	=	ITEM
 #		checks if filtering by GPU so the HTML files can be sent to the GPU folders
+#		this check must be done sequentially because NULL == "GPU" is a problem
 
-	writeOCC(addFPS(MEAN),				dataNAME = paste0(SUB, typeSHORT, "MEAN"),	fold = FOLD)
-	writeOCC(addFPS(PERC),				dataNAME = paste0(SUB, typeSHORT, "PERC"),	fold = FOLD)
-	writeOCC(ECDF,						dataNAME = paste0(SUB, typeSHORT, "ECDF"),	fold = FOLD)
-	writeOCC(STAT,						dataNAME = paste0(SUB, typeSHORT, "STAT"),	fold = FOLD)
-	writeOCC(compTAB(MEAN, PERC, ECDF),	dataNAME = paste0(SUB, typeSHORT, "COMP"),	fold = FOLD)
+	writeOCC(addFPS(MEAN),								dataNAME = paste0(ITEM.f, typeSHORT, "MEAN"),	fold = FOLD)
+	writeOCC(addFPS(PERC),								dataNAME = paste0(ITEM.f, typeSHORT, "PERC"),	fold = FOLD)
+	writeOCC(ECDF,										dataNAME = paste0(ITEM.f, typeSHORT, "ECDF"),	fold = FOLD)
+	writeOCC(STAT,										dataNAME = paste0(ITEM.f, typeSHORT, "STAT"),	fold = FOLD)
+	writeOCC(compTAB(addFPS(MEAN), addFPS(PERC), ECDF),	dataNAME = paste0(ITEM.f, typeSHORT, "COMP"),	fold = FOLD)
 }
 
 # calls both sinkTXT and sinkHTML, though checks if their respective outputs are desired
 sinkOUT	=	function(datatype)	{
-
-if	(textOUT)	sinkTXT(datatype)
+dataSEL(datatype)
+#	dataSEL is called to create the objects sinkTXT and sinkHTML are configured to write
+				sinkTXT(datatype)
 if	(HTMLOUT)	sinkHTML(datatype)
 #	first checks if this specific output is desired
 
-for (GPU in listGPU)	{	if	(file.exists(GPU) & perGPU)	{	GPU	<<-	GPU
+if	(perGPU)	{	for (GPU in listGPU)	{	if	(!file.exists(GPU))	next
+#	checks if GPU subsets are desired
 #	goes through the GPU list
-#	checks if GPU folder exists and if the separate GPU files are desired
-#		to address an issue with the GPU variable not alway being accessing, <<- is used for global access
-	if	(textOUT)	sinkTXT(datatype, "GPU")
-	if	(HTMLOUT)	sinkHTML(datatype, "GPU")
+#	checks if there is a folder for the GPU and goes to the enxt iteration if there is not
+	dataSEL(datatype, COL	=	"GPU", ITEM = GPU)
+#		with COL and ITEM, dataSEL will provide a subset to sinkTXT and sinkHTML below
+					sinkTXT(datatype,	COL	=	"GPU", ITEM	=	GPU)
+	if	(HTMLOUT)	sinkHTML(datatype,	COL	=	"GPU", ITEM	=	GPU)	
+#		COL and ITEM need to be provided to properly identify the subset with the files
 }	}
 
-if	(textAPI)			{	for (API in listAPI)	{	API	<<-	API
-#	goes through the list of APIs, if textAPI is true
-#		<<- is not necessary here, but it does not hurt to have, so for symmetry, it is present
-	if	(textOUT)	sinkTXT(datatype, "API")
-	if	(HTMLOUT)	sinkHTML(datatype, "API")
+if	(textAPI)	{	for (API in listAPI)		{
+#	checks if API subsets are desired
+#	goes through the API list
+#		with COL and ITEM, dataSEL will provide a subset to sinkTXT and sinkHTML below
+	dataSEL(datatype, COL	=	"API", ITEM = API)
+					sinkTXT(datatype,	COL	=	"API", ITEM	=	API)
+	if	(HTMLOUT)	sinkHTML(datatype,	COL	=	"API", ITEM	=	API)
+#		COL and ITEM need to be provided to properly identify the subset with the files
+}	}
+
+if	(textLOC)	{	for (Location in listLOC)	{
+#	checks if Location subsets are desired
+#	goes through the Location list
+#		with COL and ITEM, dataSEL will provide a subset to sinkTXT and sinkHTML below
+	dataSEL(datatype, COL	=	"Location", ITEM = Location)
+					sinkTXT(datatype,	COL	=	"Location", ITEM	=	Location)
+	if	(HTMLOUT)	sinkHTML(datatype,	COL	=	"Location", ITEM	=	Location)
+#		COL and ITEM need to be provided to properly identify the subset with the files
 }	}
 }
 
@@ -423,16 +355,16 @@ if	(textAPI)			{	for (API in listAPI)	{	API	<<-	API
 customSave	=	function(type="", plot = last_plot(), device=ggdevice, width=gWIDTH, height=gHEIGH, dpi=DPI)	{
 #	the plot argument allows a specific plot to be saved without having to be rendered first in the GUI
 	if	(device	==	"png"	|	device == "both")	{
-		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device=device, width=width, height=height, dpi=dpi)
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device="png", width=width, height=height, dpi=dpi)
 	}
 	if	(device	==	"pdf"	|	device == "both")	{
-		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device=device, width=width, height=height)
+		ggsave(filename=paste0(gameGAQF, " - ", type, ".pdf"), plot = plot, device="pdf", width=width, height=height)
 	}
 #	 can be set to have PNG, PDF, or both PNG and PDF outputs
 }
 
 # function that handles all of the graph saving configuration
-graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL, ...)	{
+graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = FALSE, diffLim = NULL, ...)	{
 	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
 	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
 	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
@@ -443,7 +375,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL
 	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
 	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
 	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
-	
+
 	if	(substitute(graphtype) == "graphMEANSbox")	graphNAME	=	"Means Labeled"
 #		modified version of graphMEANS that adds labels for the custom boxplots
 
@@ -456,7 +388,7 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL
 	}
 #	to identify whether the diffLim argument has been changed, the graphNAME variable is changed
 #	this also makes it possible to have the script automtically create two versions of the graph; one normal and one extended
-	
+
 	message(paste0(graphNAME, " - ", dataNAME))
 #	the message will indicate what graph is currently being worked on
 
@@ -508,15 +440,29 @@ graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
 #	by using them within the graph functions, the original data (results and various STATS) will not be altered
 #		this makes keeping level names and orders between the original data much easier
 
+# function to get stats just used for the graphs
+ggSTATS	=	function(TYPE, DATA	=	results, groups = GROUPS)	{
+	if	(TYPE	==	"MsBetweenPresents")		out	=	sepCOL(aggregate(DATA$MsBetweenPresents,		groups,	statGRAPH))
+	if	(TYPE	==	"MsBetweenDisplayChange")	out	=	sepCOL(aggregate(DATA$MsBetweenDisplayChange,	groups,	statGRAPH))
+	if	(TYPE	==	"MsUntilRenderComplete")	out	=	sepCOL(aggregate(DATA$MsUntilRenderComplete,	groups,	statGRAPH))
+	if	(TYPE	==	"MsEstimatedDriverLag")		out	=	sepCOL(aggregate(DATA$MsEstimatedDriverLag,		groups,	statGRAPH))
+
+	out$GPU			=	ordered(out$GPU,		levels = listGPU)
+	out$Location	=	ordered(out$Location,	levels = listLOC)
+	if	(testAPI)	out$API		=	ordered(out$API,	levels = listAPI)
+#		makes the GPU, Location, and API columns ordered factors so the graph facets are in the right order
+	return(out)
+}
+
 # FACET will return the appropriate faceting design for each graph
 #	different configurations will be selected based on graph type and the switch statuses (testAPI and testQUA)
 #		unfortunately I have not found a way to manipulate to the appropriate vars list, so multiple facet_grid defintions are required
 FACET = function(graphtype)	{
 	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
-		if	(testAPI	&	!testQUA)	return(facet_grid(vars(API),			cols = vars(Location), switch = "y"))		
+		if	(testAPI	&	!testQUA)	return(facet_grid(vars(API),			cols = vars(Location), switch = "y"))
 		if	(!testAPI	&	testQUA)	return(facet_grid(vars(Quality),		cols = vars(Location), switch = "y"))
 		if	(testAPI	&	testQUA)	return(facet_grid(vars(API, Quality),	cols = vars(Location), switch = "y"))
-		
+
 		return(facet_grid(cols = vars(Location), switch = "y"))
 	}
 #	the MEANS graph has different design requirements than the other graphs
@@ -532,7 +478,7 @@ FACET = function(graphtype)	{
 			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y"))
 			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"))
 		}
-		
+
 		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
 	}
 }
@@ -623,6 +569,7 @@ graphMEANS	=	function(datatype)	{
 	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 #	though not appropriate for all graphs (hence the commenting) these lines apply levels.rev and levels.short as desired
 #		rev.LOC and rev.API must be set prior to the graphs being called
+#	the ; does end the if body, so that half fo the line will always run, but the purpose is to collect STATS on one line
 
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 #		initiates the creation of a plot using ggplot2
@@ -637,7 +584,7 @@ graphMEANS	=	function(datatype)	{
 	#	standard boxplot without outlier dots shown, but is not used
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
 #		a layer that summarizes the data provided with the function provided (BoxPerc) and draws it as as geometry provided (boxplot)
-	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
+	geom_bar(aes(fill = GPU), stat = "summary", fun.y = mean) + scale_fill_hue() +
 #		a bar graph layer where the height of the bar is the mean of the data
 #			the fill for these bars will follow the default scale_fill_hue values
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
@@ -657,11 +604,8 @@ graphMEANS	=	function(datatype)	{
 
 # function to create labels for the values in graphMEANS
 boxLABS		=	function(datatype)	{
-	if	(datatype == "MsBetweenPresents")		STATS	=	graphSTATS
-	if	(datatype == "MsBetweenDisplayChange")	STATS	=	dispgSTATS
-	if	(datatype == "MsUntilRenderComplete")	STATS	=	rendgSTATS
-	if	(datatype == "MsEstimatedDriverLag")	STATS	=	drivgSTATS
-#	checks the datatype and sets the appropriate statistics to STATS
+	STATS	=	ggSTATS(datatype)
+#	creates the STATS variable with the desired stats for the data type
 
 	ALPHA	=	0.65
 #	controls the opacity for the label box fills
@@ -692,7 +636,7 @@ boxLABS		=	function(datatype)	{
 #			quotes are necessary as the column names are numbers
 #			hjust, nudge_x, vjust and nudge_y are used together so the labels will, hopefully, not overlap
 
-		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "Median"],	label = round(STATS[, "Median"], 2)),	alpha = ALPHA,
+		geom_label(data = STATS,	aes(x = GPU, y = Median,			label = round(Median, 2)),				alpha = ALPHA,
 			hjust = 1,	nudge_x = nudMED),
 		geom_text(data = STATS,		aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
 			hjust = 0,	nudge_x = -0.55,	vjust = 0)
@@ -785,6 +729,7 @@ graphCOURSE	=	function(datatype)	{
 	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 #	though not appropriate for all graphs (hence the commenting) these lines apply levels.rev and levels.short as desired
 #		rev.LOC and rev.API must be set prior to the graphs being called
+#	the ; does end the if body, so that half fo the line will always run, but the purpose is to collect STATS on one line
 
 	ALPHA	=	0.05
 	if	(length(unique(results$Location)) == 1)	ALPHA	=	1
@@ -806,8 +751,8 @@ graphCOURSE	=	function(datatype)	{
 #		adds a smooth line to indicate the trend of the performance
 #			the method used is the generalized additive module
 #			the formula shown is the default for gam, but helps protect against certain issues
-	FACET(graphCOURSE) + 
-	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakN, expand=c(0.02, 0)) +
+	FACET(graphCOURSE) +
+	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
 #		sets the X scale
 #			name is given
 #			breaks are from 0 to the greatest integer from the TimeInSeconds measurement
@@ -823,13 +768,12 @@ graphCOURSE	=	function(datatype)	{
 graphFREQ	=	function(datatype)	{
 #	graph of the frequency of certain measurements to appear in the data
 #		this is effectively showing the distribution of the data
-
+	STATS	=	ggSTATS(datatype)
+#	creates the STATS variable with the desired stats for the data type
 #	below set the X scales
 #		it shows time and therefore is continuous
 	if	(datatype == "MsBetweenPresents")	{
 #		checks if the datatype is "MsBetweenPresents" and will set the X scale and the STATS used for parts of the graph
-		STATS	=	graphSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
 #				MsBetweenPresents is the frame time with units of milliseconds
@@ -848,11 +792,9 @@ graphFREQ	=	function(datatype)	{
 #				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 		)
 	}
-	
+
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the X scale and the STATS used for parts of the graph
-		STATS	=	dispgSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
 #				MsBetweenDisplayChange is the disply time and I prefer units of Refresh Cycles Later
@@ -873,8 +815,6 @@ graphFREQ	=	function(datatype)	{
 
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the X scale and the STATS used for parts of the graph
-		STATS	=	rendgSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Render Time (ms)",
 #				MsUntilRenderComplete is the render time with units of milliseconds
@@ -895,8 +835,6 @@ graphFREQ	=	function(datatype)	{
 	}
 
 	if	(datatype == "MsEstimatedDriverLag")	{
-		STATS	=	drivgSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_X	=	scale_x_continuous(
 			name	=	"Estimated Driver Lag (ms)",
 #				MsEstimatedDriverLag is the estimated driver lag with units of milliseconds
@@ -907,6 +845,8 @@ graphFREQ	=	function(datatype)	{
 #				being an X scale, line breaks will be applied to the labels if app.BREAK = TRUE
 			expand	=	c(0.02, 0),
 #				the amount of expansion along the axis
+			sec.axis	=	dup_axis()
+#				duplicate the axis so it will be easier to read plots at the top
 		)
 	}
 
@@ -915,8 +855,9 @@ graphFREQ	=	function(datatype)	{
 	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 #	though not appropriate for all graphs these lines apply levels.rev and levels.short as desired
 #		rev.LOC and rev.API must be set prior to the graphs being called
+#	the ; does end the if body, so that half fo the line will always run, but the purpose is to collect STATS on one line
 
-	ggplot(data = results, aes(get(datatype))) +
+	ggplot(results, aes(get(x = datatype))) +
 #		initiates the graph	with the data being results and the aesthetics to be the datatype
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
 #		sets the title and subtitle of the graph, and applies the labsGPU variable
@@ -925,9 +866,9 @@ graphFREQ	=	function(datatype)	{
 	geom_freqpoly(binwidth=0.03, size=0) +
 #		the frequency plot with the aesthetics set earlier, a binwidth of 0.03, and line size of 0, for thin lines
 		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
-		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotted") +
+		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
 #			using the STATS provided, vertical lines are added for the Mean and Median, with different colors and line types
-	FACET(graphFREQ) + 
+	FACET(graphFREQ) +
 	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 #		applies the X scale set earlier
 #		the limits for the X-axis are set with coord_cartesian, which effectively crops the graph
@@ -941,10 +882,12 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 #		graph of the frame times against their quantile distribution
 #		the PERCS argument allows one to change the percentiles wanted on the X axis
 #			the default values are for 0.1%, 1%, 50%, 99%, and 99.9%
+	PERCS	=	sort(unique(c(PERCS, QUAN)))
+#	expands PERCS to include the quantiles used for the slope line
+	STATS	=	ggSTATS(datatype)
+#	creates the STATS variable with the desired stats for the data type
 	if	(datatype == "MsBetweenPresents")	{
 #		checks if the datatype is "MsBetweenPresents" and will set the Y scale
-		STATS	=	graphSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
 #				MsBetweenPresents is the frame time with units of milliseconds
@@ -964,8 +907,6 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 
 	if	(datatype == "MsBetweenDisplayChange")	{
 #		checks if the datatype is "MsBetweenDisplayChange" and will set the Y scale
-		STATS	=	dispgSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
 #				for MsBetweenDisplayChange, the display time, I prefer to use the number of refresh cycles for the scale
@@ -975,15 +916,16 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 #				ybreaks will be converted as per labelDisp set earlier
 			expand		=	c(0.02, 0),
 #				the amount of expansion along the axis
-			sec.axis	=	dup_axis()
-#				a duplicate of the scale is applied to the opposite side of the graph
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
+#				creates a second, duplicate axis that shows frame time instead of 60 Hz cycles
 		)
 	}
-	
+
 	if	(datatype == "MsUntilRenderComplete")	{
 #		checks if the datatype is "MsUntilRenderComplete" and will set the Y scale
-		STATS	=	rendgSTATS
-#			creates a generic STATS variable for holding the graph stats
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
 #				MsUntilRenderComplete is the render time
@@ -1002,7 +944,6 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	}
 
 	if	(datatype == "MsEstimatedDriverLag")	{
-		STATS	=	drivgSTATS
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
 #				MsEstimatedDriverLag is the estimated driver lag
@@ -1022,6 +963,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 #	though not appropriate for all graphs these lines apply levels.rev and levels.short as desired
 #		rev.LOC and rev.API must be set prior to the graphs being called
+#	the ; does end the if body, so that half fo the line will always run, but the purpose is to collect STATS on one line
 
 #	sec.axis	=	sec_axis(~.,
 #		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
@@ -1029,7 +971,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 #	)
 #		this can be used to add a secondary axis that shows the values for the percentiles
 #			it needs to be put in place after STATS is assigned, else it throws an error
-	
+
 
 
 	ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
@@ -1059,7 +1001,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
 #		adds a label to the plot to show the Slope of the qq line
 #			the label is placed in the lower-right using Inf, but right and bottom aligned so it does not go outside the graph
-	FACET(graphQQ) + 
+	FACET(graphQQ) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 #		applies the Y scale set earlier
 #		coord_cartesian can crop the plots to specific values
@@ -1130,7 +1072,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks will be rounded for the labels
 			limits	=	c(-diffLim, diffLim),
 #				applies symmetric limits to the difference scale
-			expand		=	c(0, 0),
+			expand		=	c(0, 0)
 #				the amount of expansion along the axis
 		)
 	}
@@ -1156,7 +1098,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks will be rounded for the labels
 			limits	=	c(-diffLim, diffLim),
 #				applies symmetric limits to the difference scale
-			expand		=	c(0, 0),
+			expand		=	c(0, 0)
 #				the amount of expansion along the axis
 		)
 	}
@@ -1182,7 +1124,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #				ybreaks will be rounded for the labels
 			limits	=	c(-diffLim, diffLim),
 #				applies symmetric limits to the difference scale
-			expand		=	c(0, 0),
+			expand		=	c(0, 0)
 #				the amount of expansion along the axis
 		)
 	}
@@ -1192,6 +1134,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 #	though not appropriate for all graphs these lines apply levels.rev and levels.short as desired
 #		rev.LOC and rev.API must be set prior to the graphs being called
+#	the ; does end the if body, so that half fo the line will always run, but the purpose is to collect STATS on one line
 
 	ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
 #		initiates the graph with the data being results
@@ -1209,22 +1152,26 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #			the viridis scale is used to set the fill colors
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	#	identical to the above, but the alpha value is also based on the density level
-	FACET(graphDIFF) + 
-	scale_X + 
+	FACET(graphDIFF) +
+	scale_X +
 	scale_Y
 #		applies the X and Y scales set earlier
 #		coord_cartesian cannot be used as it breaks the heat maps in some situations
 }
 
 #	text outputs
-if	(textFRAM)	sinkOUT("MsBetweenPresents")
-if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
-if	(textREND)	sinkOUT("MsUntilRenderComplete")
-if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
-#	checks if the statistics for these data types are desired
-message("")
-#	the print commands above will show their outputs in the console window, so this places an empty line between that and what comes next
+if	(textOUT)	{
+	if	(textFRAM)	sinkOUT("MsBetweenPresents")
+	if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
+	if	(textREND)	sinkOUT("MsUntilRenderComplete")
+	if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
+#		checks if the statistics for these data types are desired
+	message("")
+#		the print commands above will show their outputs in the console window, so this places an empty line between that and what comes next
+}
 
+# graphs
+if	(graphs)	{
 rev.LOC	=	FALSE	;	rev.API	=	TRUE
 #	sets that the location and API factor levels should or should not be reversed
 
@@ -1280,3 +1227,4 @@ if (!is.null(diffLim))	{
 	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
 }
 #	checks if a custom diffLim value was set and then calls graphOUT to make the DIFF EXT graphs
+}

@@ -7,8 +7,9 @@ library(moments)
 #	loads the moments library, used for certain functions involving probability distribution moments
 
 game	=	"!GAME!"
-cGPU	=	!GPU!
+# cGPU	=	!GPU!
 #	variables to hold the game name and current GPU
+#		cGPU is set later based on the data read in, but is here to maintain similarity to Combined - Input.r script
 #		for multi-GPU scenarios, cGPU will be NULL
 
 gameF	=	gsub(":", "-", game)
@@ -25,11 +26,17 @@ ggdevice	=	"png"
 #	ggplots2 can be saved as multiple formats, this sets it for PNG
 #		can also use PDF, but typically PNGs are desired
 
+COLUMN	=	NULL	;	SUBSET	=	NULL
+#	the column and term to filter the CSVs by
+#		for example, Quality and High or GPU and RX Vega 64
+#	these are changed later if NULL and if it is found we are in the OCAT Data folder
+
 #	below are a series of switches for various things
 useSHORT	=	TRUE
 #	controls if the shortened versions of the location and API names should be used
-testAPI		=	FALSE
+# testAPI		=	FALSE
 #	controls if there are multiple APIs involved and if they should be tested/compared
+#	this is set later based on the data and so is commented out here
 overAPI		=	FALSE
 #	this is to keep track of overriding testAPI
 #		one would want to override testAPI when there is a single API in the sample, but multiple in the population
@@ -92,6 +99,24 @@ graphDiff	=	FALSE
 #	controls if the display consecutive difference-based outputs should be created
 #	cannot be DIFF because of naming conflict in Output
 
+if (!textOUT)	{
+	textFRAM	=	FALSE
+	textDISP	=	FALSE
+	textREND	=	FALSE
+	HTMLOUT		=	FALSE
+	textDiff	=	FALSE
+}
+#	turns off all of the text outputs, if it is not desired
+
+if (!graphs)	{
+	graphFRAM	=	FALSE
+	graphDISP	=	FALSE
+	graphREND	=	FALSE
+	graphDRIV	=	FALSE
+	graphDiff	=	FALSE
+}
+#	turns off all of the graph outputs, if it is not desired
+
 if (interactive())	{
 	setwd("!PATH!")
 }	else	{
@@ -102,6 +127,13 @@ if (interactive())	{
 
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 #	stores the path to the OCAT Data folder, which is where various useful and important files are kept
+
+if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+	COLUMN	=	"Quality"
+	SUBSET	=	"High"
+}
+#	checks if relPath we are working in the top OCAT Data folder and if either the COLUMN and SUBSET variables are NULL
+#		normally if working from the OCAT Data folder it is to look at the High Quality data, so that is what is set here
 
 txtFIND	=	function(TXT, rel.Path = relPath)	{
 	locFILE	=	paste0(rel.Path, "/", TXT)
@@ -151,53 +183,163 @@ if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
 #	by using the txtFIND function, this information will follow any changes to those TXT files
 
-if (file.exists("@Combined - !QUA!.csv.bz2"))	{
-	resultsFull	=	read_csv("@Combined - !QUA!.csv.bz2")
-}	else	{
-	resultsFull	=	read_csv("@Combined - !QUA!.csv")
+# csvFIND searches the directory tree from the working directory down for CSV files and builds a list of the OCAT outputs
+csvFIND	=	function(DIRECT = getwd())	{
+	LIST		=	list.files(recursive = TRUE, pattern = ".csv")
+#		creates the list of all CSV files under the working directory
+	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST)]
+#		filters the list to only those that are OCAT CSV files, which always start with OCAT
+	LIST.full	=	paste0(getwd(), "/", LIST)
+#		adds the working directory path to the front of the CSV file list
+	LIST.rel	=	t(data.frame(lapply(LIST.full, strsplit, "OCAT Data/"), row.names = NULL)[2, ])
+#		removes the portion of the path information from OCAT Data and above, so we have the GPU, (API) and Quality configuration
+	colnames(LIST.rel)	=	NULL
+	rownames(LIST.rel)	=	NULL
+#		column and row names are removed as they are not desired
+	
+	return(LIST.rel)
 }
-#	checks if a compressed version of the data exists first
-#		if a compressed version exists, that will be read
-#		if a compressed version does not exist, then it assumes an uncompressed version does and reads that
-#	loads in the CSV to the resultsFull variable
 
-resultsFull$GPU		=	ordered(resultsFull$GPU,		levels = listGPU)
-resultsFull$Quality	=	ordered(resultsFull$Quality)
-if	(!is.null(listQUA))	resultsFull$Quality		=	ordered(resultsFull$Quality,	levels = listQUA)
+# LIST.rel	=	csvFIND()
+#	would store the LIST.rel information to an accessible variable, but is not necessary
 
-resultsFull$Location	=	ordered(resultsFull$Location)
-if	(!is.null(listLOC)) resultsFull$Location	=	ordered(resultsFull$Location,	levels = listLOC)
+# reads the CSV path information to determine the configuration
+csvCONF	=	function(CSV.list, LOCs = listLOC)	{
+	CSV.config	=	t(as.data.frame(sapply(CSV.list, strsplit, "/")))
+#		takes the provided CSV.list information (LIST.rel from csvFIND) and splits the folder names to be separate elements ina  lit
+	colnames(CSV.config)	=	NULL
+	rownames(CSV.config)	=	NULL
+#		column and row names are removed
+	
+	CONFIG	=	data.frame(matrix(ncol = 5, nrow = nrow(CSV.config)))
+#		creates an empty data frame to store the configuration and CSV information in
+	colnames(CONFIG)	=	c("GPU", "API", "Quality", "Location", "CSV")
+#		applies column names to the empty frame
 
-resultsFull$API		=	ordered(resultsFull$API)
-if	(!is.null(listAPI)) resultsFull$API			=	ordered(resultsFull$API,		levels = listAPI)
-#	first the columns are set to be ordered factors
-#		factors are desired for proper ordering in graphs
-#		the ordered function implies the factors should be ordered
-#	second it is checked if there is a list to apply as levels, and then it is applied, which will apply an order to the levels.
-#	notice, it is not the levsLOC or levsAPI lists used here, but the full-length versions; this is intentional
-#	the original data should use the full-length versions and then it changed only when needed
-lockBinding("resultsFull", .GlobalEnv)
-#	locks the variable in the Global Environment, preventing it from being altered
+	CONFIG$GPU		=	CSV.config[, 1]
+#		the first column in CSV.config will always be the GPU name, as that is the highest directory level (below OCAT Data)
+	if	(ncol(CSV.config) == 4)	CONFIG$API		=	CSV.config[, 2]
+#		if there are four columns to the CSV.config data, then there are APIs to consider
+#		API is the next directory level and thus the second column in CSV.config
+	CONFIG$Quality	=	CSV.config[, ncol(CSV.config)-1]
+#		Quality is the last directory level and so one up from the file name, the last column in the CSV.config frame
+	
+	appLOC	=	function(DATA, LOCs)	{
+		if (is.null(LOCs))	LOCs	=	paste0("Recording ", 1:length(DATA$Location))
+		rep(LOCs, length.out = length(DATA$Location))
+	}
+#	function to apply the Location name to the data provided to it
+#		this custom function is used with the by function below to apply Location names by groups properly, so if there is a single location for some configuration, it does not throw everything off
+#		if no list of locations is provided, it generates a simple numbered list
 
-results	=	resultsFull
-#	with the factor levels set, a copy of resultsFull is saved to results
-#		this way a complete and formatted copy of the data is protected and results can be a subset of it
+	CONFIG$Location	=	unlist(by(CONFIG, list(GPU = CONFIG$GPU, Quality = CONFIG$Quality), appLOC, LOCs))
+#	appLOC and by together apply the Location names, and generate them if necessary, to match the GPU-Quality groups
+#		API is not necessary for grouping, unless one API has a different number of recordings to it than the others
+	CONFIG$CSV		=	CSV.config[, ncol(CSV.config)]
+#		the CSV file names are placed in the CSV column
+	
+	return(CONFIG)
+}
 
+# CSV.config	=	csvCONF(LIST.rel)
+CSV.configFull	=	csvCONF(csvFIND())
+#	stores the data frame produced by csvCONF to CSV.configFull
+
+# csvFILT filters the CSV.configFull data frame (named CSV.list in-function) to a desired configuration
+csvFILT	=	function(CSV.list, COL, SUB)	{
+	if (!is.null(COL)	&	!is.null(SUB))	return(CSV.list[CSV.list[, COL] == SUB, ])
+#		checks to make sure there is a column and subset provided first, so either are missing the original CSV.list is returned
+	return(CSV.list)
+}
+
+
+CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
+#	stores the filtered CSV.configFull information to CSV.config
+#		by acting on the list of CSVs, this work is faster than trying to filter the data once read in
+#		if either COLUMN or SUBSET is NULL, no filtering will be done
+
+typeFIND	=	function(DATA, TYPE)	{
+	if	(length(unique(DATA[, TYPE])) == 1)	return(unique(DATA[, TYPE]))
+	return(NULL)
+}
+#	checks if there is only one value used for a specified column and returns that
+#	if there are multiple values present in that column, such as multiple APIs, then NULL is returned
+
+cGPU	=	typeFIND(CSV.config, "GPU")
+#	sets the current GPU to be either the only GPU for the CSVs being read or NULL if there are multiple
 multiGPU	=	is.null(cGPU)
-#	checks if the current GPU variable is NULL, and then stores the result of that check to the multiGPU variable
+#	sets the multiGPU switch based on the cGPU value
 labsGPU		=	labs(caption = cGPU)
 if (multiGPU)	labsGPU	=	labs()
 #	in single-GPU situations, a caption is added to the graphs to identify it
 #		a default value is set to apply this caption and then removed in multiGPU situations
 
-if	(!testAPI)	{
-#	if testAPI is FALSE, then the following test for number of APIs is done
-#	if testAPI is true TRUE, then the script continues with testAPI being TRUE
-	testAPI		=	(length(unique(results$API)) >= 2)
-#		checks if there are multiple APIs in the data, and therefore if they should be tested
-	overAPI		=	FALSE
-#		if testAPI was not overridden, overAPI will be made FALSE
+testAPI	=	is.null(typeFIND(CSV.config, "API"))
+testQUA	=	is.null(typeFIND(CSV.config, "Quality"))
+#	checks if there are multiple APIs or Qualities among the CSVs to be read in
+#		when typeFIND finds there are multiple of a given type, it returns NULL, hence is.null being used
+
+# read_OCAT is what will actually read in a provided OCAT CSV
+read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
+	if (is.data.frame(INFO))	{
+		GPU		=	INFO$GPU
+		API		=	INFO$API
+		QUA		=	INFO$Quality
+		LOC		=	INFO$Location
+		FILE	=	INFO$CSV
+	}	else	{FILE	=	INFO}
+#	INFO could be either just the CSV file name, and thus the other arguments are required, or a row from CSV.config that contains all the information
+#	if INFO is a row from a data frame, which is itself a data frame, the configuration information is pulled from it accordingly
+#	if INFO is not a row from a data frame, then it is the file name
+	
+	filePATH		=	paste(relPath, GPU, QUA, FILE, sep = "/")
+	if	(!is.na(API))	filePATH		=	paste(relPath, GPU, API, QUA, FILE, sep = "/")
+#		builds the path to a CSV file by properly adding the configuraiton information to relPath
+#		if the API information is not missing, then it will be added to the path information
+	
+	out				=	read_csv(filePATH)[, 1:20]
+#		reads in the CSV, storing just the first 20 columns to the out variable
+	
+	out$GPU			=	GPU
+	out$Quality		=	QUA
+	out$Location	=	LOC
+	out$API			=	""
+	if (!is.na(API))	out$API	=	API
+#		out gains columns with the appropriate names and has the appropriate values stored to them, which will be the single value repeated to fill the number of rows
+#		the API column will be made but be empty unless there is API information to store there
+	return(out)
 }
+
+# the function to take the CSV information and load in all of the files
+csvOCAT	=	function(CSVs)	{
+	OCATcomb	=	data.frame(matrix(ncol = 24, nrow = 0))
+#		creates an empty data frame with 24 columns
+	for (ROW in 1:nrow(CSVs))	{
+		OCATcomb	=	rbind(OCATcomb, read_OCAT(CSVs[ROW, ]))
+	}
+#		for each row in the data frame of CSVs, the CSVs are read in and added to the OCATcomb data frame
+
+	return(OCATcomb)
+}
+
+resultsFull	=	csvOCAT(CSV.config)
+#	loads in the CSVs to the resultsFull variable
+
+resultsFull$GPU		=	ordered(resultsFull$GPU, levels = listGPU)
+resultsFull$Quality	=	ordered(resultsFull$Quality, levels = listQUA)
+if (length(listLOC[1]) != 0) {
+	resultsFull$Location = ordered(resultsFull$Location, levels = listLOC)
+}
+resultsFull$API		=	ordered(resultsFull$API, levels = listAPI)
+#	for desired ordering, values should be made factors and then have their levels ordered
+#	the ordered function implies the factors should be ordered, and thus the ordered = TRUE argument is not needed
+#		in case list of locations is empty, it will not make the values factors
+#	notice, it is not the levsLOC or levsAPI lists used here, but the full-length versions; this is intentional
+#	the original data should use the full-length versions and then it changed only when needed
+
+results = resultsFull
+#	protects the original data, after having been formatted
+#	not so necessary, as all edits to it occur within function environments
 
 GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
 if	(!testAPI)	GROUPS$API		=	NULL
@@ -206,11 +348,12 @@ if	(!testQUA)	GROUPS$Quality	=	NULL
 #	initially GROUPS contains all of the possible grouping factors, but those not needed are selectively removed
 #	a list instead of a vector is used as it allows column names to be set, and these are applied to function outputs.
 
+# diff.CONS for consecutive difference, a modification to the diff function
 diff.CONS	=	function(DATA, DIR = "Forward", lag = 1)	{
 	if	(DIR == "Forward")	return(c(diff(DATA, lag = lag), rep(0, lag)))
 	if	(DIR == "Backward")	return(c(rep(0, lag), diff(DATA, lag = lag)))
 }
-#	modification to the diff function, adding a 0 to the beginning or end to match the input data length
+#	similar to diff but adds a 0 to the beginning or end to match the length of the input data
 #		I prefer Forward, so the sum point to the next value, whereas Backward points to the previous
 #	the lag argument is present for consistency with other scripts that do need it
 
@@ -234,17 +377,15 @@ DESC	=	function(ITEM = NULL)	{
 #		if there are multiple elements to any descriptor, it will be removed from the list as the naming should only use the unchanging information
 	
 	gameQ	=	game
-	if	(!is.null(descs$Quality))	gameQ	=	paste0(game,	" - ",	descs$Quality,	" Quality")
+	if	(!is.null(descs$Quality))	gameQ	=	paste0(game,	" - ",	descs$Quality,	"Quality")
 #		gameQ is to hold the game name and current quality, but only if there is only one quality in the data
 #		when there is multiple qualities, then gameQ is just the game name
 	
 	gameGAQF	=	paste0(gameF,	" - ",	paste0(descs,	collapse = " - ")	)
-	gameGAQ		=	paste0(game,	" - ",	paste0(descs,	collapse = " - ")	)
-	if	(!is.null(descs$Quality))	gameGAQF	=	paste0(gameGAQF, " Quality")
+	gameGAQ		=	paste0(game,	" - ",	paste0(descs,	collapse = " - "),	" Quality")
 #		by setting the collapse argument in paste0, the surviving elements of the descs list will be concatenated with " - " separating them, which is my preference
 #		gameGAQF is meant for file output names while gameGAQ is not
-#		a check is made so "Quality" is only appended to the string if the Quality is in the name.
-
+	
 	if	(!is.null(ITEM))	{
 		gameGAQF	=	paste0(gameGAQF,	" - ",	ITEM)
 		gameGAQ		=	paste0(gameGAQ,		" - ",	ITEM)
