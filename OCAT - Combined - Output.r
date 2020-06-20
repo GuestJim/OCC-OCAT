@@ -17,10 +17,9 @@ labelBreak	=	function(breaks, SEC = FALSE)	{
 labelRound	=	function(breaks)	round(breaks, 1)
 labelRoundB	=	function(breaks)	labelBreak(labelRound(breaks))
 ms2FPS.lab	=	function(breaks)	labelBreak(ms2FPS(breaks), SEC = TRUE)
-labelBreakS	=	function(breaks)	labelBreak(sort(breaks))
 labelBreakQQ=	function(breaks)	labelBreak(paste0(pnorm(breaks) * 100, "%"))
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
-labelDispB	=	function(breaks)	labelBreak(round(breaks * 60/1000, 1))
+labelDispB	=	function(breaks)	labelBreak(labelDisp(breaks))
 
 
 meanMS	=	function(DATA)	{
@@ -40,7 +39,7 @@ normGEO	=	function(DATA)	{
 	names(out)	=	"Normalized (%)"
 	return(out)
 }
-#	this should only be used with special AGGREGATE functions with different GROUPS than we normally use
+#	this should only be used with special AGGREGATE functions with different GROUPS than normally used
 #		for example, just GROUP by GPU to compare them, or by GPU and API to compare them
 #	normGEO is for normalizing the performance based on the maximum/longest frame time
 #		should be used on the AGGREGATE, not within it, and will require passing the specific column to the function
@@ -77,7 +76,7 @@ BoxPerc	=	function (DATA)	{
 
 qqslope	=	function (DATA, r = 2, quan = QUAN)	{
 	y		=	quantile(DATA, quan)
-	x		=	qnorm(quan)
+	#x		=	qnorm(quan)
 	x		=	100 * quan
 	#	to make this be in percentile instead of Z-score
 	slope	=	diff(y)/diff(x)
@@ -92,78 +91,29 @@ statGRAPH	=	function(DATA, ...)	{
 #	DiffMedian can be used in graphDIFF to apply a Median-Median cross on the plots
 
 
-sepCOL	=	function(tab)	{
-	out	=	as.data.frame(as.matrix(tab))
-	for (i in grep("x", names(out)))	{
-		out[, i]	=	as.numeric(as.character(out[, i]))
-	}
-	colnames(out)	=	gsub("x.", "", colnames(out))
+sepCOL	=	function(aggOUT)	{
+	matCOL	=	sapply(aggOUT, is.matrix)
+	out	=	cbind(aggOUT[, !matCOL], as.data.frame(aggOUT[, matCOL]))
 	return(out)
 }
 
-GROUPS	=	list(GPU = results$GPU, API = results$API, Quality = results$Quality, Location = results$Location)
-if	(!testAPI)	GROUPS$API		=	NULL
-if	(!testQUA)	GROUPS$Quality	=	NULL
-#	already in Input script, but keeping here for easy finding
+AGG	=	function(datatype, FUN, ..., COL = NULL, ITEM = NULL, DATA = results)	{
+	if	(!is.null(COL) & !is.null(ITEM))	DATA	=	DATA[DATA[, COL] == ITEM, ]
 
-if	(textFRAM	|	graphFRAM)	{
-	dataMEAN	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, meanMS))
-	dataPERC	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, percMS))
-	dataECDF	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, ecdfFPS, listFPS))
-	dataSTAT	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statMS))
-	graphSTATS	=	sepCOL(aggregate(results$MsBetweenPresents, GROUPS, statGRAPH))
+	GROUPS	=	list(GPU = DATA$GPU, API = DATA$API, Quality = DATA$Quality, Location = DATA$Location)
+	if	(!testAPI)	GROUPS$API		=	NULL
+	if	(!testQUA)	GROUPS$Quality	=	NULL
 
-	graphSTATS$GPU		=	ordered(graphSTATS$GPU,			levels = listGPU)
-	graphSTATS$Location	=	ordered(graphSTATS$Location,	levels = listLOC)
-	if	(testAPI)	graphSTATS$API		=	ordered(graphSTATS$API,	levels = listAPI)
+	return(sepCOL(aggregate(DATA[, datatype], GROUPS, FUN, ...)))
 }
-if	(textDISP	|	graphDISP)	{
-	dispMEAN	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, meanMS))
-	dispPERC	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, percMS))
-	dispECDF	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, ecdfFPS, listFPS))
-	dispSTAT	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statMS))
-	dispgSTATS	=	sepCOL(aggregate(results$MsBetweenDisplayChange, GROUPS, statGRAPH))
-
-	dispgSTATS$GPU		=	ordered(dispgSTATS$GPU,			levels = listGPU)
-	dispgSTATS$Location	=	ordered(dispgSTATS$Location,	levels = listLOC)
-	if	(testAPI)	dispgSTATS$API		=	ordered(dispgSTATS$API,	levels = listAPI)
-}
-if	(textREND	|	graphREND)	{
-	rendMEAN	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, meanMS))
-	rendPERC	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, percMS))
-	rendECDF	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, ecdfFPS, listFPS))
-	rendSTAT	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statMS))
-	rendgSTATS	=	sepCOL(aggregate(results$MsUntilRenderComplete, GROUPS, statGRAPH))
-
-	rendgSTATS$GPU		=	ordered(rendgSTATS$GPU,			levels = listGPU)
-	rendgSTATS$Location	=	ordered(rendgSTATS$Location,	levels = listLOC)
-	if	(testAPI)	rendgSTATS$API		=	ordered(rendgSTATS$API,	levels = listAPI)
-}
-if	(textDRIV	|	graphDRIV)	{
-	drivMEAN	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, meanMS))
-	drivPERC	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, percMS))
-	drivECDF	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, ecdfFPS, listFPS))
-	drivSTAT	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statMS))
-	drivgSTATS	=	sepCOL(aggregate(results$MsEstimatedDriverLag, GROUPS, statGRAPH))
-
-	drivgSTATS$GPU		=	ordered(drivgSTATS$GPU,			levels = listGPU)
-	drivgSTATS$Location	=	ordered(drivgSTATS$Location,	levels = listLOC)
-	if	(testAPI)	drivgSTATS$API		=	ordered(drivgSTATS$API,	levels = listAPI)
-}
-#	it is worth noting that using a list when passing the data to aggregate allows you to set the name of the output column
-#		aggregate(list(Hello = data, groups, function)) will label the column Hello
-#	it is also possible to run the function on more columns by placing them all in a list (not a vector, but a list like GROUPS)
 
 addFPS	=	function(DATA, r = 2)	{
-	lab		=	DATA[1:grep("Location", colnames(DATA))]
-	val		=	DATA[-(1:grep("Location", colnames(DATA)))]
+	numCOL	=	sapply(DATA, is.numeric)
+	dataFPS		=	cbind(list("Unit" = "FPS"),	round(1000/DATA[, numCOL], 	r))
+	dataMS		=	cbind(list("Unit" = "ms"),	round(DATA[, numCOL],		r))
 
-	tFPS	=	cbind(lab, "FPS", round(1000/val, r))
-	names(tFPS)[ncol(lab) + 1]	=	""
-	tMS		=	cbind(lab, "ms", round(val, r))
-	names(tMS)[ncol(lab) + 1]	=	""
-
-	out	=	rbind(tFPS, tMS)
+	out	=	cbind(DATA[, !numCOL], rbind(dataFPS, dataMS))
+	colnames(out)[grep("Unit", colnames(out))]	=	""
 	return(out)
 }
 
@@ -178,9 +128,9 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 	}
 
 	out	=	cbind(
-		addFPS(MEAN),
-		addFPS(PERC)[-(1:grep("0.1%", colnames(addFPS(PERC))) - 1)],
-		ECDF[listECDF]
+		MEAN,
+		PERC[, sapply(PERC, is.numeric)],
+		ECDF[, listECDF]
 	)
 
 	colnames(out)[grep("Var.", colnames(out))]	=	""
@@ -188,67 +138,35 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 	return(out)
 }
 
-subOUT	=	function(DATA, COL = "")	{
-	if	(COL == "")	{
-		out	=	DATA
-	}	else	{
-		SUB	=	eval(parse(text = COL))
-		out	=	DATA[DATA[, COL] == SUB, ]
-	}
-	return(out)
+dataSEL	=	function(datatype, COL = NULL, ITEM = NULL)	{
+	if	(datatype == "MsBetweenPresents")		descs	=	c("Frame Time",		"data")
+	if	(datatype == "MsBetweenDisplayChange")	descs	=	c("Display Time",	"disp")
+	if	(datatype == "MsUntilRenderComplete")	descs	=	c("Render Time",	"rend")
+	if	(datatype == "MsEstimatedDriverLag")	descs	=	c("Driver Lag",		"driv")
+
+	type	<<-	descs[1];	typeSHORT	<<-	descs[2]
+
+	MEAN	<<-	AGG(datatype,	meanMS,					COL = COL,	ITEM = ITEM)
+	PERC	<<-	AGG(datatype,	percMS,					COL = COL,	ITEM = ITEM)
+	ECDF	<<-	AGG(datatype,	ecdfFPS,	listFPS,	COL = COL,	ITEM = ITEM)
+	STAT	<<-	AGG(datatype,	statMS,					COL = COL,	ITEM = ITEM)
 }
 
-dataSEL	=	function(datatype, COL = "")	{
-	if	(datatype == "MsBetweenPresents"		|	datatype == "Frame Time")	{
-		type		<<-	"Frame Time"
-		typeSHORT	<<-	"data"
-		MEAN		<<-	subOUT(dataMEAN, COL)
-		PERC		<<-	subOUT(dataPERC, COL)
-		ECDF		<<-	subOUT(dataECDF, COL)
-		STAT		<<-	subOUT(dataSTAT, COL)
-	}
-	if	(datatype == "MsBetweenDisplayChange"	|	datatype == "Display Time")	{
-		type		<<-	"Display Time"
-		typeSHORT	<<-	"disp"
-		MEAN		<<-	subOUT(dispMEAN, COL)
-		PERC		<<-	subOUT(dispPERC, COL)
-		ECDF		<<-	subOUT(dispECDF, COL)
-		STAT		<<-	subOUT(dispSTAT, COL)
-	}
-	if	(datatype == "MsUntilRenderComplete"	|	datatype == "Render Time")	{
-		type		<<-	"Render Time"
-		typeSHORT	<<-	"rend"
-		MEAN		<<-	subOUT(rendMEAN, COL)
-		PERC		<<-	subOUT(rendPERC, COL)
-		ECDF		<<-	subOUT(rendECDF, COL)
-		STAT		<<-	subOUT(rendSTAT, COL)
-	}
-	if	(datatype == "MsEstimatedDriverLag"		|	datatype == "Driver Lag")	{
-		type		<<-	"Driver Lag"
-		typeSHORT	<<-	"driv"
-		MEAN		<<-	subOUT(drivMEAN, COL)
-		PERC		<<-	subOUT(drivPERC, COL)
-		ECDF		<<-	subOUT(drivECDF, COL)
-		STAT		<<-	subOUT(drivSTAT, COL)
-	}
+dataSEL.rm	=	function()	{
+	rm(type, typeSHORT, MEAN, PERC, ECDF, STAT, envir = .GlobalEnv)
 }
+#	used for removing the objects dataSEL makes, in case you need to clear them for troubleshooting purposes
 
-sinkTXT	=	function(datatype, COL = "")	{
+sinkTXT	=	function(datatype, COL = NULL, ITEM = NULL)	{
 	options(width = 1000)
 
-	dataSEL(datatype, COL)
-
 	subSTR	=	""
-	if	(COL != "")	{
-		SUB		=	eval(parse(text = COL))
-		subSTR	=	paste0(" - ", SUB, " - ")
-	}
+	if	(!is.null(ITEM))	subSTR	=	paste0(" - ", ITEM, " - ")
 
-	if	(COL	==	"GPU")	{
-		sink(paste0(SUB, "\\", gameGAQF, " ", subSTR, type, ".txt"), split = TRUE)
-	}	else	{
-		sink(paste0(gameGAQF, " ", subSTR, type, ".txt"), split = TRUE)
-	}
+	filePath	=	paste0(gameGAQF, " ", subSTR, type, ".txt")
+	if	(!is.null(COL))	if	(COL	==	"GPU")	filePath	=	paste0(ITEM, "\\", filePath)
+
+	sink(filePath, split = TRUE)
 
 	writeLines(gameGAQ)
 	writeLines(type)
@@ -257,9 +175,9 @@ sinkTXT	=	function(datatype, COL = "")	{
 	writeLines("\nPercentiles")
 	print(addFPS(PERC), row.names = FALSE)
 	writeLines("\nPercentile of FPS")
-	print(ECDF, row.names = FALSE)
+	print(ECDF, 		row.names = FALSE)
 	writeLines("\nDistribution Stats")
-	print(STAT, row.names = FALSE)
+	print(STAT,			row.names = FALSE)
 sink()
 }
 
@@ -274,46 +192,52 @@ OCCHTML	=	function(DATA)	{
 }
 
 writeOCC	=	function(DATA, dataNAME, name=gameGAQF, fold = "")	{
-	if	(fold != "")	{
-		write_tableHTML(OCCHTML(DATA), file = paste0(fold, "\\", name, " - ", dataNAME,".html"))
-	}	else	{
-		write_tableHTML(OCCHTML(DATA), file = paste0(name, " - ", dataNAME,".html"))
-	}
+	filePath	=	paste0(name, " - ", dataNAME,".html")
+	if	(fold != "")	filePath	=	paste0(fold, "\\", filePath)
+
+	write_tableHTML(OCCHTML(DATA), file = filePath)
 }
 
-sinkHTML	=	function(datatype, COL = "")	{
-	dataSEL(datatype, COL)
-
-	SUB		=	""
-	if	(COL	!=	"")		SUB		=	paste0(eval(parse(text = COL)), " - ")
+sinkHTML	=	function(datatype, COL = NULL, ITEM	= NULL)	{
+	ITEM.f	=	""
+	if	(!is.null(COL) & !is.null(ITEM))		ITEM.f		=	paste0(ITEM, " - ")
 
 	FOLD	=	""
-	if	(COL	==	"GPU")	FOLD	=	eval(parse(text = COL))
+	if	(!is.null(COL)) if	(COL	==	"GPU")	FOLD	=	ITEM
 
-	writeOCC(addFPS(MEAN),				dataNAME = paste0(SUB, typeSHORT, "MEAN"),	fold = FOLD)
-	writeOCC(addFPS(PERC),				dataNAME = paste0(SUB, typeSHORT, "PERC"),	fold = FOLD)
-	writeOCC(ECDF,						dataNAME = paste0(SUB, typeSHORT, "ECDF"),	fold = FOLD)
-	writeOCC(STAT,						dataNAME = paste0(SUB, typeSHORT, "STAT"),	fold = FOLD)
-	writeOCC(compTAB(MEAN, PERC, ECDF),	dataNAME = paste0(SUB, typeSHORT, "COMP"),	fold = FOLD)
+	writeOCC(addFPS(MEAN),								dataNAME = paste0(ITEM.f, typeSHORT, "MEAN"),	fold = FOLD)
+	writeOCC(addFPS(PERC),								dataNAME = paste0(ITEM.f, typeSHORT, "PERC"),	fold = FOLD)
+	writeOCC(ECDF,										dataNAME = paste0(ITEM.f, typeSHORT, "ECDF"),	fold = FOLD)
+	writeOCC(STAT,										dataNAME = paste0(ITEM.f, typeSHORT, "STAT"),	fold = FOLD)
+	writeOCC(compTAB(addFPS(MEAN), addFPS(PERC), ECDF),	dataNAME = paste0(ITEM.f, typeSHORT, "COMP"),	fold = FOLD)
 }
 
 sinkOUT	=	function(datatype)	{
-if	(textOUT)	sinkTXT(datatype)
+dataSEL(datatype)
+				sinkTXT(datatype)
 if	(HTMLOUT)	sinkHTML(datatype)
 
-for (GPU in listGPU)	{	if	(file.exists(GPU) & perGPU)	{	GPU	<<-	GPU
-	if	(textOUT)	sinkTXT(datatype, "GPU")
-	if	(HTMLOUT)	sinkHTML(datatype, "GPU")
+if	(perGPU)	{	for (GPU in listGPU)		{	if	(!file.exists(GPU))	next
+	dataSEL(datatype, COL	=	"GPU", ITEM = GPU)
+					sinkTXT(datatype,	COL	=	"GPU", ITEM	=	GPU)
+	if	(HTMLOUT)	sinkHTML(datatype,	COL	=	"GPU", ITEM	=	GPU)
 }	}
 
-if	(textAPI)			{	for (API in listAPI)	{	API	<<-	API
-	if	(textOUT)	sinkTXT(datatype, "API")
-	if	(HTMLOUT)	sinkHTML(datatype, "API")
+if	(textAPI)	{	for (API in listAPI)		{
+	dataSEL(datatype, COL	=	"API", ITEM = API)
+					sinkTXT(datatype,	COL	=	"API", ITEM	=	API)
+	if	(HTMLOUT)	sinkHTML(datatype,	COL	=	"API", ITEM	=	API)
+}	}
+
+if	(textLOC)	{	for (Location in listLOC)	{
+	dataSEL(datatype, COL	=	"Location", ITEM = Location)
+					sinkTXT(datatype,	COL	=	"Location", ITEM	=	Location)
+	if	(HTMLOUT)	sinkHTML(datatype,	COL	=	"Location", ITEM	=	Location)
 }	}
 }
 
 
-customSave	=	function(type="", device=ggdevice, plot = last_plot(), width=gWIDTH, height=gHEIGH, dpi=DPI)	{
+customSave	=	function(type="", plot = last_plot(), device=ggdevice, width=gWIDTH, height=gHEIGH, dpi=DPI)	{
 	if	(device	==	"png"	|	device == "both")	{
 		ggsave(filename=paste0(gameGAQF, " - ", type, ".png"), plot = plot, device="png", width=width, height=height, dpi=dpi)
 	}
@@ -322,7 +246,7 @@ customSave	=	function(type="", device=ggdevice, plot = last_plot(), width=gWIDTH
 	}
 }
 
-graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = TRUE, diffLim = NULL, ...)	{
+graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = FALSE, diffLim = NULL, ...)	{
 	if	(datatype == "MsBetweenPresents")			dataNAME	=	"Frame Time"
 	if	(datatype == "MsBetweenDisplayChange")		dataNAME	=	"Display Time"
 	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
@@ -376,13 +300,13 @@ graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
 
 FACET = function(graphtype)	{
 	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
-		if	(testAPI	&	!testQUA)	return(facet_grid(vars(API),			cols = vars(Location), switch = "y"))		
-		if	(!testAPI	&	testQUA)	return(facet_grid(vars(Quality),		cols = vars(Location), switch = "y"))
-		if	(testAPI	&	testQUA)	return(facet_grid(vars(API, Quality),	cols = vars(Location), switch = "y"))
-		
+		if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location), switch = "y"))
+		if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location), switch = "y"))
+		if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location), switch = "y"))
+
 		return(facet_grid(cols = vars(Location), switch = "y"))
 	}
-	
+
 	if	(any(substitute(graphtype)	==	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF")))	{
 		if	(multiGPU)	{
 			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y"))
@@ -393,7 +317,7 @@ FACET = function(graphtype)	{
 			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y"))
 			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"))
 		}
-		
+
 		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
 	}
 }
@@ -402,9 +326,7 @@ graphMEANS	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	ybreaks,
-			labels		=	labelRound,
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS
@@ -414,18 +336,17 @@ graphMEANS	=	function(datatype)	{
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	ybreaks,
-			labels		=	labelDisp,
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	ybreaks,
-			labels		=	labelRound,
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS
@@ -435,13 +356,11 @@ graphMEANS	=	function(datatype)	{
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	ybreaks,
-			labels		=	labelRound,
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis()
 		)
 	}
-	
+
 	# if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -451,7 +370,7 @@ graphMEANS	=	function(datatype)	{
 	geom_hline(yintercept = 1000/60, color = "red") +
 	# geom_boxplot(outlier.alpha = 0) +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-	geom_bar(aes(fill = GPU), stat = "summary", fun.y = "mean") + scale_fill_hue() +
+	geom_bar(aes(fill = GPU), stat = "summary", fun.y = mean) + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	FACET(graphMEANS) +
@@ -461,10 +380,7 @@ graphMEANS	=	function(datatype)	{
 }
 
 boxLABS		=	function(datatype)	{
-	if	(datatype == "MsBetweenPresents")		STATS	=	graphSTATS
-	if	(datatype == "MsBetweenDisplayChange")	STATS	=	dispgSTATS
-	if	(datatype == "MsUntilRenderComplete")	STATS	=	rendgSTATS
-	if	(datatype == "MsEstimatedDriverLag")	STATS	=	drivgSTATS
+	STATS	=	AGG(datatype, statGRAPH)
 
 	ALPHA	=	0.65
 
@@ -472,7 +388,6 @@ boxLABS		=	function(datatype)	{
 	nudIN	=	0.40
 	nudMED	=	0.55
 
-	# out	=	list(
 	list(
 		geom_label(data = STATS,	aes(x = GPU, y = STATS[, "99.9"],	label = round(STATS[, "99.9"], 2)),		alpha = ALPHA,
 											vjust = 0,	nudge_y = nudOUT),
@@ -486,7 +401,7 @@ boxLABS		=	function(datatype)	{
 			hjust = 1,	nudge_x = nudIN,	vjust = 1),
 		#	1% and 99%
 
-		geom_label(data = STATS,	aes(x = GPU, y = Median,	label = round(Median, 2)),	alpha = ALPHA,
+		geom_label(data = STATS,	aes(x = GPU, y = Median,			label = round(Median, 2)),				alpha = ALPHA,
 			hjust = 1,	nudge_x = nudMED),
 		geom_text(data = STATS,		aes(x = GPU, y = Mean, 				label = round(Mean, 2)),
 			hjust = 0,	nudge_x = -0.55,	vjust = 0)
@@ -500,9 +415,7 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
-			breaks		=	ybreaks,
-			labels		=	labelRound,
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS
@@ -512,18 +425,17 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Refresh Cycles Later (1/60 s)",
-			breaks		=	ybreaks,
-			labels		=	labelDisp,
-			expand		=	c(0.02, 0),
-			sec.axis	=	dup_axis()
+			breaks		=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis(
+				name	=	"Display Time (ms)",
+				labels	=	ybreaks
+			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Render Time (ms)",
-			breaks		=	ybreaks,
-			labels		=	labelRound,
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS
@@ -533,13 +445,11 @@ graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Estimated Driver Lag (ms)",
-			breaks		=	ybreaks,
-			labels		=	labelRound,
-			expand		=	c(0.02, 0),
+			breaks		=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis()
 		)
 	}
-	
+
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -553,19 +463,17 @@ graphCOURSE	=	function(datatype)	{
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
 	FACET(graphCOURSE) +
-	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreakS, expand=c(0.02, 0)) +
+	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
 }
 
 
 graphFREQ	=	function(datatype)	{
+	STATS	=	AGG(datatype, statGRAPH)
 	if	(datatype == "MsBetweenPresents")	{
-		STATS	=	graphSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRoundB,
-			expand	=	c(0.02, 0),
+			breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS.lab
@@ -573,12 +481,9 @@ graphFREQ	=	function(datatype)	{
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
-		STATS	=	dispgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	ybreaks,
-			labels	=	labelDispB,
-			expand	=	c(0.02, 0),
+			breaks	=	ybreaks,	labels	=	labelDispB,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Display Time (ms)",
 				labels	=	ybreaks
@@ -586,12 +491,9 @@ graphFREQ	=	function(datatype)	{
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
-		STATS	=	rendgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRoundB,
-			expand	=	c(0.02, 0),
+			breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS.lab
@@ -599,12 +501,10 @@ graphFREQ	=	function(datatype)	{
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
-		STATS	=	drivgSTATS
 		scale_X	=	scale_x_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRoundB,
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRoundB,	expand	=	c(0.02, 0),
+			sec.axis	=	dup_axis()
 		)
 	}
 
@@ -612,7 +512,7 @@ graphFREQ	=	function(datatype)	{
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
-	ggplot(results, aes(get(datatype))) +
+	ggplot(results, aes(get(x = datatype))) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
 	geom_vline(xintercept = 1000/60, color = "red") +
 	geom_freqpoly(binwidth=0.03, size=0) +
@@ -624,13 +524,12 @@ graphFREQ	=	function(datatype)	{
 }
 
 graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
+	PERCS	=	sort(unique(c(PERCS, QUAN)))
+	STATS	=	AGG(datatype, statGRAPH)
 	if	(datatype == "MsBetweenPresents")	{
-		STATS	=	graphSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRound,
-			expand	=	c(0.02, 0),
+			breaks	=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Frame Rate (FPS)",
 				labels	=	ms2FPS
@@ -638,25 +537,19 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
-		STATS	=	dispgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	ybreaks,
-			labels	=	labelDisp,
-			expand	=	c(0.02, 0),
+			breaks	=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
-				name	=	"Display Time (FPS)",
+				name	=	"Display Time (ms)",
 				labels	=	ybreaks
 			)
 		)
 	}
 	if	(datatype == "MsUntilRenderComplete")	{
-		STATS	=	rendgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRound,
-			expand	=	c(0.02, 0),
+			breaks	=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Render Rate (FPS)",
 				labels	=	ms2FPS
@@ -664,15 +557,12 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
-		STATS	=	drivgSTATS
 		scale_Y	=	scale_y_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRound,
-			expand	=	c(0.02, 0)
+			breaks	=	ybreaks,	labels	=	labelRound,	expand	=	c(0.02, 0)
 		)
 	}
-	
+
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -705,25 +595,19 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRoundB,
-			limits	=	c(0, FtimeLimit),
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Frame Time Difference (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRound,
-			limits	=	c(-diffLim, diffLim),
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	ybreaks,
-			labels	=	labelDisp,
-			limits	=	c(0, FtimeLimit),
+			breaks	=	ybreaks,	labels	=	labelDisp,		limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
@@ -736,36 +620,28 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	if	(datatype == "MsUntilRenderComplete")	{
 		scale_X	=	scale_x_continuous(
 			name	=	"Render Time (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRoundB,
-			limits	=	c(0, FtimeLimit),
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Render Time Difference (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRound,
-			limits	=	c(-diffLim, diffLim),
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
 	if	(datatype == "MsEstimatedDriverLag")	{
 		scale_X	=	scale_x_continuous(
 			name	=	"Estimated Driver Lag (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRoundB,
-			limits	=	c(0, FtimeLimit),
+			breaks	=	ybreaks,	labels	=	labelRoundB,	limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Lag Difference (ms)",
-			breaks	=	ybreaks,
-			labels	=	labelRound,
-			limits	=	c(-diffLim, diffLim),
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
-	
+
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
@@ -783,12 +659,15 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 #	using coord_cartesian to apply limits breaks the heatmap for some reason
 
 #	text outputs
-if	(textFRAM)	sinkOUT("MsBetweenPresents")
-if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
-if	(textREND)	sinkOUT("MsUntilRenderComplete")
-if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
-message("")
+if	(textOUT)	{
+	if	(textFRAM)	sinkOUT("MsBetweenPresents")
+	if	(textDISP)	sinkOUT("MsBetweenDisplayChange")
+	if	(textREND)	sinkOUT("MsUntilRenderComplete")
+	if	(textDRIV)	sinkOUT("MsEstimatedDriverLag")
+	message("")
+}
 
+if	(graphs)	{
 rev.LOC	=	FALSE	;	rev.API	=	TRUE
 
 #Means
@@ -832,4 +711,5 @@ if (!is.null(diffLim))	{
 	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim)
 	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim)
 	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
+}
 }
