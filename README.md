@@ -1,7 +1,7 @@
 # OCC-OCAT
 My scripts for processing OCAT data and generating the scripts.
 
-The way these work is to have the OCAT CSVs in this folder heirarchy: \[Article Title\]\OCAT Data\\\[GPU\]\\\[API\]\\\[Quality\]\[CSV files\] with GPU, Quality, and if appropriate API named correctly.
+The way these work is to have the OCAT CSVs in this folder heirarchy: \[Article Title\]\OCAT Data\\\[GPU\]\\\[API\]\\\[Quality\]\\\[CSV files\] with GPU, Quality, and if appropriate API named correctly.
 The "OCAT" Python script can then have a file dropped on it from the "OCAT Data" folder or from the lowest folder where the CSVs are kept and it will generate the R scripts to process that data from the reference scripts kept here.
 It is necessary the reference R scripts are kept in the same folder as the Python script, as it looks for them there.
 The "@*** - PA - \[Article Title\].r" script should then be run to create a "@Combined - \[Quality\].csv" file that the "@Combined - Input - \[Article Title\].r" script will read in when executed.
