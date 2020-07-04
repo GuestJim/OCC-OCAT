@@ -127,10 +127,13 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 		listECDF	=	begECDF:endECDF
 	}
 
+	compECDF	=	as.data.frame(ECDF[, listECDF])
+	names(compECDF)	=	colnames(ECDF)[listECDF]
+
 	out	=	cbind(
 		MEAN,
 		PERC[, sapply(PERC, is.numeric)],
-		ECDF[, listECDF]
+		compECDF
 	)
 
 	colnames(out)[grep("Var.", colnames(out))]	=	""
