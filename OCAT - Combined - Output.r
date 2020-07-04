@@ -186,11 +186,14 @@ compTAB	=	function(MEAN, PERC, ECDF)	{
 #			the column indices for the min and max of listFPS are used as the beginning and end of the columns to include
 	}
 
+	compECDF	=	as.data.frame(ECDF[, listECDF])
+	names(compECDF)	=	colnames(ECDF)[listECDF]
+#		column names are not kept when only one column is selected, so it must be set manually
 	out	=	cbind(
-		addFPS(MEAN),
-		addFPS(PERC)[, sapply(addFPS(PERC), is.numeric)],
+		MEAN,
+		PERC[, sapply(PERC, is.numeric)],
 #			selects just the columns of type numeric
-		ECDF[, listECDF]
+		compECDF
 	)
 #		combines the MEAN (mean and median) and PERC (percentile) columns after they have FPS versions added with the ECDF columns
 
