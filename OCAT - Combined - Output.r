@@ -584,7 +584,7 @@ graphMEANS	=	function(datatype)	{
 	#	standard boxplot without outlier dots shown, but is not used
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
 #		a layer that summarizes the data provided with the function provided (BoxPerc) and draws it as as geometry provided (boxplot)
-	geom_bar(aes(fill = GPU), stat = "summary", fun.y = mean) + scale_fill_hue() +
+	geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
 #		a bar graph layer where the height of the bar is the mean of the data
 #			the fill for these bars will follow the default scale_fill_hue values
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
