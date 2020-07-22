@@ -601,8 +601,9 @@ graphMEANS	=	function(datatype)	{
 #		applies the Y scale set earlier in the function
 #		the limits for the Y-axis are set with coord_cartesian, which effectively crops the graph
 #			coord_cartsian can be better than limits set inside the scale, as those will remove values outside those limits
-	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
+	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom", plot.title.position = "plot")
 #		sets the guide to be based on the fill scale (GPU), to have one row, and to be on the bottom of the graph
+#		places the graph title in the upper-left corner of the graph, instead of aligning it with the plot after the facet labels
 }
 
 # function to create labels for the values in graphMEANS
@@ -761,10 +762,12 @@ graphCOURSE	=	function(datatype)	{
 #			breaks are from 0 to the greatest integer from the TimeInSeconds measurement
 #			labelBreakN is used to prevent overlap
 #			the padding along the scale is set
-	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) + 
 #		applies the Y scale set earlier
 #		the limits for the Y-axis are set with coord_cartesian, which effectively crops the graph
 #			coord_cartsian can be better than limits set inside the scale, as those will remove values outside those limits
+	theme(plot.title.position = "plot")
+#		places the graph title in the upper-left corner of the graph, instead of aligning it with the plot after the facet labels
 }
 
 # creates a function for the FREQuency graph
@@ -876,8 +879,10 @@ graphFREQ	=	function(datatype)	{
 #		applies the X scale set earlier
 #		the limits for the X-axis are set with coord_cartesian, which effectively crops the graph
 #			coord_cartsian can be better than limits set inside the scale, as those will remove values outside those limits
-	scale_y_continuous(name="Count", expand=c(0.02, 0))
+	scale_y_continuous(name="Count", expand=c(0.02, 0)) +
 #		sets the Y scale to have the name Count and the padding for this scale
+	theme(plot.title.position = "plot")
+#		places the graph title in the upper-left corner of the graph, instead of aligning it with the plot after the facet labels
 }
 
 # creates a function for the Quantile graph
@@ -1009,12 +1014,14 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 #		applies the Y scale set earlier
 #		coord_cartesian can crop the plots to specific values
 #			just setting limits sometimes causes issues, as values beyond the limits are dropped, while this just does not show them
-	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
+	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0)) + 
 #		sets the X scale to show the desired percentiles
 #			qnorm is used to get the correct positions of the breaks, as the axis is actually in Z-score
 #			the labelBreakQQ function adds line breaks, converts to percentages, and adds % symboles
 #			the minor breaks between the major breaks are disabled
 #			the graphs padding of the scale is set
+	theme(plot.title.position = "plot")
+#		places the graph title in the upper-left corner of the graph, instead of aligning it with the plot after the facet labels
 }
 
 # creates a function for the Consecutive DIFFerence graph
@@ -1148,18 +1155,21 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	geom_point(alpha = 0.1) +
 #		places points at the X and Y coordinates set by the aesthetics earlier
 #		the alpha/transparency value is set to 0.1 so the darkness indicates density
-	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
 #		adds a density plot with the geometry of a polygon
-#			the color of the polygon will be based on the density level
+#			the color of the polygon will be based on the normalized density level
+#				stat is soft-depreciated so updated to after_stat
 #			a legend will not be shown
 #			the viridis scale is used to set the fill colors
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	#	identical to the above, but the alpha value is also based on the density level
 	FACET(graphDIFF) +
 	scale_X +
-	scale_Y
+	scale_Y +
 #		applies the X and Y scales set earlier
 #		coord_cartesian cannot be used as it breaks the heat maps in some situations
+	theme(plot.title.position = "plot")
+#		places the graph title in the upper-left corner of the graph, instead of aligning it with the plot after the facet labels
 }
 
 #	text outputs
