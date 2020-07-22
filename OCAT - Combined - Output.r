@@ -379,7 +379,7 @@ graphMEANS	=	function(datatype)	{
 	FACET(graphMEANS) +
 	scale_x_discrete(labels = labelBreak) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom")
+	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom", plot.title.position = "plot")
 }
 
 boxLABS		=	function(datatype)	{
@@ -467,7 +467,8 @@ graphCOURSE	=	function(datatype)	{
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
 	FACET(graphCOURSE) +
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
-	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit))
+	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) + 
+	theme(plot.title.position = "plot")
 }
 
 
@@ -523,7 +524,8 @@ graphFREQ	=	function(datatype)	{
 		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
 	FACET(graphFREQ) +
 	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
-	scale_y_continuous(name="Count", expand=c(0.02, 0))
+	scale_y_continuous(name="Count", expand=c(0.02, 0)) + 
+	theme(plot.title.position = "plot")
 }
 
 graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
@@ -591,7 +593,8 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
 	FACET(graphQQ) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0))
+	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0)) + 
+	theme(plot.title.position = "plot")
 }
 
 graphDIFF	=	function(datatype, diffLim = 1000/50)	{
@@ -653,11 +656,12 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
 	geom_point(alpha = 0.1) +
-	stat_density_2d(geom = "polygon", aes(fill = stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	FACET(graphDIFF) +
 	scale_X +
-	scale_Y
+	scale_Y + 
+	theme(plot.title.position = "plot")
 }
 #	using coord_cartesian to apply limits breaks the heatmap for some reason
 
