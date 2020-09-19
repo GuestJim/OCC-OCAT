@@ -686,7 +686,7 @@ if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
 #Means with Boxplot Lables
 #				graphOUT("MsBetweenPresents",		graphMEANSbox)
 
-rev.LOC	=	TRUE	;	rev.API	=	TRUE
+rev.LOC	=	FALSE	;	rev.API	=	TRUE
 
 #Course
 if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphCOURSE)
