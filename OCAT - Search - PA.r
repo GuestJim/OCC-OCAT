@@ -4,7 +4,7 @@ library(readr)
 game	=	"!GAME!"
 COMPRESS	=	TRUE
 
-COLUMN	=	NULL	;	SUBSET	=	NULL
+COLUMN	=	NULL	;	SUBSET	=	"!QUA!"
 
 setwd("!PATH!")
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
@@ -109,7 +109,7 @@ csvOCAT	=	function(CSVs)	{
 OCATcomb	=	csvOCAT(CSV.config)
 
 if	(COMPRESS)	{
-	write_csv(OCATcomb, "@Combined - !QUA!.csv.bz2")
+	write_csv(OCATcomb, paste0("@Combined - ", SUBSET, ".csv.bz2"))
 }	else	{
-	write_csv(OCATcomb, "@Combined - !QUA!.csv")
+	write_csv(OCATcomb, paste0("@Combined - ", SUBSET, ".csv"))
 }
