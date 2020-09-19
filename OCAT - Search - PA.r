@@ -5,11 +5,15 @@ library(readr)
 game	=	"!GAME!"
 #	will be the name of the game
 #		!GAME! is replaced by the Python script
+COMPRESS	=	TRUE
+#	controls if the output CSV should be compressed
 
-COLUMN	=	NULL	;	SUBSET	=	NULL
+COLUMN	=	NULL	;	SUBSET	=	"!QUA!"
 #	the column and term to filter the CSVs by
 #		for example, Quality and High or GPU and RX Vega 64
 #	these are changed later if NULL and if it is found we are in the OCAT Data folder
+#	by having SUBSET set to be the Quality, then the CSV file names can use SUBSET
+#		this makes it easier to build multiple CSVs without needing different files for each
 
 setwd("!PATH!")
 #	sets the working directory, allowing paths later to be relative from this directory
@@ -162,8 +166,12 @@ csvOCAT	=	function(CSVs)	{
 OCATcomb	=	csvOCAT(CSV.config)
 #	loads in the CSVs to the OCATcomb variable
 
-write_csv(OCATcomb, "@Combined - !QUA!.csv")
+if	(COMPRESS)	{
+	write_csv(OCATcomb, paste0("@Combined - ", SUBSET, ".csv.bz2"))
+}	else	{
+	write_csv(OCATcomb, paste0("@Combined - ", SUBSET, ".csv"))
+}
 #	write_csv is a readr function that will write a CSV for you
 #		OCATcomb is the data that will be written
-#		"@Combined - !QUA!.csv" is the name of the output CSV
-#			!QUA! is replaced by the Python script, to identify what the data is for
+#	depending on the value of COMPRESS, a compressed version of the CSV will be saved instead.
+#	with SUBSET set to be the Quality, according to the Python script, it is easier to have this one file create CSVs for different qualities
