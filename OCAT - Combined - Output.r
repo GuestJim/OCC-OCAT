@@ -1201,7 +1201,7 @@ if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
 #	here as example but commented out as I do not need it
 #		there is no switch to control it but I indented so it aligns with other graphOUT calls
 
-rev.LOC	=	TRUE	;	rev.API	=	TRUE
+rev.LOC	=	FALSE	;	rev.API	=	TRUE
 #	sets that the location and API factor levels should or should not be reversed
 
 #Course
