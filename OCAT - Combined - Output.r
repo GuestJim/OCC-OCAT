@@ -474,7 +474,7 @@ FACET = function(graphtype)	{
 		if	(!testAPI	&	testQUA)	return(facet_grid(vars(Quality),		cols = vars(Location), switch = "y"),	labeller = facWRAP)
 		if	(testAPI	&	testQUA)	return(facet_grid(vars(API, Quality),	cols = vars(Location), switch = "y"),	labeller = facWRAP)
 
-		return(facet_grid(cols = vars(Location), switch = "y"))
+		return(facet_grid(cols = vars(Location), switch = "y")	labeller = facWRAP)
 	}
 #	the MEANS graph has different design requirements than the other graphs
 #	if additional graphs are added with the same requirement, they can be added to the lsit
@@ -490,7 +490,7 @@ FACET = function(graphtype)	{
 			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"),	labeller = facWRAP)
 		}
 
-		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
+		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")	labeller = facWRAP)
 	}
 }
 #	functions end when they reach return, so there is no issue with using multiple
