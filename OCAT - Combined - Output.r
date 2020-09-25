@@ -302,26 +302,32 @@ graph.rev	=	function(DATA, rev.LOC = FALSE, rev.API = FALSE)	{
 #	spacing between facet panels can be set with  theme(panel.spacing.x = unit(1, "lines"))
 
 FACET = function(graphtype)	{
-	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
-		if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
-		if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
-		if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
+	facWRAP	=	labeller(	Location	=	label_wrap_gen(facWID),
+							API			=	label_wrap_gen(facWID),
+							Quality		=	label_wrap_gen(facWID),
+							GPU			=	label_wrap_gen(facWID)	)
+#	label_wrap_gen will wrap the text of the facet labels, based on the number of characters set by facWID
 
-		return(facet_grid(cols = vars(Location), switch = "y"))
+	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
+		if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location), switch = "y",	labeller = facWRAP))
+		if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location), switch = "y",	labeller = facWRAP))
+		if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location), switch = "y",	labeller = facWRAP))
+
+		return(facet_grid(cols = vars(Location), switch = "y",	labeller = facWRAP))
 	}
 
 	if	(any(substitute(graphtype)	==	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF")))	{
 		if	(multiGPU)	{
-			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
-			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, Quality),		cols = vars(GPU), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
-			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, API, Quality),	cols = vars(GPU), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y",	labeller = facWRAP))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, Quality),		cols = vars(GPU), switch = "y",	labeller = facWRAP))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, API, Quality),	cols = vars(GPU), switch = "y",	labeller = facWRAP))
 		}	else	{
-			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location, GPU), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
-			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
-			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y",	labeller = labeller(Location = label_wrap_gen(facWID))))
+			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location, GPU), switch = "y",	labeller = facWRAP))
+			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y",	labeller = facWRAP))
+			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y",	labeller = facWRAP))
 		}
 
-		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"))
+		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y",	labeller = facWRAP))
 	}
 }
 
