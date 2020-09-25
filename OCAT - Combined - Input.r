@@ -26,6 +26,9 @@ gHEIGH	=	9
 app.BREAK	=	FALSE
 #	switch for if line breaks should be used in the labels
 #		can be changed prior to graphs being created for selective application
+facWID		=	25
+#	control for width for text wrapping in the Location facet label
+#		default value for label_wrap_gen is 25
 testQUA		=	FALSE
 
 textOUT		=	TRUE
