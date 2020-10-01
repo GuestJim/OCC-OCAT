@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GPU DevID="67DF" RevID="E7">
+    <PPW Value="1"/>
+    <FEATURE ID="100" Enabled="0">
+        <STATES>
+            <STATE ID="0" Enabled="False" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="101" Enabled="0">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="102" Enabled="13">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="4" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="300"/>
+            <STATE ID="1" Enabled="True" Value="600"/>
+            <STATE ID="2" Enabled="True" Value="900"/>
+            <STATE ID="3" Enabled="True" Value="1145"/>
+            <STATE ID="4" Enabled="True" Value="1215"/>
+            <STATE ID="5" Enabled="True" Value="1257"/>
+            <STATE ID="6" Enabled="True" Value="1300"/>
+            <STATE ID="7" Enabled="True" Value="1366"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="12" Enabled="True">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="750"/>
+            <STATE ID="1" Enabled="True" Value="769"/>
+            <STATE ID="2" Enabled="True" Value="881"/>
+            <STATE ID="3" Enabled="True" Value="1093"/>
+            <STATE ID="4" Enabled="True" Value="1175"/>
+            <STATE ID="5" Enabled="True" Value="1100"/>
+            <STATE ID="6" Enabled="True" Value="1100"/>
+            <STATE ID="7" Enabled="True" Value="1100"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="5" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="300"/>
+            <STATE ID="1" Enabled="True" Value="1000"/>
+            <STATE ID="2" Enabled="True" Value="2000"/>
+            <STATE ID="3" Enabled="False" Value="0"/>
+            <STATE ID="4" Enabled="False" Value="0"/>
+            <STATE ID="5" Enabled="False" Value="0"/>
+            <STATE ID="6" Enabled="False" Value="0"/>
+            <STATE ID="7" Enabled="False" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="13" Enabled="True">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="750"/>
+            <STATE ID="1" Enabled="True" Value="825"/>
+            <STATE ID="2" Enabled="True" Value="900"/>
+            <STATE ID="3" Enabled="False" Value="0"/>
+            <STATE ID="4" Enabled="False" Value="0"/>
+            <STATE ID="5" Enabled="False" Value="0"/>
+            <STATE ID="6" Enabled="False" Value="0"/>
+            <STATE ID="7" Enabled="False" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="9" Enabled="True">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="0"/>
+            <STATE ID="1" Enabled="True" Value="0"/>
+            <STATE ID="2" Enabled="True" Value="1366"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="8" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="0"/>
+            <STATE ID="1" Enabled="True" Value="0"/>
+            <STATE ID="2" Enabled="True" Value="30"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="17" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="18" Enabled="True">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="19" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="False" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="20" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="False" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="21" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="False" Value="0"/>
+        </STATES>
+    </FEATURE>
+    <FEATURE ID="22" Enabled="False">
+        <STATES>
+            <STATE ID="0" Enabled="True" Value="30"/>
+            <STATE ID="1" Enabled="True" Value="19"/>
+            <STATE ID="2" Enabled="True" Value="50"/>
+            <STATE ID="3" Enabled="True" Value="21"/>
+            <STATE ID="4" Enabled="True" Value="63"/>
+            <STATE ID="5" Enabled="True" Value="38"/>
+            <STATE ID="6" Enabled="True" Value="76"/>
+            <STATE ID="7" Enabled="True" Value="56"/>
+            <STATE ID="8" Enabled="True" Value="85"/>
+            <STATE ID="9" Enabled="True" Value="71"/>
+        </STATES>
+    </FEATURE>
+</GPU>
