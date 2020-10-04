@@ -24,7 +24,7 @@ listLOC	=	txtFIND("Locations.txt")
 
 csvFIND	=	function(DIRECT = getwd())	{
 	LIST		=	list.files(DIRECT, recursive = TRUE, pattern = ".csv")
-	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST)]
+	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST) & !grepl("@", LIST)]
 	LIST.full	=	paste0(DIRECT, "/", LIST)
 	LIST.rel	=	t(data.frame(lapply(LIST.full, strsplit, "OCAT Data/"), row.names = NULL)[2, ])
 	colnames(LIST.rel)	=	NULL
