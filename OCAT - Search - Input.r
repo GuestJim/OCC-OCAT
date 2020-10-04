@@ -190,8 +190,8 @@ if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 csvFIND	=	function(DIRECT = getwd())	{
 	LIST		=	list.files(recursive = TRUE, pattern = ".csv")
 #		creates the list of all CSV files under the working directory
-	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST)]
-#		filters the list to only those that are OCAT CSV files, which always start with OCAT
+	LIST		=	LIST[grepl("OCAT", LIST) & grepl("csv", LIST) & !startsWith(LIST, "@")]
+#		filters the list to only those that are OCAT CSV files, which always start with OCAT, and removes any with @ at the start of the folder path
 	LIST.full	=	paste0(getwd(), "/", LIST)
 #		adds the working directory path to the front of the CSV file list
 	LIST.rel	=	t(data.frame(lapply(LIST.full, strsplit, "OCAT Data/"), row.names = NULL)[2, ])
