@@ -468,13 +468,14 @@ FACET = function(graphtype)	{
 							Quality		=	label_wrap_gen(facWID),
 							GPU			=	label_wrap_gen(facWID)	)
 #	this will currently wrap each of the labels potentially used, but does not cause a problem when a variable is not used
+#	could just use labeller = label_wrap_gen(facWID) in the facet_grid call, without specifying for the variables, but I like this for reference at least
 
 	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
 		if	(testAPI	&	!testQUA)	return(facet_grid(vars(API),			cols = vars(Location), switch = "y"),	labeller = facWRAP)
 		if	(!testAPI	&	testQUA)	return(facet_grid(vars(Quality),		cols = vars(Location), switch = "y"),	labeller = facWRAP)
 		if	(testAPI	&	testQUA)	return(facet_grid(vars(API, Quality),	cols = vars(Location), switch = "y"),	labeller = facWRAP)
 
-		return(facet_grid(cols = vars(Location), switch = "y")	labeller = facWRAP)
+		return(facet_grid(cols = vars(Location), switch = "y"	labeller = facWRAP))
 	}
 #	the MEANS graph has different design requirements than the other graphs
 #	if additional graphs are added with the same requirement, they can be added to the lsit
@@ -490,7 +491,7 @@ FACET = function(graphtype)	{
 			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y"),	labeller = facWRAP)
 		}
 
-		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y")	labeller = facWRAP)
+		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y"	labeller = facWRAP))
 	}
 }
 #	functions end when they reach return, so there is no issue with using multiple
@@ -1163,10 +1164,11 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	geom_point(alpha = 0.1) +
 #		places points at the X and Y coordinates set by the aesthetics earlier
 #		the alpha/transparency value is set to 0.1 so the darkness indicates density
-	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), bins = 20, show.legend = FALSE) + scale_fill_viridis_c() +
 #		adds a density plot with the geometry of a polygon
 #			the color of the polygon will be based on the normalized density level
 #				stat is soft-depreciated so updated to after_stat
+#			the number of bins is now fixed, which will hopefully fix the issue of the heatmap not appearing on some faceted graphs
 #			a legend will not be shown
 #			the viridis scale is used to set the fill colors
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +

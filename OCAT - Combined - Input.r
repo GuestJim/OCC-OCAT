@@ -107,11 +107,16 @@ relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 #	stores the path to the OCAT Data folder, which is where various useful and important files are kept
 
 txtFIND	=	function(TXT, rel.Path = relPath)	{
-	locFILE	=	paste0(rel.Path, "/", TXT)
-	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	if (file.exists(TXT))	{
+		return(readLines(TXT, warn = FALSE))
+	}	else	{
+		locFILE	=	paste0(rel.Path, "/", TXT)
+		if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	}
 	return(NULL)
 }
 #	function to find a TXT file and return its contents
+#	it checks both the current folder and the relative path which should point to the OCAT Data folder
 #	if the file does not exist, NULL is returned
 #		return exits the function, so if the file exists, its contents are returned instead of the later NULL
 

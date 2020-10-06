@@ -139,11 +139,16 @@ if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
 #		normally if working from the OCAT Data folder it is to look at the High Quality data, so that is what is set here
 
 txtFIND	=	function(TXT, rel.Path = relPath)	{
-	locFILE	=	paste0(rel.Path, "/", TXT)
-	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	if (file.exists(TXT))	{
+		return(readLines(TXT, warn = FALSE))
+	}	else	{
+		locFILE	=	paste0(rel.Path, "/", TXT)
+		if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	}
 	return(NULL)
 }
 #	function to find a TXT file and return its contents
+#	it checks both the current folder and the relative path which should point to the OCAT Data folder
 #	if the file does not exist, NULL is returned
 #		return exits the function, so if the file exists, its contents are returned instead of the later NULL
 
