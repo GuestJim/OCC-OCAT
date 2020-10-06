@@ -307,6 +307,7 @@ FACET = function(graphtype)	{
 							Quality		=	label_wrap_gen(facWID),
 							GPU			=	label_wrap_gen(facWID)	)
 #	label_wrap_gen will wrap the text of the facet labels, based on the number of characters set by facWID
+#	could just use labeller = label_wrap_gen(facWID) in the facet_grid call, without specifying for the variables, but I like this for reference at least
 
 	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
 		if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location), switch = "y",	labeller = facWRAP))
@@ -662,7 +663,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	ggplot(data = results, aes(x = get(datatype), y = diff.CONS(get(datatype))) ) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " Consecutive Differences")) + labsGPU +
 	geom_point(alpha = 0.1) +
-	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), show.legend = FALSE) + scale_fill_viridis_c() +
+	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), bins = 20, show.legend = FALSE) + scale_fill_viridis_c() +
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
 	FACET(graphDIFF) +
 	scale_X +

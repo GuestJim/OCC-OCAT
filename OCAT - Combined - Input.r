@@ -67,8 +67,12 @@ if (interactive())	{
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 
 txtFIND	=	function(TXT, rel.Path = relPath)	{
-	locFILE	=	paste0(rel.Path, "/", TXT)
-	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	if (file.exists(TXT))	{
+		return(readLines(TXT, warn = FALSE))
+	}	else	{
+		locFILE	=	paste0(rel.Path, "/", TXT)
+		if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	}
 	return(NULL)
 }
 

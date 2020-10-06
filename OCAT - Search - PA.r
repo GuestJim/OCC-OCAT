@@ -15,8 +15,12 @@ if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
 }
 
 txtFIND	=	function(TXT, rel.Path = relPath)	{
-	locFILE	=	paste0(rel.Path, "/", TXT)
-	if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	if (file.exists(TXT))	{
+		return(readLines(TXT, warn = FALSE))
+	}	else	{
+		locFILE	=	paste0(rel.Path, "/", TXT)
+		if (file.exists(locFILE))	return(readLines(locFILE, warn = FALSE))
+	}
 	return(NULL)
 }
 
