@@ -104,6 +104,8 @@ AGG	=	function(datatype, FUN, ..., COL = NULL, ITEM = NULL, DATA = results)	{
 	if	(!testAPI)	GROUPS$API		=	NULL
 	if	(!testQUA)	GROUPS$Quality	=	NULL
 
+	if	(any(sapply(GROUPS, length) == 0))	return(NULL)
+
 	return(sepCOL(aggregate(DATA[, datatype], GROUPS, FUN, ...)))
 }
 
