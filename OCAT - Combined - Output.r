@@ -152,6 +152,9 @@ AGG	=	function(datatype, FUN, ..., COL = NULL, ITEM = NULL, DATA = results)	{
 #		aggregate requires the grouping elements be each the same length as data, so GROUPS must be remade with it
 #		the process of making GROUPS is identical to what is in Input.r, just with DATA instead of results
 
+	if	(any(sapply(GROUPS, length) == 0))	return(NULL)
+#		for those cases when the subset does not include any data for a given configuration, NULL will be returned to avoid errors
+
 	return(sepCOL(aggregate(DATA[, datatype], GROUPS, FUN, ...)))
 #		the desired column of DATA is selected and the GROUPS, FUN(ction), and other arguments are all passed to aggregate
 #		before returning the output, sepCOL is applied sto give me the desired formating
