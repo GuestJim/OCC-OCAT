@@ -26,6 +26,7 @@ yratesEXT	=	NULL
 
 gWIDTH	=	8
 gHEIGH	=	9
+ogHEIGH	=	gHEIGH
 app.BREAK	=	FALSE
 #	switch for if line breaks should be used in the labels
 #		can be changed prior to graphs being created for selective application
