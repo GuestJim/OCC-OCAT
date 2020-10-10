@@ -1215,39 +1215,39 @@ rev.LOC	=	FALSE	;	rev.API	=	TRUE
 #	sets that the location and API factor levels should or should not be reversed
 
 #Course
-if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphCOURSE)
-if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphCOURSE)
-if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphCOURSE)
-if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphCOURSE)
+if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphCOURSE,		height = ogHEIGH)
+if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphCOURSE,		height = ogHEIGH)
+if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphCOURSE,		height = ogHEIGH)
+if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphCOURSE,		height = ogHEIGH)
 #	checks if the data type should have a graph made, then does so
 
 #Frequency
-if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphFREQ)
-if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphFREQ)
-if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphFREQ)
-if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphFREQ)
+if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphFREQ,		height = ogHEIGH)
+if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphFREQ,		height = ogHEIGH)
+if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphFREQ,		height = ogHEIGH)
+if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphFREQ,		height = ogHEIGH)
 #	checks if the data type should have a graph made, then does so
 
 #QQ
-if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphQQ)
-if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphQQ)
-if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphQQ)
-if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphQQ)
+if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphQQ,		height = ogHEIGH)
+if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphQQ,		height = ogHEIGH)
+if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphQQ,		height = ogHEIGH)
+if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphQQ,		height = ogHEIGH)
 #	checks if the data type should have a graph made, then does so
 
 #Difference
-if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF)
-if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF)
-if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF)
-if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF)
+if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,		height = ogHEIGH)
+if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,		height = ogHEIGH)
+if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,		height = ogHEIGH)
+if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,		height = ogHEIGH)
 #	checks if the data type should have a graph made, then does so
 
 #Difference - Extended
 if (!is.null(diffLim))	{
-	if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = diffLim)
-	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim)
-	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim)
-	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim)
+	if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphDIFF,	diffLim = diffLim,		height = ogHEIGH)
+	if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphDIFF,	diffLim = diffLim,		height = ogHEIGH)
+	if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphDIFF,	diffLim = diffLim,		height = ogHEIGH)
+	if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphDIFF,	diffLim = diffLim,		height = ogHEIGH)
 }
 #	checks if a custom diffLim value was set and then calls graphOUT to make the DIFF EXT graphs
 }

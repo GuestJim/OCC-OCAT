@@ -55,6 +55,8 @@ testQUA		=	FALSE
 gWIDTH	=	8
 gHEIGH	=	9
 #	graph width and height
+ogHEIGH	=	gHEIGH
+#	sometimes the non-MEANS graphs need to be taller, and this will set their height
 app.BREAK	=	FALSE
 #	switch for if line breaks should be used in the scale labels (including secondary axes)
 #		can be changed prior to graphs being created for selective application
