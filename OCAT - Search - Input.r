@@ -27,7 +27,7 @@ yratesEXT	=	NULL
 gWIDTH	=	8
 gHEIGH	=	9
 ogHEIGH	=	gHEIGH
-app.BREAK	=	FALSE
+app.BREAK	=	TRUE
 #	switch for if line breaks should be used in the labels
 #		can be changed prior to graphs being created for selective application
 facWID		=	25
@@ -69,7 +69,7 @@ if (interactive())	{
 
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 
-if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+if	(getwd() == relPath | (is.null(COLUMN) | is.null(SUBSET)))	{
 	COLUMN	=	"Quality"
 	SUBSET	=	"High"
 }

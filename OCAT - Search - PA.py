@@ -46,6 +46,7 @@ if		TYPE	==	"MULTI":
 elif	TYPE	==	"SINGLE":
 	QUAs	=	list(set(QUAs))
 
+SUBS	=	"NULL"
 
 droppedGame	=	RelPath.rsplit("\\", 3)[1]	\
 	.replace(" Performance Analysis", "")	\
@@ -55,6 +56,7 @@ if		TYPE	==	"MULTI" and len(GPUs) != 1:
 	cGPU	=	"NULL"
 elif	TYPE	==	"SINGLE" or len(GPUs) == 1:
 	cGPU	=	"\"" + str(GPUs[0]) + "\""
+	SUBS	=	"\"Quality\""
 
 scriptFull	=	scriptPath + "OCAT - Search - PA.r"
 
@@ -69,7 +71,8 @@ if not os.path.exists(outputFull):
 			fout.write(line	\
 				.replace("!PATH!",		RPath)			\
 				.replace("!GAME!",		droppedGame)	\
-				.replace("!QUA!",		QUAs[0])
+				.replace("!QUA!",		QUAs[0])		\
+				.replace("!SUBS!",		SUBS)
 			)
 		fout.close()
 

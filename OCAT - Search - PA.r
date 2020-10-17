@@ -4,12 +4,12 @@ library(readr)
 game	=	"!GAME!"
 COMPRESS	=	TRUE
 
-COLUMN	=	NULL	;	SUBSET	=	"!QUA!"
+COLUMN	=	!SUBS!	;	SUBSET	=	"!QUA!"
 
 setwd("!PATH!")
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 
-if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+if	(getwd() == relPath | (is.null(COLUMN) | is.null(SUBSET)))	{
 	COLUMN	=	"Quality"
 	SUBSET	=	"High"
 }

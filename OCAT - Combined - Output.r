@@ -166,7 +166,7 @@ sinkTXT	=	function(datatype, COL = NULL, ITEM = NULL)	{
 	options(width = 1000)
 
 	subSTR	=	""
-	if	(!is.null(ITEM))	subSTR	=	paste0(" - ", ITEM, " - ")
+	if	(!is.null(ITEM))	subSTR	=	paste0("- ", ITEM, " - ")
 
 	filePath	=	paste0(gameGAQF, " ", subSTR, type, ".txt")
 	if	(!is.null(COL))	if	(COL	==	"GPU")	filePath	=	paste0(ITEM, "\\", filePath)

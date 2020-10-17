@@ -4,6 +4,7 @@ library(moments)
 
 game	=	"!GAME!"
 cGPU	=	!GPU!
+SUBSET	=	"!QUA!"
 
 gameF	=	gsub(":", "-", game)
 gameF	=	unlist(strsplit(gameF, split=" [(]"))[1]
@@ -24,7 +25,7 @@ yratesEXT	=	NULL
 gWIDTH	=	8
 gHEIGH	=	9
 ogHEIGH	=	gHEIGH
-app.BREAK	=	FALSE
+app.BREAK	=	TRUE
 #	switch for if line breaks should be used in the labels
 #		can be changed prior to graphs being created for selective application
 facWID		=	25
@@ -101,10 +102,10 @@ levsAPI		=	listAPI
 if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
 
-if (file.exists("@Combined - !QUA!.csv.bz2"))	{
-	resultsFull	=	read_csv("@Combined - !QUA!.csv.bz2")
+if (file.exists(paste0("@Combined - ", SUBSET, ".csv.bz2")))	{
+	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"))
 }	else	{
-	resultsFull	=	read_csv("@Combined - !QUA!.csv")
+	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"))
 }
 
 
