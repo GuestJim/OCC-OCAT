@@ -133,7 +133,7 @@ if (interactive())	{
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 #	stores the path to the OCAT Data folder, which is where various useful and important files are kept
 
-if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+if	(getwd() == relPath & (is.null(COLUMN) | is.null(SUBSET)))	{
 	COLUMN	=	"Quality"
 	SUBSET	=	"High"
 }

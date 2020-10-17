@@ -8,12 +8,13 @@ game	=	"!GAME!"
 COMPRESS	=	TRUE
 #	controls if the output CSV should be compressed
 
-COLUMN	=	NULL	;	SUBSET	=	"!QUA!"
+COLUMN	=	!SUBS!	;	SUBSET	=	"!QUA!"
 #	the column and term to filter the CSVs by
 #		for example, Quality and High or GPU and RX Vega 64
-#	these are changed later if NULL and if it is found we are in the OCAT Data folder
-#	by having SUBSET set to be the Quality, then the CSV file names can use SUBSET
+#	these are changed later if either are NULL and if it is found we are in the OCAT Data folder
+#	by having SUBSET set to be the quality, then the CSV file names can use SUBSET
 #		this makes it easier to build multiple CSVs without needing different files for each
+#	the !SUBS! will be replaced by NULL if this is multi-GPU and made "Quality" if single-GPU, as that is the most likely column to subset by
 
 setwd("!PATH!")
 #	sets the working directory, allowing paths later to be relative from this directory
@@ -21,7 +22,7 @@ setwd("!PATH!")
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 #	stores the path to the OCAT Data folder, which is where various useful and important files are kept
 
-if	(getwd() == relPath & (is.null(COLUMN) & is.null(SUBSET)))	{
+if	(getwd() == relPath & (is.null(COLUMN) | is.null(SUBSET)))	{
 	COLUMN	=	"Quality"
 	SUBSET	=	"High"
 }

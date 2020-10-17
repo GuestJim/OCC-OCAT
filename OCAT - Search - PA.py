@@ -91,6 +91,9 @@ elif	TYPE	==	"SINGLE":
 	QUAs	=	list(set(QUAs))
 #		create a list from the set of values in the GPU and Quality lists.
 
+SUBS	=	"NULL"
+#	SUBS is for setting the COLUMN value in the R script
+#		the default of NULL ensures the default subsetting written into the file.
 
 droppedGame	=	RelPath.rsplit("\\", 3)[1]	\
 	.replace(" Performance Analysis", "")	\
@@ -103,9 +106,12 @@ if		TYPE	==	"MULTI" and len(GPUs) != 1:
 	cGPU	=	"NULL"
 elif	TYPE	==	"SINGLE" or len(GPUs) == 1:
 	cGPU	=	"\"" + str(GPUs[0]) + "\""
+	SUBS	=	"\"Quality\""
 #	sets the cGPU, current GPU, variable based on if this is a single or multi-GPU situation
 #		quotes are added to the string here, which is why \" is present
 #	GPUsread is a list of the read GPUs from the folder names and useful for single-GPU, multi-API situations
+#	a single-GPU situation is most likely to call for a specific column to be subset by, and the most likely column is "Quality" then
+#		the quotation marks are needed in the R script, so I need to escape them here so they will be placed in script.
 
 scriptFull	=	scriptPath + "OCAT - Search - PA.r"
 #	sets the name and path of the reference R script to be loaded in
@@ -152,7 +158,8 @@ if not os.path.exists(outputFull):
 				.replace("!PATH!",	RPath)			\
 				.replace("!GAME!",	droppedGame)	\
 				.replace("!QUA!",	QUAs[0])		\
-				.replace("!GPU!",	cGPU)
+				.replace("!GPU!",	cGPU)			\
+				.replace("!SUBS!",		SUBS
 			)
 #				writes each line from the reference file to the output file, but runs the replace function to change the appropriate things
 		fout.close()
