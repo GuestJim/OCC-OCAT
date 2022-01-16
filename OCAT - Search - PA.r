@@ -9,7 +9,7 @@ COLUMN	=	!SUBS!	;	SUBSET	=	"!QUA!"
 setwd("!PATH!")
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 
-if	(getwd() == relPath | (is.null(COLUMN) | is.null(SUBSET)))	{
+if	(getwd() == relPath & (is.null(COLUMN) | is.null(SUBSET)))	{
 	COLUMN	=	"Quality"
 	SUBSET	=	"High"
 }
@@ -66,7 +66,8 @@ csvCONF	=	function(CSV.list, LOCs = listLOC)	{
 }
 
 # CSV.config	=	csvCONF(LIST.rel)
-CSV.configFull	=	csvCONF(csvFIND())
+if (SUBSET == "All")	CSV.config	=	CSV.configFull
+if (SUBSET != "All")	CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
 
 
 csvFILT	=	function(CSV.list, COL, SUB)	{
