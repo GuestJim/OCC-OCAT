@@ -152,6 +152,7 @@ DESC	=	function(ITEM = NULL)	{
 
 	if	(length(descs$GPU)		> 1)	descs$GPU		=	NULL
 	if	(length(descs$API)		> 1)	descs$API		=	NULL
+	try(	if	(is.na(descs$API))		descs$API		=	NULL,	silent = TRUE)
 	if	(length(descs$Location)	> 1)	descs$Location	=	NULL
 	if	(length(descs$Quality)	> 1)	descs$Quality	=	NULL
 
