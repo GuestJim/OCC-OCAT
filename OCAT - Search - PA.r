@@ -66,16 +66,15 @@ csvCONF	=	function(CSV.list, LOCs = listLOC)	{
 }
 
 # CSV.config	=	csvCONF(LIST.rel)
-if (SUBSET == "All")	CSV.config	=	CSV.configFull
-if (SUBSET != "All")	CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
-
+CSV.configFull	=	csvCONF(csvFIND())
 
 csvFILT	=	function(CSV.list, COL, SUB)	{
 	if (!is.null(COL)	&	!is.null(SUB))	return(CSV.list[CSV.list[, COL] == SUB, ])
 	return(CSV.list)
 }
 
-CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
+if (SUBSET == "All")	CSV.config	=	CSV.configFull
+if (SUBSET != "All")	CSV.config	=	csvFILT(CSV.configFull, COLUMN, SUBSET)
 
 
 read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
