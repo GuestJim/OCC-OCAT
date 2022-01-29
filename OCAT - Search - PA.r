@@ -24,6 +24,9 @@ txtFIND	=	function(TXT, rel.Path = relPath)	{
 	return(NULL)
 }
 
+listGPU	=	txtFIND("GPUs.txt")
+listQUA	=	txtFIND("Qualities.txt")
+listAPI	=	txtFIND("APIs.txt")
 listLOC	=	txtFIND("Locations.txt")
 
 csvFIND	=	function(DIRECT = getwd())	{
@@ -110,10 +113,19 @@ csvOCAT	=	function(CSVs)	{
 	return(OCATcomb)
 }
 
+if (!is.null(listGPU))	CSV.config$GPU		=	ordered(CSV.config$GPU,			listGPU)
+if (!is.null(listAPI))	CSV.config$API		=	ordered(CSV.config$API,			listAPI)
+if (!is.null(listQUA))	CSV.config$Quality	=	ordered(CSV.config$Quality,		listQUA)
+if (!is.null(listLOC))	CSV.config$Location	=	ordered(CSV.config$Location,	listLOC)
+
+CSV.config	=	CSV.config[order(CSV.config$GPU, CSV.config$API, CSV.config$Quality, CSV.config$Location), ]
 OCATcomb	=	csvOCAT(CSV.config)
 
+PREFIX	=	"@Combined"
+if (SUBSET == "All")	PREFIX	=	game
+
 if	(COMPRESS)	{
-	write_csv(OCATcomb, paste0("@Combined - ", SUBSET, ".csv.bz2"))
+	write_csv(OCATcomb, paste0(PREFIX, " - ", SUBSET, ".csv.bz2"))
 }	else	{
-	write_csv(OCATcomb, paste0("@Combined - ", SUBSET, ".csv"))
+	write_csv(OCATcomb, paste0(PREFIX, " - ", SUBSET, ".csv"))
 }
