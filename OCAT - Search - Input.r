@@ -4,6 +4,7 @@ library(moments)
 
 game	=	"!GAME!"
 # cGPU	=	!GPU!
+noCOL	=	c("Motherboard","OS","Processor","System RAM","Base Driver Version","Driver Package","GPU #","GPU","GPU Core Clock (MHz)","GPU Memory Clock (MHz)","GPU Memory (MB)")
 
 gameF	=	gsub(":", "-", game)
 gameF	=	unlist(strsplit(gameF, split=" [(]"))[1]
@@ -69,7 +70,7 @@ if (interactive())	{
 
 relPath	=	paste0(unlist(strsplit(getwd(), "OCAT Data"))[1], "OCAT Data")
 
-if	(getwd() == relPath | (is.null(COLUMN) | is.null(SUBSET)))	{
+if	(getwd() == relPath & (is.null(COLUMN) | is.null(SUBSET)))	{
 	COLUMN	=	"Quality"
 	SUBSET	=	"High"
 }
@@ -184,7 +185,7 @@ read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
 	filePATH		=	paste(relPath, GPU, QUA, FILE, sep = "/")
 	if	(!any(is.na(API), is.null(API)))	filePATH		=	paste(relPath, GPU, API, QUA, FILE, sep = "/")
 
-	out				=	read_csv(filePATH)[, 1:20]
+	out				=	read_csv(filePATH, guess_max = 10, lazy = TRUE, col_select=!noCOL)
 
 	out$GPU			=	GPU
 	out$Quality		=	QUA
@@ -246,6 +247,7 @@ DESC	=	function(ITEM = NULL)	{
 
 	if	(length(descs$GPU)		> 1)	descs$GPU		=	NULL
 	if	(length(descs$API)		> 1)	descs$API		=	NULL
+		if	(is.na(descs$API))			descs$API		=	NULL
 	if	(length(descs$Location)	> 1)	descs$Location	=	NULL
 	if	(length(descs$Quality)	> 1)	descs$Quality	=	NULL
 

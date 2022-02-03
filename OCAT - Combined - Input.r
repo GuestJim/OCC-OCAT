@@ -103,9 +103,9 @@ if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
 
 if (file.exists(paste0("@Combined - ", SUBSET, ".csv.bz2")))	{
-	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"))
+	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"), guess_max = 10, lazy = TRUE)
 }	else	{
-	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"))
+	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"), guess_max = 10, lazy = TRUE)
 }
 
 

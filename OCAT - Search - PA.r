@@ -3,6 +3,7 @@ library(readr)
 
 game	=	"!GAME!"
 COMPRESS	=	TRUE
+noCOL	=	c("Motherboard","OS","Processor","System RAM","Base Driver Version","Driver Package","GPU #","GPU","GPU Core Clock (MHz)","GPU Memory Clock (MHz)","GPU Memory (MB)")
 
 COLUMN	=	!SUBS!	;	SUBSET	=	"!QUA!"
 
@@ -92,7 +93,7 @@ read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
 	filePATH		=	paste(relPath, GPU, QUA, FILE, sep = "/")
 	if	(!any(is.na(API), is.null(API)))	filePATH		=	paste(relPath, GPU, API, QUA, FILE, sep = "/")
 
-	out				=	read_csv(filePATH)[, 1:20]
+	out				=	read_csv(filePATH, guess_max = 10, lazy = TRUE, col_select=!noCOL)
 
 	out$GPU			=	GPU
 	out$Quality		=	QUA
