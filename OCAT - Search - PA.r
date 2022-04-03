@@ -93,7 +93,7 @@ read_OCAT	=	function(INFO, GPU = NULL, API = NULL, QUA = NULL, LOC = NULL)	{
 	filePATH		=	paste(relPath, GPU, QUA, FILE, sep = "/")
 	if	(!any(is.na(API), is.null(API)))	filePATH		=	paste(relPath, GPU, API, QUA, FILE, sep = "/")
 
-	out				=	read_csv(filePATH, guess_max = 10, lazy = TRUE, col_select=!noCOL)
+	out				=	read_csv(filePATH, guess_max = 10, lazy = TRUE, col_select=!all_of(noCOL), show_col_type = FALSE)
 
 	out$GPU			=	GPU
 	out$Quality		=	QUA
