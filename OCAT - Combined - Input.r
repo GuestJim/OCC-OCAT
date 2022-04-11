@@ -102,10 +102,15 @@ levsAPI		=	listAPI
 if	(useSHORT	&	!is.null(shortAPI))	levsAPI	=	shortAPI
 
 
-if (file.exists(paste0("@Combined - ", SUBSET, ".csv.bz2")))	{
-	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"), guess_max = 10, lazy = TRUE)
-}	else	{
-	resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"), guess_max = 10, lazy = TRUE)
+if (file.exists(paste0(game, " - All.csv.bz2")))	{
+	resultsFull	=	read_csv(paste0(game, " - All.csv.bz2"), guess_max = 10, lazy = TRUE)
+	reusltsFull	=	resultsFull[resultsFull$Quality == SUBSET, ]
+}	else {
+	if (file.exists(paste0("@Combined - ", SUBSET, ".csv.bz2")))	{
+		resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv.bz2"), guess_max = 10, lazy = TRUE)
+	}	else	{
+		resultsFull	=	read_csv(paste0("@Combined - ", SUBSET, ".csv"), guess_max = 10, lazy = TRUE)
+	}
 }
 
 
