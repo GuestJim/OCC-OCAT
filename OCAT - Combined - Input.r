@@ -162,7 +162,8 @@ DESC	=	function(ITEM = NULL)	{
 	if	(length(descs$Quality)	> 1)	descs$Quality	=	NULL
 
 	gameQ	=	game
-	if	(!is.null(descs$Quality))	gameQ	=	paste0(game,	" - ",	descs$Quality,	" Quality")
+	if	(!is.null(descs$API))		gameQ	=	paste0(gameQ,	" - ",	descs$API)
+	if	(!is.null(descs$Quality))	gameQ	=	paste0(gameQ,	" - ",	descs$Quality,	" Quality")
 
 	gameGAQF	=	paste0(gameF,	" - ",	paste0(descs,	collapse = " - ")	)
 	gameGAQ		=	paste0(game,	" - ",	paste0(descs,	collapse = " - ")	)
