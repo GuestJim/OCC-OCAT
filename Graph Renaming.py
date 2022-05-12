@@ -48,13 +48,13 @@ DATAs	=	[\
 'Driver']
 
 TYPEs	=	[\
-'Means',\
+'Summary',\
 'Course',\
 'Freq',\
 'QQ',\
 'Diff',\
 'Diff EXT',\
-'Means Labeled']
+'Summary Labeled']
 
 def numFind	(filename, list):
 	if list == [""]:

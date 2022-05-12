@@ -257,13 +257,13 @@ graphOUT	=	function(datatype, graphtype, OUT = TRUE, SHOW = FALSE, diffLim = NUL
 	if	(datatype == "MsUntilRenderComplete")		dataNAME	=	"Render Time"
 	if	(datatype == "MsEstimatedDriverLag")		dataNAME	=	"Driver Lag"
 
-	if	(substitute(graphtype) == "graphMEANS")		graphNAME	=	"Means"
+	if	(substitute(graphtype) == "graphSUMM")		graphNAME	=	"Means"
 	if	(substitute(graphtype) == "graphCOURSE")	graphNAME	=	"Course"
 	if	(substitute(graphtype) == "graphFREQ")		graphNAME	=	"Freq"
 	if	(substitute(graphtype) == "graphQQ")		graphNAME	=	"QQ"
 	if	(substitute(graphtype) == "graphDIFF")		graphNAME	=	"Diff"
 
-	if	(substitute(graphtype) == "graphMEANSbox")	graphNAME	=	"Means Labeled"
+	if	(substitute(graphtype) == "graphSUMMbox")	graphNAME	=	"Means Labeled"
 
 	PLOT	=	graphtype(datatype)
 	if	(graphNAME == "Diff" & !is.null(diffLim))	{
@@ -319,7 +319,7 @@ FACET = function(graphtype)	{
 	FACETselect	=	function(IN2)	paste0(names(FACS[IN2])[FACS[IN2]], collapse = ", ")
 	#	this will return only the names that are present in FACS and are desired, as set below
 
-	if	(graphtype == "graphMEANS")		FACSsel	=	c(
+	if	(graphtype == "graphSUMM")		FACSsel	=	c(
 		FACETselect(c("Quality", "API")),
 		FACETselect(c("Location")))
 	if	(graphtype	%in%	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF"))	FACSsel	=	c(
@@ -335,7 +335,7 @@ FACET = function(graphtype)	{
 	return(eval(parse(text = out)))
 }
 
-graphMEANS	=	function(datatype)	{
+graphSUMM	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name		=	"Frame Time (ms)",
@@ -386,7 +386,7 @@ graphMEANS	=	function(datatype)	{
 	geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-	FACET("graphMEANS") +
+	FACET("graphSUMM") +
 	scale_x_discrete(labels = labelBreak) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom", plot.title.position = "plot")
@@ -422,7 +422,7 @@ boxLABS		=	function(datatype)	{
 		)
 }
 
-graphMEANSbox	=	function(datatype)	graphMEANS(datatype) + boxLABS(datatype)
+graphSUMMbox	=	function(datatype)	graphSUMM(datatype) + boxLABS(datatype)
 
 graphCOURSE	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
@@ -703,13 +703,13 @@ if	(graphs)	{
 rev.LOC	=	FALSE	;	rev.API	=	TRUE
 
 #Means
-if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphMEANS)
-if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphMEANS)
-if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphMEANS)
-if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphMEANS)
+if	(graphFRAM)	graphOUT("MsBetweenPresents",		graphSUMM)
+if	(graphDISP)	graphOUT("MsBetweenDisplayChange",	graphSUMM)
+if	(graphREND)	graphOUT("MsUntilRenderComplete",	graphSUMM)
+if	(graphDRIV)	graphOUT("MsEstimatedDriverLag",	graphSUMM)
 
 #Means with Boxplot Lables
-#				graphOUT("MsBetweenPresents",		graphMEANSbox)
+#				graphOUT("MsBetweenPresents",		graphSUMMbox)
 
 rev.LOC	=	FALSE	;	rev.API	=	TRUE
 
