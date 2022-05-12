@@ -310,28 +310,29 @@ FACET = function(graphtype)	{
 							GPU			=	label_wrap_gen(facWID)	)
 #	label_wrap_gen will wrap the text of the facet labels, based on the number of characters set by facWID
 #	could just use labeller = label_wrap_gen(facWID) in the facet_grid call, without specifying for the variables, but I like this for reference at least
+	FACS	=	c(
+		GPU			=	TRUE,
+		Location	=	TRUE,
+		API			=	testAPI,
+		Quality		=	testQUA
+		)
+	FACETselect	=	function(IN2)	paste0(names(FACS[IN2])[FACS[IN2]], collapse = ", ")
+	#	this will return only the names that are present in FACS and are desired, as set below
 
-	if	(any(substitute(graphtype)	==	c("graphMEANS")))	{
-		if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location), switch = "y",	labeller = facWRAP))
-		if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location), switch = "y",	labeller = facWRAP))
-		if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location), switch = "y",	labeller = facWRAP))
+	if	(graphtype == "graphMEANS")		FACSsel	=	c(
+		FACETselect(c("Quality", "API")),
+		FACETselect(c("Location")))
+	if	(graphtype	%in%	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF"))	FACSsel	=	c(
+		FACETselect(c("Location", "Quality", "API")),
+		FACETselect(c("GPU")))
 
-		return(facet_grid(cols = vars(Location), switch = "y",	labeller = facWRAP))
-	}
+	ROWS	=	FACSsel[1]	;	COLS	=	FACSsel[2]
 
-	if	(any(substitute(graphtype)	==	c("graphCOURSE", "graphFREQ", "graphQQ", "graphDIFF")))	{
-		if	(multiGPU)	{
-			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(Location, API),			cols = vars(GPU), switch = "y",	labeller = facWRAP))
-			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, Quality),		cols = vars(GPU), switch = "y",	labeller = facWRAP))
-			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(Location, API, Quality),	cols = vars(GPU), switch = "y",	labeller = facWRAP))
-		}	else	{
-			if	(testAPI	&	!testQUA)	return(facet_grid(rows = vars(API),				cols = vars(Location, GPU), switch = "y",	labeller = facWRAP))
-			if	(!testAPI	&	testQUA)	return(facet_grid(rows = vars(Quality),			cols = vars(Location, GPU), switch = "y",	labeller = facWRAP))
-			if	(testAPI	&	testQUA)	return(facet_grid(rows = vars(API, Quality),	cols = vars(Location, GPU), switch = "y",	labeller = facWRAP))
-		}
-
-		return(facet_grid(rows = vars(Location), cols = vars(GPU), switch = "y",	labeller = facWRAP))
-	}
+	outROW	=	NULL	;	outCOL	=	NULL
+	if (ROWS != "")	outROW	=	paste0("rows = vars(", ROWS, ")")
+	if (COLS != "")	outCOL	=	paste0("cols = vars(", COLS, ")")
+	out	=	paste0("facet_grid(", paste(c(outROW, outCOL), collapse = ", "), ", switch = 'y', labeller = facWRAP)")
+	return(eval(parse(text = out)))
 }
 
 graphMEANS	=	function(datatype)	{
@@ -385,7 +386,7 @@ graphMEANS	=	function(datatype)	{
 	geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
-	FACET(graphMEANS) +
+	FACET("graphMEANS") +
 	scale_x_discrete(labels = labelBreak) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 	guides(fill = guide_legend(nrow = 1)) + theme(legend.position = "bottom", plot.title.position = "plot")
@@ -464,7 +465,6 @@ graphCOURSE	=	function(datatype)	{
 
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
-	# if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 	ALPHA	=	0.05
 	if	(length(unique(results$Location)) == 1)	ALPHA	=	1
@@ -474,7 +474,7 @@ graphCOURSE	=	function(datatype)	{
 	geom_hline(yintercept = 1000/60, color = "red") +
 	geom_point(alpha = ALPHA) +
 	geom_smooth(method="gam", formula= y ~ s(x, bs = "cs")) +
-	FACET(graphCOURSE) +
+	FACET("graphCOURSE") +
 	scale_x_continuous(name="Time (s)", breaks=seq(from=0, to=max(results$TimeInSeconds), by=60), labels = labelBreak, expand=c(0.02, 0)) +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) + 
 	theme(plot.title.position = "plot")
@@ -482,7 +482,6 @@ graphCOURSE	=	function(datatype)	{
 
 
 graphFREQ	=	function(datatype)	{
-	STATS	=	AGG(datatype, statGRAPH)
 	if	(datatype == "MsBetweenPresents")	{
 		scale_X	=	scale_x_continuous(
 			name	=	"Frame Time (ms)",
@@ -523,23 +522,39 @@ graphFREQ	=	function(datatype)	{
 
 	if (useSHORT)	results	=	data.short(results)
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
-	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
 	ggplot(results, aes(get(x = datatype))) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
 	geom_vline(xintercept = 1000/60, color = "red") +
 	geom_freqpoly(binwidth=0.03, size=0) +
-		geom_vline(data = STATS, aes(xintercept = Mean), color = "darkgreen") +
-		geom_vline(data = STATS, aes(xintercept = Median), color = "darkcyan", linetype="dotdash") +
-	FACET(graphFREQ) +
+		geom_vline(data = aggregate(results[, datatype], GROUPS, mean), aes(xintercept = get(datatype)), color = "darkgreen") +
+		geom_vline(data = aggregate(results[, datatype], GROUPS, median), aes(xintercept = get(datatype)), color = "darkcyan", linetype="dotdash") +
+	FACET("graphFREQ") +
 	scale_X + coord_cartesian(xlim = c(0, FtimeLimit)) +
 	scale_y_continuous(name="Count", expand=c(0.02, 0)) + 
 	theme(plot.title.position = "plot")
 }
 
+#	creating custom layers for QQ graph to use
+#		this simplifies some of the building and rmoves the need for a STATS object
+StatQuanSlope	<-	ggproto("StatQuanSlope", Stat,
+	required_aes	=	c("sample"),
+	compute_group	=	function(data, scales, Q = c(0.01, 0.99), r = 2)	{
+		data.frame(	x	=	Inf,	y	=	-Inf,
+			label	=	paste0("Slope: ", round(diff(quantile(data$sample, Q))/diff(100 * Q), r))
+		)
+	}
+)
+
+geom_qq_label	<-	function(mapping = NULL, data = NULL, geom = "label", position = "identity", na.rm = FALSE, show.legend = NA,  inherit.aes = TRUE, ...)	{
+	layer(stat = StatQuanSlope, data = data, mapping = mapping, geom = geom, 
+    position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+    params = list(na.rm = na.rm, ...))
+}
+
 graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	PERCS	=	sort(unique(c(PERCS, QUAN)))
-	STATS	=	AGG(datatype, statGRAPH)
+	
 	if	(datatype == "MsBetweenPresents")	{
 		scale_Y	=	scale_y_continuous(
 			name	=	"Frame Time (ms)",
@@ -577,30 +592,15 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 		)
 	}
 
-	if (useSHORT)	results	=	data.short(results)
-	results	=	graph.rev(results,	rev.LOC,	rev.API)
-	if (useSHORT)	STATS	=	data.short(STATS)	;	STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
-
-#	sec.axis	=	sec_axis(~.,
-#		breaks	=	STATS[c("0.1", "1", "Median", "99", "99.9")],
-#		labels	=	paste0(round(STATS[c("0.1", "1", "Median", "99", "99.9")], 2), c(" (0.1%)", " (1%)", " (50%)", " (99%)", " (99.9%)"))
-#	)
-#		this can be used to add a secondary axis that shows the values for the percentiles
-#			code remains for reference as now Rates are shown for the second axis
-
-	ggplot(data = STATS, aes(ymin = -Inf, xmin = -Inf)) +
+	ggplot(data = results, aes(sample = get(datatype))) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - QQ Distribution")) + labsGPU +
 	geom_hline(yintercept = 1000/60, color	=	"red") +
-		geom_rect(aes(ymax = get("0.1"),	xmax = qnorm(.001)), alpha=0.1, fill=c("blue"), color = "grey") +
-		geom_rect(aes(ymax = get("1"),		xmax = qnorm(.010)), alpha=0.1, fill=c("blue"), color = "grey") +
-		geom_rect(aes(ymax = get("Median"),	xmax = qnorm(.500)), alpha=0.1, fill=c("blue"), color = "grey") +
-		geom_rect(aes(ymax = get("99"),		xmax = qnorm(.990)), alpha=0.1, fill=c("red"), color = "grey") +
-		geom_rect(aes(ymax = get("99.9"),	xmax = qnorm(.999)), alpha=0.1, fill=c("red"), color = "grey") +
-	stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "green", size = 1.1, linetype = "dotted") +
-	stat_qq(data = results, aes(sample=get(datatype))) +
-	stat_qq_line(data = results, aes(sample=get(datatype)), line.p = QUAN, color = "green", alpha = 0.5, size = 1.1, linetype = "dotted") +
-	geom_label(data = STATS, aes(x = Inf, y = -Inf, label = paste0("Slope: ", Slope)), parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") +
-	FACET(graphQQ) +
+		lapply(PERCS, function(IN)	geom_qq_rect(Q = IN, alpha = 0.1, fill = ifelse(IN <= 0.5, "blue", "red"), color = "grey")) + 
+	stat_qq_line(line.p = QUAN, color = "green", size = 1.1, linetype = "dotted") +
+	stat_qq() +
+	stat_qq_line(line.p = QUAN, color = "green", alpha = 0.5, size = 1.1, linetype = "dotted") +
+	geom_qq_label(Q = QUAN, parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") + 
+	FACET("graphQQ") +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
 	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0)) + 
 	theme(plot.title.position = "plot")
@@ -667,7 +667,7 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	geom_point(alpha = 0.1) +
 	stat_density_2d(geom = "polygon", aes(fill = after_stat(nlevel)), bins = 20, show.legend = FALSE) + scale_fill_viridis_c() +
 	# stat_density_2d(geom = "polygon", aes(fill = stat(nlevel), alpha = stat(nlevel)), show.legend = FALSE) + 	scale_fill_viridis_c() +
-	FACET(graphDIFF) +
+	FACET("graphDIFF") +
 	scale_X +
 	scale_Y + 
 	theme(plot.title.position = "plot")
