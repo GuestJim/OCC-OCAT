@@ -17,7 +17,7 @@ labelBreak	=	function(breaks, SEC = FALSE)	{
 labelRound	=	function(breaks)	round(breaks, 1)
 labelRoundB	=	function(breaks)	labelBreak(labelRound(breaks))
 ms2FPS.lab	=	function(breaks)	labelBreak(ms2FPS(breaks), SEC = TRUE)
-labelBreakQQ=	function(breaks)	labelBreak(paste0(pnorm(breaks) * 100, "%"))
+labelBreakQQ=	function(breaks)	labelBreak(paste0(signif(pnorm(breaks)) * 100, "%"))
 labelDisp	=	function(breaks)	round(breaks * 60/1000, 1)
 labelDispB	=	function(breaks)	labelBreak(labelDisp(breaks))
 
@@ -618,7 +618,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 	geom_qq_label(Q = QUAN, parse = TRUE, hjust="right", vjust="bottom", fill = "darkgrey", color = "green") + 
 	FACET("graphQQ") +
 	scale_Y + coord_cartesian(ylim = c(0, FtimeLimit)) +
-	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreakQQ, minor_breaks = NULL, expand = c(0.02, 0)) + 
+	scale_x_continuous(name = "Percentile", breaks = qnorm(PERCS), labels = labelBreak(paste0(PERCS * 100, "%")), minor_breaks = NULL, expand = c(0.02, 0)) + 
 	theme(plot.title.position = "plot")
 }
 
