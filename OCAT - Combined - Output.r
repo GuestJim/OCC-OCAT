@@ -480,7 +480,6 @@ graphCOURSE	=	function(datatype)	{
 	theme(plot.title.position = "plot")
 }
 
-
 graphFREQ	=	function(datatype)	{
 	if	(datatype == "MsBetweenPresents")	{
 		scale_X	=	scale_x_continuous(
@@ -498,7 +497,7 @@ graphFREQ	=	function(datatype)	{
 			breaks	=	ybreaks,	labels	=	labelDispB,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Display Time (ms)",
-				labels	=	ybreaks
+				labels	=	labelBreak
 			)
 		)
 	}
@@ -587,7 +586,7 @@ graphQQ	=	function(datatype, PERCS = c(.001, .01, .5, .99, .999))	{
 			breaks	=	ybreaks,	labels	=	labelDisp,	expand	=	c(0.02, 0),
 			sec.axis	=	dup_axis(
 				name	=	"Display Time (ms)",
-				labels	=	ybreaks
+				labels	=	labelRound
 			)
 		)
 	}
@@ -638,13 +637,12 @@ graphDIFF	=	function(datatype, diffLim = 1000/50)	{
 	if	(datatype == "MsBetweenDisplayChange")	{
 		scale_X	=	scale_x_continuous(
 			name	=	"Refresh Cycles Later (1/60 s)",
-			breaks	=	ybreaks,	labels	=	labelDisp,		limits	=	c(0, FtimeLimit),
+			breaks	=	ybreaks,	labels	=	labelDispB,		limits	=	c(0, FtimeLimit),
 			expand	=	c(0.02, 0)
 		)
 		scale_Y	=	scale_y_continuous(
 			name	=	"Consecutive Display Time Difference (ms)",
-			breaks	=	ybreaks,
-			limits	=	c(-diffLim, diffLim),
+			breaks	=	ybreaks,	labels	=	labelRound,		limits	=	c(-diffLim, diffLim),
 			expand	=	c(0, 0)
 		)
 	}
