@@ -378,12 +378,15 @@ graphSUMM	=	function(datatype)	{
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
+	GPU_fill	=	scale_fill_manual(values = scales::hue_pal()(length(listGPU),	breaks = listGPU)
+
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
 	geom_hline(yintercept = 1000/60, color = "red") +
 	# geom_boxplot(outlier.alpha = 0) +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", width = 0.6) +
-	geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
+	# geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + scale_fill_hue() +
+	geom_bar(aes(fill = GPU), stat = "summary", fun = mean) + GPU_fill() +
 	stat_summary(fun.data = BoxPerc, geom = "boxplot", alpha = 0.25, width = 0.6) +
 	# geom_boxplot(alpha = 0.50, outlier.alpha = 0.1) +
 	FACET("graphSUMM") +
