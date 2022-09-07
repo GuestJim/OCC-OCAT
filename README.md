@@ -16,3 +16,8 @@ The Fully Commented branch has versions of the scripts where I comment almost li
 Article covering all of the statistics, graphs, and scripts can be found here: https://github.com/GuestJim/Serious-Statistics-Reprocessed
 
 The Old folders have an older version of these, where a Batch file is used to call a Python script to create the desired R script
+
+Since originally making them, I have learned about Lag graphs, which plot the data against the data but shifted by some amount, nromally 1.
+(The X axis is n + 1 and Y is n, for example.)
+My Consecutive Difference graphs then are possibly a variant of lag graphs, as they are the data on one axis and the difference between n and n + 1 on the other.
+Additional information: [NIST Lag Plot in Handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/lagplot.htm)
