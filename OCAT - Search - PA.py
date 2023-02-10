@@ -77,7 +77,8 @@ if not os.path.exists(outputFull):
 		fout.close()
 
 
-scriptFull	=	scriptPath + "OCAT - Combined - Input.r"
+# scriptFull	=	scriptPath + "OCAT - Combined - Input.r"
+scriptFull	=	scriptPath + "OCAT - Search - Input.r"
 
 outputName	=	"Combined - Input - " + droppedGame + ".r"
 outputFull	=	droppedPath + "@" + outputName
