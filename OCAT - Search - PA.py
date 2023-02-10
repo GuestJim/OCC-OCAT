@@ -78,9 +78,10 @@ if not os.path.exists(outputFull):
 
 
 # scriptFull	=	scriptPath + "OCAT - Combined - Input.r"
+# outputName	=	"Combined - Input - " + droppedGame + ".r"
 scriptFull	=	scriptPath + "OCAT - Search - Input.r"
+outputName	=	"Search - Input - " + droppedGame + ".r"
 
-outputName	=	"Combined - Input - " + droppedGame + ".r"
 outputFull	=	droppedPath + "@" + outputName
 
 if not os.path.exists(outputFull):
