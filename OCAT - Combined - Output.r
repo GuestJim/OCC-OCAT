@@ -1,4 +1,4 @@
-yrates	=	c(c(120, 60, 30, 20, 15, 12, 10), yratesEXT)
+yrates	=	c(c(120, 60, 30, 20, 15, 12, 10, 8, 6, 5), yratesEXT)
 yrates	=	sort(c(yrates,-yrates))
 ytimes	=	sort(1000/yrates)
 ybreaks	=	sort(c(round(ytimes, 2), 0))
