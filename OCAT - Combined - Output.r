@@ -378,7 +378,7 @@ graphSUMM	=	function(datatype)	{
 	results	=	graph.rev(results,	rev.LOC,	rev.API)
 	# if (useSHORT)	STATS	=	data.short(STATS)	; STATS	=	graph.rev(STATS,	rev.LOC,	rev.API)
 
-	GPU_fill	=	scale_fill_manual(values = scales::hue_pal()(length(listGPU),	breaks = listGPU)
+	GPU_fill	=	scale_fill_manual(values = scales::hue_pal()(length(listGPU)),	breaks = listGPU)
 
 	ggplot(data = results, aes(x = GPU, y = get(datatype))) +
 	ggtitle(gameQ, subtitle = paste0(datatype, " - Means, Medians, and Percentiles")) + labsGPU +
@@ -528,7 +528,7 @@ graphFREQ	=	function(datatype)	{
 	ggplot(results, aes(get(x = datatype))) +
 	ggtitle(gameQ, subtitle=paste0(datatype, " - Frequency Plot")) + labsGPU +
 	geom_vline(xintercept = 1000/60, color = "red") +
-	geom_freqpoly(binwidth=0.03, size=0) +
+	geom_freqpoly(binwidth=0.03, size=0.25) +
 		geom_vline(data = aggregate(results[, datatype], GROUPS, mean), aes(xintercept = get(datatype)), color = "darkgreen") +
 		geom_vline(data = aggregate(results[, datatype], GROUPS, median), aes(xintercept = get(datatype)), color = "darkcyan", linetype="dotdash") +
 	FACET("graphFREQ") +
